@@ -8,6 +8,7 @@
       <mat-label>Competência</mat-label>
       <input matInput type="month" [value]="competence()" (change)="setCompetence($any($event.target).value)" />
     </mat-form-field>
+    <button mat-stroked-button routerLink="/finance/crm">CRM por imóvel</button>
     <button mat-stroked-button routerLink="/finance">Voltar às finanças</button>
     <button mat-stroked-button routerLink="/sales">Vendas externas</button>
   </div>

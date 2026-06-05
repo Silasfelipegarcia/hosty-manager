@@ -8,6 +8,7 @@ export interface PropertyExpense {
   name: string;
   amount: number;
   notes?: string;
+  spentOn?: string;
   createdAt?: string;
 }
 
@@ -17,6 +18,7 @@ export interface PropertyExpenseRequest {
   name: string;
   amount: number;
   notes?: string;
+  spentOn?: string;
 }
 
 export const EXPENSE_CATEGORIES = [

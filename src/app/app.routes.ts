@@ -67,6 +67,10 @@ export const routes: Routes = [
           import('./features/finance/financial-health.page').then((m) => m.FinancialHealthPage),
       },
       {
+        path: 'finance/crm',
+        loadComponent: () => import('./features/finance/property-crm.page').then((m) => m.PropertyCrmPage),
+      },
+      {
         path: 'sales',
         loadComponent: () => import('./features/sales/external-sales.page').then((m) => m.ExternalSalesPage),
       },

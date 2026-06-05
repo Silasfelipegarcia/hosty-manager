@@ -20,7 +20,6 @@ import { FixedCostRow } from '../../../core/models/finance.models';
 import { PropertyExpense, EXPENSE_CATEGORIES } from '../../../core/models/property-expense.models';
 import { buildPropertyHealth } from '../../../core/finance/financial-health';
 import { CurrencyBrlPipe } from '../../../shared/pipes/currency-brl.pipe';
-import { CompetencePipe } from '../../../shared/pipes/competence.pipe';
 
 @Component({
   selector: 'app-property-detail-page',
@@ -37,7 +36,6 @@ import { CompetencePipe } from '../../../shared/pipes/competence.pipe';
     MatSelectModule,
     MatChipsModule,
     CurrencyBrlPipe,
-    CompetencePipe,
     DecimalPipe,
   ],
   templateUrl: './property-detail.page.html',
@@ -107,6 +105,7 @@ export class PropertyDetailPage implements OnInit {
     name: [''],
     amount: [0],
     notes: [''],
+    spentOn: [this.todayIso()],
   });
 
   get propertyId(): string {
@@ -173,7 +172,7 @@ export class PropertyDetailPage implements OnInit {
     const raw = this.newExpense.getRawValue();
     if (!raw.name.trim()) return;
     await firstValueFrom(this.expensesApi.add(this.propertyId, raw));
-    this.newExpense.patchValue({ name: '', amount: 0, notes: '' });
+    this.newExpense.patchValue({ name: '', amount: 0, notes: '', spentOn: this.todayIso() });
     await this.loadFinanceTab();
   }
 
@@ -231,5 +230,10 @@ export class PropertyDetailPage implements OnInit {
   private nowCompetence(): string {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  private todayIso(): string {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 }

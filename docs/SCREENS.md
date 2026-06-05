@@ -16,6 +16,7 @@
 | `finance_dashboard_page.dart` | `/finance` | Dashboard + fixos + YTD + break-even |
 | `external_sales_page.dart` (CRM) | `/sales` | Vendas externas + backfill histórico |
 | `financial_health_page.dart` (CRM) | `/finance/health` | Saúde financeira + gráfico YTD |
+| `property_crm_page.dart` (CRM) | `/finance/crm` | CRM por imóvel: período, metas, ledger de gastos |
 | `pending_kit_orders_page.dart` | `/kits/pending` | Fila |
 | `field_tasks_page.dart` | `/field-services/pending` | Fila |
 | `property_messages_hub_page.dart` | `/messages` | Inbox |

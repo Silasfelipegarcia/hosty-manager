@@ -53,6 +53,7 @@ Base URL: `environment.apiBaseUrl` + `/api/v1`
 | Bundle | GET | `/finance/dashboard/bundle` |
 | Custos fixos | GET/POST/PUT/DELETE | `/finance/fixed-costs` |
 | Despesas por imóvel | GET/POST/PUT/DELETE | `/finance/properties/{propertyId}/expenses` |
+| Despesas do owner (período) | GET | `/finance/expenses?from=yyyy-MM&to=yyyy-MM&propertyId=` |
 | Custos variáveis | POST | `/finance/bookings/{id}/variable-costs` |
 | Saúde financeira (`/finance/health`) | GET | `/finance/dashboard/bundle`, `/finance/fixed-costs`, `/properties/owner` |
 | YTD / break-even (`/finance`) | GET | 12× `/finance/dashboard/bundle?competence=yyyy-MM` (paralelo) |

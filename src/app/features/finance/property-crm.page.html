@@ -1,0 +1,143 @@
+<div class="page-header">
+  <div>
+    <h1>CRM por imóvel</h1>
+    <p>Controle de custo, receita e metas de tranquilidade — {{ periodLabel() }}</p>
+  </div>
+  <div class="actions">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>De</mat-label>
+      <input matInput type="month" [value]="from()" (change)="setFrom($any($event.target).value)" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Até</mat-label>
+      <input matInput type="month" [value]="to()" (change)="setTo($any($event.target).value)" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Imóvel</mat-label>
+      <mat-select [value]="propertyFilter()" (selectionChange)="setPropertyFilter($event.value)">
+        <mat-option value="">Todos</mat-option>
+        @for (p of properties(); track p.id) {
+          <mat-option [value]="p.id">{{ p.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <button mat-stroked-button (click)="applyPreset('3m')">3 meses</button>
+    <button mat-stroked-button (click)="applyPreset('6m')">6 meses</button>
+    <button mat-stroked-button (click)="applyPreset('12m')">12 meses</button>
+    <button mat-stroked-button (click)="applyPreset('ytd')">Ano</button>
+    <button mat-stroked-button routerLink="/finance">Finanças</button>
+  </div>
+</div>
+
+@if (loading()) {
+  <p class="muted">Carregando…</p>
+} @else {
+  <div class="kpi-grid">
+    <mat-card><span>Bruto no período</span><strong>{{ insights().totalGross | currencyBrl }}</strong></mat-card>
+    <mat-card><span>Lucro no período</span><strong>{{ insights().totalProfit | currencyBrl }}</strong></mat-card>
+    <mat-card><span>Despesas lançadas</span><strong>{{ insights().totalExpenses | currencyBrl }}</strong></mat-card>
+    <mat-card><span>Meses analisados</span><strong>{{ insights().monthCount }}</strong></mat-card>
+    <mat-card><span>Imóveis no vermelho</span><strong>{{ insights().deficitProperties.length }}</strong></mat-card>
+  </div>
+
+  <div class="grid-2">
+    <mat-card class="insight-card">
+      <h3>Meses que mais faturaram</h3>
+      @if (insights().topMonths.length === 0) {
+        <p class="muted">Sem dados no período.</p>
+      } @else {
+        <ol class="rank-list">
+          @for (m of insights().topMonths; track m.competence; let i = $index) {
+            <li>
+              <span class="rank">{{ i + 1 }}º</span>
+              <span>{{ m.label }}</span>
+              <strong>{{ m.gross | currencyBrl }}</strong>
+              <small>Lucro {{ m.profit | currencyBrl }}</small>
+            </li>
+          }
+        </ol>
+      }
+    </mat-card>
+
+    <mat-card class="insight-card">
+      <h3>Faturamento por mês</h3>
+      <canvas baseChart type="bar" [data]="monthChart"></canvas>
+    </mat-card>
+  </div>
+
+  @if (insights().deficitProperties.length > 0) {
+    <mat-card class="alert-card">
+      <h3>Imóveis com prejuízo no período</h3>
+      <ul>
+        @for (r of insights().deficitProperties; track r.propertyId) {
+          <li>
+            <a [routerLink]="['/properties', r.propertyId]">{{ r.propertyName }}</a>
+            — {{ r.profit | currencyBrl }}
+          </li>
+        }
+      </ul>
+    </mat-card>
+  }
+
+  <h2 class="section-title">Visão por imóvel</h2>
+  <p class="muted section-hint">
+    Meta tranquila = fixos + despesas + 2 meses de reserva operacional + 12% de contingência sobre o bruto médio.
+    Acima do limiar “só lucro” você cobre todos os custos do mês com folga de 10%.
+  </p>
+
+  <div class="property-grid">
+    @for (r of filteredRows(); track r.propertyId) {
+      <mat-card [class]="statusClass(r.status)">
+        <div class="card-head">
+          <h3>{{ r.propertyName }}</h3>
+          <mat-chip>{{ r.statusLabel }}</mat-chip>
+        </div>
+        <mat-divider />
+        <dl class="metrics">
+          <div><dt>Bruto (período)</dt><dd>{{ r.gross | currencyBrl }}</dd></div>
+          <div><dt>Custos operacionais</dt><dd>{{ r.totalCosts | currencyBrl }}</dd></div>
+          <div><dt>Despesas lançadas</dt><dd>{{ r.periodExpenses | currencyBrl }}</dd></div>
+          <div><dt>Lucro</dt><dd>{{ r.profit | currencyBrl }}</dd></div>
+          <div><dt>Margem</dt><dd>{{ (r.margin * 100) | number:'1.0-1' }}%</dd></div>
+          <div><dt>Fixos/mês</dt><dd>{{ r.monthlyFixed | currencyBrl }}</dd></div>
+          <div><dt>Noites p/ empatar</dt><dd>{{ r.breakEvenNights }}</dd></div>
+          <div><dt>Meta 30 diárias</dt><dd>{{ r.revenueTarget30 | currencyBrl }}</dd></div>
+          <div class="highlight"><dt>Meta tranquila/mês</dt><dd>{{ r.tranquilityTarget | currencyBrl }}</dd></div>
+          <div><dt>Falta p/ tranquilidade</dt><dd>{{ r.gapToTranquility | currencyBrl }}</dd></div>
+          <div class="highlight"><dt>Só lucro acima de</dt><dd>{{ r.profitOnlyThreshold | currencyBrl }}</dd></div>
+        </dl>
+        <mat-divider />
+        <a [routerLink]="['/properties', r.propertyId]">Abrir imóvel</a>
+      </mat-card>
+    }
+  </div>
+
+  <mat-card class="ledger-card">
+    <h3>Registro de gastos</h3>
+    <p class="muted">Data em que o gasto ocorreu, competência contábil e valor.</p>
+    @if (filteredExpenses().length === 0) {
+      <p class="muted">Nenhuma despesa no período.</p>
+    } @else {
+      <table>
+        <tr>
+          <th>Data</th>
+          <th>Competência</th>
+          <th>Imóvel</th>
+          <th>Categoria</th>
+          <th>Descrição</th>
+          <th>Valor</th>
+        </tr>
+        @for (e of filteredExpenses(); track e.id) {
+          <tr>
+            <td>{{ e.spentOn ? (e.spentOn | date:'dd/MM/yyyy') : '—' }}</td>
+            <td>{{ e.competence }}</td>
+            <td>{{ e.propertyName || e.propertyId }}</td>
+            <td>{{ e.categoryLabel || e.category }}</td>
+            <td>{{ e.name }}</td>
+            <td>{{ e.amount | currencyBrl }}</td>
+          </tr>
+        }
+      </table>
+    }
+  </mat-card>
+}

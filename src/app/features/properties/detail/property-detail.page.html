@@ -131,6 +131,7 @@
                 }
               </mat-select>
             </mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Data do gasto</mat-label><input matInput type="date" formControlName="spentOn" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Observações</mat-label><input matInput formControlName="notes" /></mat-form-field>
             <button mat-stroked-button type="submit">Adicionar despesa</button>
           </form>
@@ -140,7 +141,7 @@
             <ul>
               @for (e of propertyExpenses(); track e.id) {
                 <li>
-                  <span>{{ e.name }} — {{ e.categoryLabel || e.category }} — {{ e.amount | currencyBrl }}</span>
+                  <span>{{ e.name }} — {{ e.spentOn || e.competence }} — {{ e.categoryLabel || e.category }} — {{ e.amount | currencyBrl }}</span>
                   <button mat-button color="warn" (click)="deleteExpense(e.id)">Excluir</button>
                 </li>
               }
