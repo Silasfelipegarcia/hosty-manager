@@ -1,37 +1,28 @@
 <div class="page-header">
   <div>
-    <h1>Saúde financeira</h1>
-    <p>Reservas, custos fixos e margem por imóvel — {{ competence() | competence }}</p>
+    <h1>Caixa e reservas</h1>
+    <p>Quanto manter em caixa neste mês — {{ competence() | competence }}</p>
   </div>
   <div class="actions">
     <mat-form-field appearance="outline" subscriptSizing="dynamic">
       <mat-label>Competência</mat-label>
       <input matInput type="month" [value]="competence()" (change)="setCompetence($any($event.target).value)" />
     </mat-form-field>
-    <button mat-stroked-button routerLink="/finance/crm">CRM por imóvel</button>
-    <button mat-stroked-button routerLink="/finance">Voltar às finanças</button>
-    <button mat-stroked-button routerLink="/sales">Vendas externas</button>
+    <button mat-stroked-button routerLink="/finance">Mês atual</button>
+    <button mat-stroked-button routerLink="/finance/crm">Performance por período</button>
   </div>
 </div>
 
 @if (loading()) {
   <p class="muted">Carregando…</p>
 } @else {
-  <mat-card class="ytd-card">
-    <div class="ytd-head">
-      <h3>Lucro acumulado no ano</h3>
-      <span [class]="'ytd-' + ytdStatus().tone">{{ ytdStatus().label }}</span>
-    </div>
-    <canvas baseChart type="line" [data]="ytdChart"></canvas>
-  </mat-card>
-
   <div class="kpi-grid">
     <mat-card>
-      <span>Bruto total</span>
+      <span>Bruto do mês</span>
       <strong>{{ summary().totalGross | currencyBrl }}</strong>
     </mat-card>
     <mat-card>
-      <span>Lucro total</span>
+      <span>Lucro do mês</span>
       <strong>{{ summary().totalProfit | currencyBrl }}</strong>
     </mat-card>
     <mat-card>
@@ -48,13 +39,17 @@
     </mat-card>
   </div>
 
-  @if (health().length === 0) {
+  <p class="muted ytd-link">
+    Acumulado do ano disponível em <a routerLink="/finance">Mês atual</a> (seção YTD).
+  </p>
+
+  @if (filteredHealth().length === 0) {
     <mat-card class="empty">
       <p class="muted">Nenhum imóvel cadastrado.</p>
     </mat-card>
   } @else {
     <div class="property-grid">
-      @for (h of health(); track h.propertyId) {
+      @for (h of filteredHealth(); track h.propertyId) {
         <mat-card [class]="statusClass(h.status)">
           <div class="card-head">
             <h3>{{ h.propertyName }}</h3>
@@ -77,7 +72,10 @@
 
           <mat-divider />
 
-          <a [routerLink]="['/properties', h.propertyId]">Ver imóvel</a>
+          <div class="card-links">
+            <a [routerLink]="['/properties', h.propertyId]">Ver imóvel</a>
+            <a [routerLink]="['/finance/crm']" [queryParams]="{ propertyId: h.propertyId }">Análise de período</a>
+          </div>
         </mat-card>
       }
     </div>

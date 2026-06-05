@@ -86,9 +86,23 @@ export function presetPeriod(preset: '3m' | '6m' | '12m' | 'ytd'): { from: strin
   return { from, to };
 }
 
-export function buildMonthlyInsights(bundles: PeriodMonthBundle[]): MonthlyInsight[] {
+export function isPeriodValid(from: string, to: string): boolean {
+  return buildPeriodMonths(from, to).length > 0;
+}
+
+export function buildMonthlyInsights(bundles: PeriodMonthBundle[], propertyId?: string): MonthlyInsight[] {
   return bundles
     .map(({ competence, bundle }) => {
+      if (propertyId) {
+        const p = bundle.byProperty.find((row) => row.propertyId === propertyId);
+        return {
+          competence,
+          label: monthLabel(competence),
+          gross: p?.grossAmount ?? 0,
+          profit: p?.profit ?? 0,
+          costs: p?.totalCosts ?? 0,
+        };
+      }
       const d = bundle.dashboard;
       const costs = d.totalPlatformFees + d.totalVariableCosts + d.totalFixedCosts;
       return {

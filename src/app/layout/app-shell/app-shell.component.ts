@@ -9,12 +9,14 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { AuthService } from '../../core/auth/auth.service';
 import { BadgeService } from '../../core/api/badge.service';
 import { environment } from '../../../environments/environment';
+import { ClaraAssistantWidget } from '../clara-assistant/clara-assistant.widget';
 
 interface NavItem {
   label: string;
   path: string;
   icon: string;
   badge?: () => number;
+  exact?: boolean;
 }
 
 @Component({
@@ -30,6 +32,7 @@ interface NavItem {
     MatToolbarModule,
     MatButtonModule,
     MatBadgeModule,
+    ClaraAssistantWidget,
   ],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss',
@@ -49,9 +52,9 @@ export class AppShellComponent implements OnInit {
       icon: 'event',
       badge: () => this.badges.ownerActionRequired(),
     },
-    { label: 'Finanças', path: '/finance', icon: 'payments' },
-    { label: 'CRM Imóveis', path: '/finance/crm', icon: 'analytics' },
-    { label: 'Saúde', path: '/finance/health', icon: 'savings' },
+    { label: 'Finanças', path: '/finance', icon: 'payments', exact: true },
+    { label: 'Performance', path: '/finance/crm', icon: 'analytics' },
+    { label: 'Caixa', path: '/finance/health', icon: 'savings' },
     { label: 'Vendas', path: '/sales', icon: 'point_of_sale' },
     { label: 'Mensagens', path: '/messages', icon: 'chat' },
     { label: 'Conta', path: '/account', icon: 'person' },

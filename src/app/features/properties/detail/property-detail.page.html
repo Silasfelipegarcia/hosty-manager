@@ -89,7 +89,9 @@
             <mat-label>Competência</mat-label>
             <input matInput type="month" [value]="financeCompetence()" (change)="setFinanceCompetence($any($event.target).value)" />
           </mat-form-field>
-          <a mat-stroked-button [routerLink]="['/sales']" [queryParams]="{ propertyId: propertyId }">Ver vendas</a>
+          <a mat-stroked-button [routerLink]="['/finance/crm']" [queryParams]="{ propertyId: propertyId }">Análise de período</a>
+          <a mat-stroked-button [routerLink]="['/finance/health']" [queryParams]="{ propertyId: propertyId }">Caixa deste mês</a>
+          <a mat-stroked-button [routerLink]="['/sales']" [queryParams]="{ propertyId: propertyId }">Vendas</a>
         </div>
 
         <div class="kpi-grid">
@@ -100,9 +102,9 @@
         </div>
 
         <mat-card class="health-mini">
-          <h4>Saúde financeira</h4>
-          <p>Retirada segura neste mês: <strong>{{ safeToWithdraw() | currencyBrl }}</strong></p>
-          <a routerLink="/finance/health">Ver carteira completa</a>
+          <h4>Caixa deste mês</h4>
+          <p>Retirada segura: <strong>{{ safeToWithdraw() | currencyBrl }}</strong></p>
+          <a routerLink="/finance/health">Ver reservas e retirada</a>
         </mat-card>
 
         <mat-card>

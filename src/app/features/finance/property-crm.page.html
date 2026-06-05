@@ -1,9 +1,23 @@
 <div class="page-header">
   <div>
-    <h1>CRM por imóvel</h1>
-    <p>Controle de custo, receita e metas de tranquilidade — {{ periodLabel() }}</p>
+    <h1>Performance por imóvel</h1>
+    <p>Análise por período — custo, receita e metas de tranquilidade</p>
   </div>
   <div class="actions">
+    <button mat-stroked-button routerLink="/finance">Mês atual</button>
+    <button mat-stroked-button routerLink="/finance/health">Caixa e reservas</button>
+  </div>
+</div>
+
+<div class="filters-panel">
+  <div class="preset-chips">
+    <span class="preset-label">Período:</span>
+    <button mat-stroked-button [class.active-preset]="activePreset() === '3m'" (click)="applyPreset('3m')">3 meses</button>
+    <button mat-stroked-button [class.active-preset]="activePreset() === '6m'" (click)="applyPreset('6m')">6 meses</button>
+    <button mat-stroked-button [class.active-preset]="activePreset() === '12m'" (click)="applyPreset('12m')">12 meses</button>
+    <button mat-stroked-button [class.active-preset]="activePreset() === 'ytd'" (click)="applyPreset('ytd')">Ano</button>
+  </div>
+  <div class="filter-row">
     <mat-form-field appearance="outline" subscriptSizing="dynamic">
       <mat-label>De</mat-label>
       <input matInput type="month" [value]="from()" (change)="setFrom($any($event.target).value)" />
@@ -15,29 +29,41 @@
     <mat-form-field appearance="outline" subscriptSizing="dynamic">
       <mat-label>Imóvel</mat-label>
       <mat-select [value]="propertyFilter()" (selectionChange)="setPropertyFilter($event.value)">
-        <mat-option value="">Todos</mat-option>
+        <mat-option value="">Todos os imóveis</mat-option>
         @for (p of properties(); track p.id) {
           <mat-option [value]="p.id">{{ p.name }}</mat-option>
         }
       </mat-select>
     </mat-form-field>
-    <button mat-stroked-button (click)="applyPreset('3m')">3 meses</button>
-    <button mat-stroked-button (click)="applyPreset('6m')">6 meses</button>
-    <button mat-stroked-button (click)="applyPreset('12m')">12 meses</button>
-    <button mat-stroked-button (click)="applyPreset('ytd')">Ano</button>
-    <button mat-stroked-button routerLink="/finance">Finanças</button>
+    <span class="period-badge">{{ periodLabel() }}</span>
   </div>
 </div>
 
-@if (loading()) {
+@if (periodInvalid()) {
+  <mat-card class="error-card">
+    <p>O período é inválido: a data inicial deve ser anterior ou igual à final.</p>
+  </mat-card>
+} @else if (loading()) {
   <p class="muted">Carregando…</p>
 } @else {
+  @if (focusMode() && focusProperty(); as prop) {
+    <mat-card class="focus-banner">
+      <div>
+        <h2>{{ prop.name }}</h2>
+        <p class="muted">Visão focada neste imóvel — {{ periodLabel() }}</p>
+      </div>
+      <button mat-stroked-button (click)="clearPropertyFilter()">Ver todos os imóveis</button>
+    </mat-card>
+  }
+
   <div class="kpi-grid">
     <mat-card><span>Bruto no período</span><strong>{{ insights().totalGross | currencyBrl }}</strong></mat-card>
     <mat-card><span>Lucro no período</span><strong>{{ insights().totalProfit | currencyBrl }}</strong></mat-card>
     <mat-card><span>Despesas lançadas</span><strong>{{ insights().totalExpenses | currencyBrl }}</strong></mat-card>
     <mat-card><span>Meses analisados</span><strong>{{ insights().monthCount }}</strong></mat-card>
-    <mat-card><span>Imóveis no vermelho</span><strong>{{ insights().deficitProperties.length }}</strong></mat-card>
+    @if (!focusMode()) {
+      <mat-card><span>Imóveis no vermelho</span><strong>{{ insights().deficitProperties.length }}</strong></mat-card>
+    }
   </div>
 
   <div class="grid-2">
@@ -61,17 +87,17 @@
 
     <mat-card class="insight-card">
       <h3>Faturamento por mês</h3>
-      <canvas baseChart type="bar" [data]="monthChart"></canvas>
+      <canvas baseChart type="bar" [data]="monthChart()"></canvas>
     </mat-card>
   </div>
 
-  @if (insights().deficitProperties.length > 0) {
+  @if (!focusMode() && insights().deficitProperties.length > 0) {
     <mat-card class="alert-card">
       <h3>Imóveis com prejuízo no período</h3>
       <ul>
         @for (r of insights().deficitProperties; track r.propertyId) {
           <li>
-            <a [routerLink]="['/properties', r.propertyId]">{{ r.propertyName }}</a>
+            <a [routerLink]="['/finance/crm']" [queryParams]="{ propertyId: r.propertyId }">{{ r.propertyName }}</a>
             — {{ r.profit | currencyBrl }}
           </li>
         }
@@ -79,15 +105,15 @@
     </mat-card>
   }
 
-  <h2 class="section-title">Visão por imóvel</h2>
+  <h2 class="section-title">{{ focusMode() ? 'Detalhe do imóvel' : 'Visão por imóvel' }}</h2>
   <p class="muted section-hint">
     Meta tranquila = fixos + despesas + 2 meses de reserva operacional + 12% de contingência sobre o bruto médio.
     Acima do limiar “só lucro” você cobre todos os custos do mês com folga de 10%.
   </p>
 
-  <div class="property-grid">
+  <div class="property-grid" [class.focus-grid]="focusMode()">
     @for (r of filteredRows(); track r.propertyId) {
-      <mat-card [class]="statusClass(r.status)">
+      <mat-card [class]="statusClass(r.status)" [class.focus-card]="focusMode()">
         <div class="card-head">
           <h3>{{ r.propertyName }}</h3>
           <mat-chip>{{ r.statusLabel }}</mat-chip>
@@ -122,7 +148,9 @@
         <tr>
           <th>Data</th>
           <th>Competência</th>
-          <th>Imóvel</th>
+          @if (!focusMode()) {
+            <th>Imóvel</th>
+          }
           <th>Categoria</th>
           <th>Descrição</th>
           <th>Valor</th>
@@ -131,7 +159,9 @@
           <tr>
             <td>{{ e.spentOn ? (e.spentOn | date:'dd/MM/yyyy') : '—' }}</td>
             <td>{{ e.competence }}</td>
-            <td>{{ e.propertyName || e.propertyId }}</td>
+            @if (!focusMode()) {
+              <td>{{ e.propertyName || e.propertyId }}</td>
+            }
             <td>{{ e.categoryLabel || e.category }}</td>
             <td>{{ e.name }}</td>
             <td>{{ e.amount | currencyBrl }}</td>

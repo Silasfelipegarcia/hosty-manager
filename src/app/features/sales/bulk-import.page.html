@@ -1,0 +1,42 @@
+<div class="page-header">
+  <div>
+    <h1>Importação em massa</h1>
+    <p>Planilha CSV de aluguéis históricos (backfill) — Airbnb, Booking, direto</p>
+  </div>
+  <a mat-stroked-button routerLink="/sales">Venda unitária</a>
+</div>
+
+<mat-card class="help-card">
+  <h3>Formato do CSV (separador <code>;</code>)</h3>
+  <p>Colunas: <strong>imóvel</strong> (nome ou ID) · competência · check-in · check-out · valor bruto · plataforma · tipo taxa · canal · e-mail · notas</p>
+  <p class="muted">Check-in e check-out devem ser datas passadas. Plataforma: DIRECT, AIRBNB, BOOKING… Taxa: PERCENTAGE ou FIXED.</p>
+  <button mat-stroked-button type="button" (click)="useTemplate()">Usar modelo de exemplo</button>
+  <label class="file-btn">
+    <input type="file" accept=".csv,.txt" (change)="onFileSelected($event)" hidden />
+    <span mat-stroked-button>Carregar arquivo</span>
+  </label>
+</mat-card>
+
+<mat-card class="editor-card">
+  <textarea [value]="csv()" (input)="csv.set($any($event.target).value)" rows="14"></textarea>
+  <div class="actions">
+    <button mat-flat-button color="primary" (click)="importCsv()" [disabled]="loading()">
+      {{ loading() ? 'Importando…' : 'Importar linhas' }}
+    </button>
+  </div>
+</mat-card>
+
+@if (result(); as r) {
+  <mat-card class="result-card">
+    <h3>Resultado</h3>
+    <p><strong>{{ r.createdCount }}</strong> estadia(s) importada(s).</p>
+    @if (r.errors.length > 0) {
+      <h4>Erros ({{ r.errors.length }})</h4>
+      <ul>
+        @for (e of r.errors; track e) {
+          <li>{{ e }}</li>
+        }
+      </ul>
+    }
+  </mat-card>
+}

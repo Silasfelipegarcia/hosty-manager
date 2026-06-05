@@ -1,7 +1,7 @@
 import { DecimalPipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -59,6 +59,7 @@ const FIXED_TEMPLATES = [
 export class FinancePage implements OnInit {
   private readonly finance = inject(FinanceService);
   private readonly props = inject(PropertiesService);
+  private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(FormBuilder);
   readonly bundle = signal<FinanceDashboardBundle | null>(null);
   readonly fixedCosts = signal<FixedCostRow[]>([]);
@@ -75,7 +76,21 @@ export class FinancePage implements OnInit {
   readonly ytdStatus = computed(() => yearStatus(ytdTotals(this.ytdSeries()).profit));
   readonly ytdSummary = computed(() => ytdTotals(this.ytdSeries()));
 
-  propertyChart: ChartConfiguration<'bar'>['data'] = { labels: [], datasets: [{ label: 'Lucro', data: [] }] };
+  readonly topPropertyRows = computed(() => {
+    const b = this.bundle();
+    const props = this.properties();
+    if (!b) return [];
+    return b.byProperty
+      .slice()
+      .sort((a, b2) => b2.profit - a.profit)
+      .slice(0, 5)
+      .map((r) => ({
+        propertyId: r.propertyId,
+        propertyName: propertyLabel(r.propertyId, props, r.propertyName),
+        gross: r.grossAmount,
+        profit: r.profit,
+      }));
+  });
   ytdChart: ChartConfiguration<'line'>['data'] = {
     labels: [],
     datasets: [
@@ -100,6 +115,10 @@ export class FinancePage implements OnInit {
   });
 
   ngOnInit(): void {
+    const competence = this.route.snapshot.queryParamMap.get('competence');
+    if (competence) {
+      this.competence.set(competence);
+    }
     void this.load();
   }
 
@@ -117,12 +136,6 @@ export class FinancePage implements OnInit {
     this.ytdSeries.set(buildYtdSeries(ytdBundles));
     this.breakEvenRows.set(this.buildBreakEven(properties.content, bundle, costs.content));
 
-    const rows = bundle.byProperty ?? [];
-    const props = properties.content;
-    this.propertyChart = {
-      labels: rows.map((r) => propertyLabel(r.propertyId, props, r.propertyName)),
-      datasets: [{ label: 'Lucro', data: rows.map((r) => r.profit), backgroundColor: '#0F766E' }],
-    };
     const series = buildYtdSeries(ytdBundles);
     this.ytdChart = {
       labels: series.map((p) => p.label),

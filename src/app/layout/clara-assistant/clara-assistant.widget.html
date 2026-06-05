@@ -1,0 +1,113 @@
+<div class="clara-root" [class.open]="open()">
+  @if (open()) {
+    <section class="clara-panel" role="dialog" aria-label="Chat com Clara">
+      <header class="panel-header">
+        <div class="header-info">
+          <div class="avatar">
+            <mat-icon>smart_toy</mat-icon>
+          </div>
+          <div>
+            <strong>Clara</strong>
+            <span>Assistente do proprietário</span>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button
+            mat-icon-button
+            type="button"
+            aria-label="Filtros de contexto"
+            (click)="toggleScope()"
+            [class.active]="showScope()"
+          >
+            <mat-icon>tune</mat-icon>
+          </button>
+          <button mat-icon-button type="button" aria-label="Nova conversa" (click)="clearChat()">
+            <mat-icon>refresh</mat-icon>
+          </button>
+          <button mat-icon-button type="button" aria-label="Fechar chat" (click)="close()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      </header>
+
+      @if (showScope()) {
+        <div class="scope-bar" [formGroup]="scope">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>Competência</mat-label>
+            <input matInput type="month" formControlName="competence" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>Imóvel</mat-label>
+            <mat-select formControlName="propertyId">
+              <mat-option value="">Carteira inteira</mat-option>
+              @for (p of properties(); track p.id) {
+                <mat-option [value]="p.id">{{ p.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+      }
+
+      <div class="chat-log" #chatLog>
+        @for (line of lines(); track $index) {
+          <div class="bubble" [class.user]="line.role === 'user'" [class.assistant]="line.role === 'assistant'">
+            @if (line.role === 'assistant') {
+              <span class="bubble-label">Clara</span>
+            }
+            <p>{{ line.text }}</p>
+            @if (line.fallback) {
+              <small class="fallback">Resumo automático (IA offline)</small>
+            }
+          </div>
+        }
+        @if (loading()) {
+          <div class="typing">
+            <span></span><span></span><span></span>
+          </div>
+        }
+      </div>
+
+      @if (lines().length <= 1 && !loading()) {
+        <div class="suggestions">
+          @for (s of suggestions; track s) {
+            <button type="button" (click)="send(s)">{{ s }}</button>
+          }
+        </div>
+      }
+
+      <form class="chat-input" [formGroup]="messageForm" (ngSubmit)="send()">
+        <input
+          type="text"
+          placeholder="Pergunte à Clara…"
+          formControlName="message"
+          autocomplete="off"
+        />
+        <button
+          mat-icon-button
+          color="primary"
+          type="submit"
+          [disabled]="loading()"
+          aria-label="Enviar mensagem"
+        >
+          <mat-icon>send</mat-icon>
+        </button>
+      </form>
+    </section>
+  }
+
+  <button
+    class="clara-fab"
+    type="button"
+    [attr.aria-expanded]="open()"
+    aria-label="Abrir chat com Clara"
+    matTooltip="Falar com a Clara"
+    matTooltipPosition="left"
+    (click)="toggle()"
+  >
+    @if (open()) {
+      <mat-icon>expand_more</mat-icon>
+    } @else {
+      <mat-icon>forum</mat-icon>
+    }
+  </button>
+</div>

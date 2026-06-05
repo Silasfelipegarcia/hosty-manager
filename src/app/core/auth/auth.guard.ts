@@ -14,6 +14,15 @@ export const authGuard: CanActivateFn = () => {
   return true;
 };
 
+export const landingGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  if (auth.isLoggedIn && auth.isOwner()) {
+    return router.createUrlTree(['/dashboard']);
+  }
+  return true;
+};
+
 export const guestGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);

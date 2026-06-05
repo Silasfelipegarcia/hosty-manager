@@ -10,6 +10,7 @@
           mat-list-item
           [routerLink]="item.path"
           routerLinkActive="active"
+          [routerLinkActiveOptions]="item.exact ? { exact: true } : { exact: false }"
           [matBadge]="item.badge?.() || null"
           [matBadgeHidden]="!item.badge?.()"
           matBadgeColor="warn"
@@ -37,5 +38,6 @@
     <main class="content">
       <router-outlet />
     </main>
+    <app-clara-assistant />
   </mat-sidenav-content>
 </mat-sidenav-container>

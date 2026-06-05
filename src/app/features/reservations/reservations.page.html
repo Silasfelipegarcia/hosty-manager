@@ -1,12 +1,92 @@
 <div class="page-header">
-  <h1>Reservas</h1>
+  <div>
+    <h1>Reservas</h1>
+    <p>Operação de estadias — aprovações, check-in e check-out</p>
+  </div>
   <button mat-flat-button color="primary" (click)="showCreate.set(true)">Nova reserva</button>
 </div>
+
+<div class="kpi-strip">
+  <mat-card><span>Ações pendentes</span><strong>{{ ownerActions() }}</strong></mat-card>
+  <mat-card><span>Em estadia</span><strong>{{ staysActive() }}</strong></mat-card>
+  <mat-card><span>Próximas</span><strong>{{ staysUpcoming() }}</strong></mat-card>
+  <mat-card><span>Pedidos de acesso</span><strong>{{ accessRequests().length }}</strong></mat-card>
+</div>
+
+<div class="filters-bar">
+  <div class="filter-pills">
+    @for (f of filterOptions; track f.id) {
+      <button mat-stroked-button [class.active-filter]="activeFilter() === f.id" (click)="setFilter(f.id)">
+        {{ f.label }} ({{ filterCounts()[f.id] }})
+      </button>
+    }
+  </div>
+  <div class="filter-right">
+    <mat-button-toggle-group [value]="viewMode()" (change)="setViewMode($event.value)">
+      <mat-button-toggle value="list">Lista</mat-button-toggle>
+      <mat-button-toggle value="calendar">Calendário</mat-button-toggle>
+    </mat-button-toggle-group>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Imóvel</mat-label>
+      <mat-select [value]="propertyFilter()" (selectionChange)="setPropertyFilter($event.value)">
+        <mat-option value="">Todos</mat-option>
+        @for (p of properties(); track p.id) {
+          <mat-option [value]="p.id">{{ p.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+</div>
+
+@if (viewMode() === 'calendar') {
+  <mat-card class="calendar-card">
+    <div class="calendar-toolbar">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Mês</mat-label>
+        <input matInput type="month" [value]="calendarMonth()" (change)="setCalendarMonth($any($event.target).value)" />
+      </mat-form-field>
+      @if (calendarDayFilter()) {
+        <button mat-stroked-button (click)="calendarDayFilter.set('')">Limpar dia selecionado</button>
+      }
+    </div>
+
+    @if (occupancy().length > 0) {
+      <div class="occupancy-strip">
+        @for (item of occupancy(); track item.propertyId) {
+          @if (!propertyFilter() || propertyFilter() === item.propertyId) {
+            <span class="occ-chip">{{ occupancyLabel(item) }}</span>
+          }
+        }
+      </div>
+    }
+
+    <div class="calendar-grid">
+      @for (label of weekdayLabels; track label) {
+        <div class="cal-head">{{ label }}</div>
+      }
+      @for (cell of calendarCells(); track cell.date) {
+        <button
+          type="button"
+          class="cal-cell"
+          [class.out-month]="!cell.inMonth"
+          [class.has-bookings]="cell.bookings.length > 0"
+          [class.selected-day]="calendarDayFilter() === cell.date"
+          (click)="selectCalendarDay(cell)"
+        >
+          <span class="cal-day">{{ cell.day }}</span>
+          @if (cell.inMonth && cell.bookings.length > 0) {
+            <span class="cal-count">{{ cell.bookings.length }}</span>
+          }
+        </button>
+      }
+    </div>
+  </mat-card>
+}
 
 @if (showCreate()) {
   <mat-card class="create-card">
     <h3>Nova reserva manual</h3>
-    <form [formGroup]="createForm" (ngSubmit)="create()">
+    <form [formGroup]="createForm" (ngSubmit)="create()" class="create-form">
       <mat-form-field appearance="outline">
         <mat-label>Imóvel</mat-label>
         <mat-select formControlName="propertyId">
@@ -18,53 +98,201 @@
       <mat-form-field appearance="outline"><mat-label>Check-in</mat-label><input matInput type="date" formControlName="checkinDate" /></mat-form-field>
       <mat-form-field appearance="outline"><mat-label>Check-out</mat-label><input matInput type="date" formControlName="checkoutDate" /></mat-form-field>
       <mat-form-field appearance="outline"><mat-label>Valor bruto</mat-label><input matInput type="number" formControlName="grossAmount" /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>E-mail inquilino</mat-label><input matInput formControlName="tenantIdentifier" /></mat-form-field>
-      <button mat-flat-button color="primary" type="submit">Criar</button>
-      <button mat-button type="button" (click)="showCreate.set(false)">Cancelar</button>
+      <mat-form-field appearance="outline"><mat-label>Competência</mat-label><input matInput type="month" formControlName="competence" /></mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Canal</mat-label>
+        <mat-select formControlName="reservationSource">
+          <mat-option value="DIRECT">Direto</mat-option>
+          <mat-option value="AIRBNB">Airbnb</mat-option>
+          <mat-option value="BOOKING">Booking</mat-option>
+          <mat-option value="WHATSAPP">WhatsApp</mat-option>
+          <mat-option value="MANUAL">Manual</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Tipo de taxa</mat-label>
+        <mat-select formControlName="feeType">
+          <mat-option value="PERCENTAGE">Percentual</mat-option>
+          <mat-option value="FIXED">Valor fixo</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Inquilino (e-mail)</mat-label>
+        <input matInput formControlName="tenantIdentifier" [matAutocomplete]="tenantAuto" (input)="searchTenants($any($event.target).value)" />
+        <mat-autocomplete #tenantAuto="matAutocomplete" (optionSelected)="selectTenant($event.option.value)">
+          @for (t of tenantResults(); track t.id) {
+            <mat-option [value]="t">{{ t.fullName || t.email }} — {{ t.email }}</mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+      <div class="form-actions">
+        <button mat-flat-button color="primary" type="submit">Criar</button>
+        <button mat-button type="button" (click)="showCreate.set(false)">Cancelar</button>
+      </div>
     </form>
   </mat-card>
 }
 
-<div class="master-detail">
-  <mat-card class="list-pane">
-    <mat-list>
-      @for (b of bookings(); track b.id) {
-        <a mat-list-item [routerLink]="['/reservations', b.id]" [class.active]="selected()?.id === b.id">
-          <span matListItemTitle>{{ b.tenantName || b.tenantEmail || 'Reserva' }}</span>
-          <span matListItemLine>{{ b.propertyName }} · {{ b.checkinDate }} → {{ b.checkoutDate }}</span>
-          <span matListItemMeta>{{ b.lifecycleStatus }}</span>
-        </a>
+@if (loading()) {
+  <p class="muted">Carregando…</p>
+} @else {
+  <div class="master-detail">
+    <mat-card class="list-pane">
+      @if (activeFilter() === 'approval' && accessRequests().length > 0) {
+        <div class="approval-queue">
+          <h4>Pedidos de estadia</h4>
+          @for (req of accessRequests(); track req.id) {
+            <div class="approval-item">
+              <strong>{{ req.tenantFullName || req.tenantName || req.tenantEmail || 'Inquilino' }}</strong>
+              <span>{{ req.propertyName }}</span>
+              <small>{{ req.requestedCheckinDate }} → {{ req.requestedCheckoutDate }}</small>
+              <button mat-stroked-button color="primary" (click)="approveAccessRequest(req)">Aprovar estadia</button>
+            </div>
+          }
+          <mat-divider />
+        </div>
       }
-    </mat-list>
-  </mat-card>
 
-  <mat-card class="detail-pane">
-    @if (!selected()) {
-      <p class="muted">Selecione uma reserva.</p>
-    } @else {
-      <h3>{{ selected()!.propertyName }}</h3>
-      <p>{{ selected()!.tenantName || selected()!.tenantEmail }}</p>
-      <p>{{ selected()!.checkinDate }} → {{ selected()!.checkoutDate }}</p>
-      <p>Status: <strong>{{ selected()!.lifecycleStatus }}</strong> · {{ selected()!.grossAmount | currencyBrl }}</p>
-      <div class="actions">
-        @if (selected()!.ownerActionRequired || selected()!.pendingStayRequest) {
-          <button mat-flat-button color="primary" (click)="ownerConfirm()">Aprovar estadia</button>
+      @if (filteredBookings().length === 0) {
+        <p class="muted empty-list">Nenhuma reserva neste filtro.</p>
+      } @else {
+        <mat-list>
+          @for (b of filteredBookings(); track b.id) {
+            <a mat-list-item [routerLink]="['/reservations', b.id]" [class.active]="selected()?.id === b.id" class="booking-row">
+              <div class="row-main">
+                <span class="guest">{{ displayGuestName(b) }}</span>
+                <span class="property">{{ b.propertyName }}</span>
+                <span class="dates">{{ formatStayDates(b.checkinDate, b.checkoutDate) }}</span>
+                <div class="row-meta">
+                  <span class="chip" [class]="'tone-' + flowStageTone(flowStageKey(b))">{{ flowStageDisplayLabel(flowStageKey(b)) }}</span>
+                  <span class="source">{{ reservationSourceLabel(b) }}</span>
+                  <strong class="amount">{{ displayAmount(b) | currencyBrl }}</strong>
+                  @if (b.backfill) { <span class="badge-hist">Histórico</span> }
+                  @if (bookingNeedsOwnerAction(b)) { <span class="badge-action">Ação</span> }
+                </div>
+              </div>
+            </a>
+          }
+        </mat-list>
+      }
+
+      @if (hasMore()) {
+        <div class="load-more">
+          <button mat-stroked-button (click)="loadMore()" [disabled]="loadingMore()">
+            {{ loadingMore() ? 'Carregando…' : 'Carregar mais reservas' }}
+          </button>
+        </div>
+      }
+    </mat-card>
+
+    <mat-card class="detail-pane">
+      @if (!selected()) {
+        <p class="muted">Selecione uma reserva.</p>
+      } @else if (selected(); as b) {
+        <div class="detail-head">
+          <div class="guest-block">
+            @if (b.tenantPhotoUrl) {
+              <img class="guest-photo" [src]="b.tenantPhotoUrl" alt="" />
+            }
+            <div>
+              <h3>{{ b.propertyName }}</h3>
+              <p class="guest-name">{{ displayGuestName(b) }}</p>
+              @if (displayGuestEmail(b); as email) {
+                <p class="guest-email">{{ email }}</p>
+              }
+            </div>
+          </div>
+          <div class="detail-badges">
+            <span class="chip" [class]="'tone-' + flowStageTone(flowStageKey(b))">{{ flowStageDisplayLabel(flowStageKey(b)) }}</span>
+            <span class="source-chip">{{ reservationSourceLabel(b) }}</span>
+            @if (b.backfill) { <span class="badge-hist">Histórico</span> }
+          </div>
+        </div>
+
+        <p class="stay-dates">{{ formatStayDates(b.checkinDate, b.checkoutDate) }}</p>
+        <p class="amount-banner">{{ displayAmount(b) | currencyBrl }}</p>
+
+        <mat-divider />
+
+        <h4>Linha do tempo</h4>
+        <ul class="timeline">
+          <li [class.done]="!!b.checkinDate">Reserva: {{ b.checkinDate | date:'dd/MM/yyyy' }} → {{ b.checkoutDate | date:'dd/MM/yyyy' }}</li>
+          @if (b.checkedInAt) { <li class="done">Check-in: {{ b.checkedInAt | date:'dd/MM/yyyy HH:mm' }}</li> }
+          @if (b.checkoutRequestedAt) { <li class="pending">Pedido de check-out: {{ b.checkoutRequestedAt | date:'dd/MM/yyyy HH:mm' }}</li> }
+          @if (b.checkedOutAt) { <li class="done">Check-out: {{ b.checkedOutAt | date:'dd/MM/yyyy HH:mm' }}</li> }
+          @if (b.competence) { <li>Competência financeira: {{ b.competence }}</li> }
+        </ul>
+
+        <div class="actions">
+          @if (flowStageKey(b) === 'WAITING_OWNER_CONFIRMATION' || b.pendingStayRequest) {
+            <button mat-flat-button color="primary" (click)="ownerConfirm()">Aprovar estadia</button>
+          }
+          @if (isWaitingCheckoutApproval(b)) {
+            <button mat-flat-button color="primary" (click)="approveCheckout()">Aprovar check-out</button>
+            <button mat-stroked-button color="warn" (click)="rejectCheckout()">Rejeitar check-out</button>
+          }
+          @if (isAwaitingOwnerCheckinAck(b)) {
+            <button mat-flat-button color="primary" (click)="acknowledgeCheckin()">Confirmar check-in</button>
+          }
+          @if (tenantCancellationPending(b)) {
+            <button mat-flat-button color="primary" (click)="approveCancellation()">Aprovar cancelamento</button>
+            <button mat-stroked-button color="warn" (click)="rejectCancellation()">Rejeitar cancelamento</button>
+          }
+          @if (ownerCanCancelOrDelete(b)) {
+            <button mat-stroked-button color="warn" (click)="cancelBooking()">Cancelar reserva</button>
+          }
+        </div>
+
+        @if (b.competence) {
+          <a class="finance-link" [routerLink]="financeLink()" [queryParams]="financeQueryParams(b)">Ver no financeiro →</a>
         }
-        <button mat-stroked-button (click)="approveCheckout()">Aprovar check-out</button>
-      </div>
-      <h4>Chat</h4>
-      <div class="chat">
-        @for (m of messages(); track m.id ?? m.createdAt) {
-          <div class="msg"><small>{{ m.senderRole }}</small><p>{{ m.body }}</p></div>
+
+        <mat-divider />
+
+        <h4>Pedidos de kit</h4>
+        @if (kitOrders().length === 0) {
+          <p class="muted section-empty">Nenhum pedido de kit nesta estadia.</p>
+        } @else {
+          <ul class="kit-list">
+            @for (order of kitOrders(); track order.id) {
+              <li>
+                <div class="kit-head">
+                  <strong>{{ order.status }}</strong>
+                  <span>{{ kitOrderTotal(order) | currencyBrl }}</span>
+                </div>
+                @if (order.guestMessage) { <p class="kit-msg">{{ order.guestMessage }}</p> }
+                <ul class="kit-lines">
+                  @for (line of order.lines ?? []; track line.kitId) {
+                    <li>{{ line.kitName }} × {{ line.quantity }} — {{ line.unitPriceSnapshot | currencyBrl }}</li>
+                  }
+                </ul>
+                @if (order.status === 'PENDING') {
+                  <div class="kit-actions">
+                    <button mat-stroked-button color="primary" (click)="approveKitOrder(order)">Aprovar</button>
+                    <button mat-stroked-button color="warn" (click)="rejectKitOrder(order)">Rejeitar</button>
+                  </div>
+                }
+              </li>
+            }
+          </ul>
         }
-      </div>
-      <form class="chat-input" (ngSubmit)="sendMessage()">
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>Mensagem</mat-label>
-          <input matInput [value]="newMessage()" (input)="newMessage.set($any($event.target).value)" />
-        </mat-form-field>
-        <button mat-stroked-button type="submit">Enviar</button>
-      </form>
-    }
-  </mat-card>
-</div>
+
+        <mat-divider />
+
+        <h4>Chat</h4>
+        <div class="chat">
+          @for (m of messages(); track m.id ?? m.createdAt) {
+            <div class="msg"><small>{{ m.senderRole }}</small><p>{{ m.body }}</p></div>
+          }
+        </div>
+        <form class="chat-input" (ngSubmit)="sendMessage()">
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Mensagem</mat-label>
+            <input matInput [value]="newMessage()" (input)="newMessage.set($any($event.target).value)" />
+          </mat-form-field>
+          <button mat-stroked-button type="submit">Enviar</button>
+        </form>
+      }
+    </mat-card>
+  </div>
+}

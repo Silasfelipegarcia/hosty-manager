@@ -1,6 +1,6 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -21,6 +21,7 @@ import {
   buildMonthlyInsights,
   buildPeriodMonths,
   buildPropertyCrmRows,
+  isPeriodValid,
   monthLabel,
   PeriodMonthBundle,
   presetPeriod,
@@ -52,20 +53,20 @@ export class PropertyCrmPage implements OnInit {
   private readonly finance = inject(FinanceService);
   private readonly props = inject(PropertiesService);
   private readonly expensesApi = inject(PropertyExpensesService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   readonly from = signal(presetPeriod('6m').from);
   readonly to = signal(presetPeriod('6m').to);
   readonly propertyFilter = signal('');
+  readonly activePreset = signal<'3m' | '6m' | '12m' | 'ytd' | ''>('6m');
   readonly loading = signal(true);
   readonly properties = signal<PropertyDto[]>([]);
   readonly rows = signal<PropertyCrmRow[]>([]);
   readonly expenses = signal<PropertyExpense[]>([]);
 
-  readonly insights = computed(() => {
-    const bundles = this.monthBundles();
-    const monthly = buildMonthlyInsights(bundles);
-    return buildCrmInsights(this.rows(), monthly);
-  });
+  readonly periodInvalid = computed(() => !isPeriodValid(this.from(), this.to()));
+  readonly focusMode = computed(() => !!this.propertyFilter());
 
   readonly filteredRows = computed(() => {
     const id = this.propertyFilter();
@@ -79,29 +80,54 @@ export class PropertyCrmPage implements OnInit {
     return id ? all.filter((e) => e.propertyId === id) : all;
   });
 
+  readonly focusProperty = computed(() => {
+    const id = this.propertyFilter();
+    if (!id) return null;
+    return this.properties().find((p) => p.id === id) ?? null;
+  });
+
   private readonly monthBundles = signal<PeriodMonthBundle[]>([]);
 
-  monthChart: ChartConfiguration<'bar'>['data'] = {
-    labels: [],
-    datasets: [{ label: 'Bruto', data: [], backgroundColor: '#0F766E' }],
-  };
+  readonly insights = computed(() => {
+    const propId = this.propertyFilter() || undefined;
+    const monthly = buildMonthlyInsights(this.monthBundles(), propId);
+    return buildCrmInsights(this.filteredRows(), monthly);
+  });
+
+  readonly monthChart = computed((): ChartConfiguration<'bar'>['data'] => {
+    const propId = this.propertyFilter() || undefined;
+    const monthly = buildMonthlyInsights(this.monthBundles(), propId)
+      .slice()
+      .sort((a, b) => a.competence.localeCompare(b.competence));
+    return {
+      labels: monthly.map((m) => m.label),
+      datasets: [{ label: 'Bruto', data: monthly.map((m) => m.gross), backgroundColor: '#0F766E' }],
+    };
+  });
 
   ngOnInit(): void {
+    const propertyId = this.route.snapshot.queryParamMap.get('propertyId');
+    if (propertyId) {
+      this.propertyFilter.set(propertyId);
+    }
     void this.load();
   }
 
   async load(): Promise<void> {
+    if (this.periodInvalid()) {
+      this.loading.set(false);
+      return;
+    }
     this.loading.set(true);
     try {
       const from = this.from();
       const to = this.to();
       const months = buildPeriodMonths(from, to);
-      const propFilter = this.propertyFilter() || undefined;
 
       const [properties, fixedCosts, expenseList, ...bundles] = await Promise.all([
         firstValueFrom(this.props.listOwner()),
         firstValueFrom(this.finance.listFixedCosts(0, 200)),
-        firstValueFrom(this.expensesApi.listOwner(from, to, propFilter)),
+        firstValueFrom(this.expensesApi.listOwner(from, to)),
         ...months.map((competence) =>
           firstValueFrom(this.finance.getDashboardBundle(competence)).then((bundle) => ({ competence, bundle })),
         ),
@@ -110,15 +136,7 @@ export class PropertyCrmPage implements OnInit {
       this.properties.set(properties.content);
       this.monthBundles.set(bundles);
       this.expenses.set(expenseList);
-
-      const crmRows = buildPropertyCrmRows(properties.content, bundles, fixedCosts.content, expenseList);
-      this.rows.set(crmRows);
-
-      const monthly = buildMonthlyInsights(bundles);
-      this.monthChart = {
-        labels: monthly.map((m) => m.label),
-        datasets: [{ label: 'Bruto', data: monthly.map((m) => m.gross), backgroundColor: '#0F766E' }],
-      };
+      this.rows.set(buildPropertyCrmRows(properties.content, bundles, fixedCosts.content, expenseList));
     } finally {
       this.loading.set(false);
     }
@@ -128,22 +146,36 @@ export class PropertyCrmPage implements OnInit {
     const p = presetPeriod(preset);
     this.from.set(p.from);
     this.to.set(p.to);
+    this.activePreset.set(preset);
     void this.load();
   }
 
   setFrom(value: string): void {
+    if (!value) return;
     this.from.set(value);
+    this.activePreset.set('');
     void this.load();
   }
 
   setTo(value: string): void {
+    if (!value) return;
     this.to.set(value);
+    this.activePreset.set('');
     void this.load();
   }
 
   setPropertyFilter(value: string): void {
     this.propertyFilter.set(value);
-    void this.load();
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: value ? { propertyId: value } : { propertyId: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  clearPropertyFilter(): void {
+    this.setPropertyFilter('');
   }
 
   statusClass(status: PropertyCrmRow['status']): string {

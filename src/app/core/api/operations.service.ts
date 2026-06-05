@@ -11,7 +11,7 @@ import {
   FieldServiceOrder,
   KitOrder,
   MessageInboxItem,
-  PortfolioSummary,
+  PortfolioAvailabilitySummary,
   ServiceProvider,
   StaysSummary,
   TenantSearchResult,
@@ -57,8 +57,27 @@ export class OperationsService {
   }
 
   getPortfolioSummary(from: string, to: string) {
-    return this.http.get<PortfolioSummary>(
+    return this.http.get<PortfolioAvailabilitySummary>(
       `${this.base}/availability/portfolio-summary?from=${from}&to=${to}`,
+    );
+  }
+
+  cancelBookingByOwner(bookingId: string) {
+    return this.http.post<BookingDto>(`${this.base}/bookings/${bookingId}/cancellation/owner`, {});
+  }
+
+  approveTenantCancellation(bookingId: string) {
+    return this.http.post<BookingDto>(`${this.base}/bookings/${bookingId}/cancellation/approve`, {});
+  }
+
+  rejectTenantCancellation(bookingId: string) {
+    return this.http.post<BookingDto>(`${this.base}/bookings/${bookingId}/cancellation/reject`, {});
+  }
+
+  importBackfillCsv(csv: string) {
+    return this.http.post<{ createdCount: number; errors: string[]; importedAt: string }>(
+      `${this.base}/bookings/backfill/import-csv`,
+      { csv },
     );
   }
 

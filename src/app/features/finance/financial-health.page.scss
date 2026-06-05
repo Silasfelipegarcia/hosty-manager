@@ -116,18 +116,12 @@ a {
   padding: 24px;
 }
 
-.ytd-card {
-  padding: 16px;
+.ytd-link {
   margin-bottom: 16px;
 }
 
-.ytd-head {
+.card-links {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
-
-.ytd-positive { color: #0f766e; font-weight: 600; }
-.ytd-neutral { color: #64748b; font-weight: 600; }
-.ytd-negative { color: #b91c1c; font-weight: 600; }

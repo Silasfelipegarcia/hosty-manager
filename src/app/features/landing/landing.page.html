@@ -1,0 +1,48 @@
+<div class="landing">
+  <header class="top">
+    <div class="brand">
+      <mat-icon>domain</mat-icon>
+      <span>{{ appName }}</span>
+    </div>
+    <a mat-stroked-button routerLink="/login">Entrar</a>
+  </header>
+
+  <section class="hero">
+    <h1>Gestão de imóveis de temporada com clareza financeira</h1>
+    <p>
+      Centralize reservas, finanças por imóvel, vendas externas e insights com a Clara —
+      sua assistente no portal do proprietário.
+    </p>
+    <div class="hero-actions">
+      <a mat-flat-button color="primary" routerLink="/login">Acessar o portal</a>
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="feature">
+      <mat-icon>payments</mat-icon>
+      <h3>Finanças por imóvel</h3>
+      <p>Mês atual, caixa, performance por período e registro de gastos.</p>
+    </div>
+    <div class="feature">
+      <mat-icon>event</mat-icon>
+      <h3>Reservas e operação</h3>
+      <p>Aprovações, calendário, check-in e check-out em um só lugar.</p>
+    </div>
+    <div class="feature">
+      <mat-icon>smart_toy</mat-icon>
+      <h3>Clara, sua assistente</h3>
+      <p>Insights e tutoria sobre lucro, ocupação e próximos passos.</p>
+    </div>
+    <div class="feature">
+      <mat-icon>upload_file</mat-icon>
+      <h3>Importação em massa</h3>
+      <p>Planilha CSV para aluguéis históricos de Airbnb, Booking e vendas diretas.</p>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>© {{ appName }} — feito para proprietários que querem ver lucro de verdade.</p>
+    <a routerLink="/login">Login do proprietário</a>
+  </footer>
+</div>

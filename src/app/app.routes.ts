@@ -1,8 +1,14 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard } from './core/auth/auth.guard';
+import { authGuard, guestGuard, landingGuard } from './core/auth/auth.guard';
 import { AppShellComponent } from './layout/app-shell/app-shell.component';
 
 export const routes: Routes = [
+  {
+    path: '',
+    pathMatch: 'full',
+    canActivate: [landingGuard],
+    loadComponent: () => import('./features/landing/landing.page').then((m) => m.LandingPage),
+  },
   {
     path: 'login',
     canActivate: [guestGuard],
@@ -25,7 +31,6 @@ export const routes: Routes = [
     canActivate: [authGuard],
     component: AppShellComponent,
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
       {
         path: 'dashboard',
         loadComponent: () => import('./features/dashboard/dashboard.page').then((m) => m.DashboardPage),
@@ -71,6 +76,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/finance/property-crm.page').then((m) => m.PropertyCrmPage),
       },
       {
+        path: 'sales/import',
+        loadComponent: () => import('./features/sales/bulk-import.page').then((m) => m.BulkImportPage),
+      },
+      {
         path: 'sales',
         loadComponent: () => import('./features/sales/external-sales.page').then((m) => m.ExternalSalesPage),
       },
@@ -93,5 +102,5 @@ export const routes: Routes = [
       },
     ],
   },
-  { path: '**', redirectTo: 'dashboard' },
+  { path: '**', redirectTo: '' },
 ];

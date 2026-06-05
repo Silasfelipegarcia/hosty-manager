@@ -1,16 +1,15 @@
 <div class="page-header">
   <div>
-    <h1>Finanças</h1>
-    <p>{{ competence() | competence }}</p>
+    <h1>Mês atual</h1>
+    <p>Raio-X financeiro do mês — {{ competence() | competence }}</p>
   </div>
   <div class="actions">
     <mat-form-field appearance="outline" subscriptSizing="dynamic">
       <mat-label>Competência</mat-label>
       <input matInput type="month" [value]="competence()" (change)="setCompetence($any($event.target).value)" />
     </mat-form-field>
-    <button mat-stroked-button routerLink="/finance/crm">CRM por imóvel</button>
-    <button mat-stroked-button routerLink="/finance/health">Saúde financeira</button>
-    <button mat-stroked-button routerLink="/sales">Vendas externas</button>
+    <button mat-stroked-button routerLink="/finance/crm">Performance por período</button>
+    <button mat-stroked-button routerLink="/finance/health">Caixa e reservas</button>
     <button mat-stroked-button (click)="exportCsv()">Exportar CSV</button>
   </div>
 </div>
@@ -27,8 +26,20 @@
 
   <div class="grid-2">
     <mat-card>
-      <h3>Lucro por imóvel</h3>
-      <canvas baseChart type="bar" [data]="propertyChart"></canvas>
+      <div class="section-head">
+        <h3>Lucro por imóvel</h3>
+        <a routerLink="/finance/health">Ver caixa e reservas →</a>
+      </div>
+      <table>
+        <tr><th>Imóvel</th><th>Bruto</th><th>Lucro</th></tr>
+        @for (row of topPropertyRows(); track row.propertyId) {
+          <tr>
+            <td>{{ row.propertyName }}</td>
+            <td>{{ row.gross | currencyBrl }}</td>
+            <td>{{ row.profit | currencyBrl }}</td>
+          </tr>
+        }
+      </table>
     </mat-card>
     <mat-card>
       <h3>Por plataforma</h3>
