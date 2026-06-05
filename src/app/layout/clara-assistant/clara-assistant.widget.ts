@@ -44,7 +44,8 @@ const FALLBACK_HINTS: Record<string, string> = {
   no_base_url: 'Configure hosty.agent-runtime.base-url na API.',
   connection_refused: 'Suba o runtime: python -m uvicorn server:app --host 127.0.0.1 --port 8000',
   timeout: 'O runtime demorou para responder. Tente de novo.',
-  runtime_5xx: 'Erro no motor de IA (verifique ANTHROPIC_API_KEY ou GROQ_API_KEY).',
+  runtime_5xx: 'Erro no motor de IA. Confira se o runtime está no ar (porta 8000) e reinicie a API Java.',
+  runtime_bad_request: 'A API não conseguiu falar com o runtime (requisição inválida). Reinicie a API Java após atualizar.',
   runtime_unavailable: 'Runtime indisponível no momento.',
   empty_reply: 'A IA respondeu vazio. Reinicie a conversa.',
 };
