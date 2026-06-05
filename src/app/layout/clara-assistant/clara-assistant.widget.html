@@ -1,109 +1,149 @@
 <div class="clara-root" [class.open]="open()">
   @if (open()) {
-    <section class="clara-panel" role="dialog" aria-label="Chat com Clara">
-      <header class="panel-header">
-        <div class="header-info">
-          <div class="avatar">
-            <mat-icon>smart_toy</mat-icon>
+    <section class="messenger-panel" role="dialog" aria-label="Chat com Clara">
+      <!-- Header estilo Messenger -->
+      <header class="messenger-header">
+        <div class="header-peer">
+          <div class="avatar-wrap clara">
+            <span class="avatar-circle">C</span>
+            <span class="online-dot" [class.typing]="sending()"></span>
           </div>
-          <div>
+          <div class="peer-meta">
             <strong>Clara</strong>
-            <span>Assistente do proprietário</span>
+            <span class="status">{{ headerStatus() }}</span>
           </div>
         </div>
         <div class="header-actions">
           <button
-            mat-icon-button
             type="button"
-            aria-label="Filtros de contexto"
+            class="icon-btn"
+            aria-label="Filtros"
             (click)="toggleScope()"
             [class.active]="showScope()"
           >
             <mat-icon>tune</mat-icon>
           </button>
-          <button mat-icon-button type="button" aria-label="Nova conversa" (click)="clearChat()">
+          <button type="button" class="icon-btn" aria-label="Nova conversa" (click)="clearChat()">
             <mat-icon>refresh</mat-icon>
           </button>
-          <button mat-icon-button type="button" aria-label="Fechar chat" (click)="close()">
-            <mat-icon>close</mat-icon>
+          <button type="button" class="icon-btn" aria-label="Minimizar" (click)="close()">
+            <mat-icon>expand_more</mat-icon>
           </button>
         </div>
       </header>
 
       @if (showScope()) {
         <div class="scope-bar" [formGroup]="scope">
-          <mat-form-field appearance="outline" subscriptSizing="dynamic">
-            <mat-label>{{ labels.referenceMonth }}</mat-label>
-            <input matInput type="month" formControlName="competence" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" subscriptSizing="dynamic">
-            <mat-label>{{ labels.property }}</mat-label>
-            <mat-select formControlName="propertyId">
-              <mat-option value="">Carteira inteira</mat-option>
+          <label class="scope-field">
+            <span>Mês</span>
+            <input type="month" formControlName="competence" />
+          </label>
+          <label class="scope-field">
+            <span>Imóvel</span>
+            <select formControlName="propertyId">
+              <option value="">Carteira inteira</option>
               @for (p of properties(); track p.id) {
-                <mat-option [value]="p.id">{{ p.name }}</mat-option>
+                <option [value]="p.id">{{ p.name }}</option>
               }
-            </mat-select>
-          </mat-form-field>
+            </select>
+          </label>
         </div>
       }
 
-      <div class="chat-log" #chatLog>
-        @for (line of lines(); track $index) {
-          <div
-            class="bubble"
-            [class.user]="line.role === 'user'"
-            [class.assistant]="line.role === 'assistant'"
-            [class.error]="line.role === 'error'"
-          >
-            @if (line.role === 'assistant') {
-              <span class="bubble-label">Clara</span>
+      <!-- Thread -->
+      <div class="messenger-thread" #chatLog>
+        @for (line of lines(); track line.id) {
+          <div class="msg-row" [class.outgoing]="line.role === 'user'" [class.incoming]="line.role !== 'user'">
+            @if (line.role !== 'user') {
+              <div class="avatar-wrap clara sm">
+                <span class="avatar-circle">C</span>
+              </div>
             }
-            @if (line.fallback) {
-              <div class="fallback-banner">{{ fallbackHint(line.fallbackReason) }}</div>
-            }
-            <p>{{ line.text }}</p>
-            @if (line.actionLinks?.length) {
-              <div class="action-links">
-                @for (link of line.actionLinks; track link.path) {
-                  <a [routerLink]="link.path" (click)="close()">{{ link.label }}</a>
+
+            <div class="msg-stack">
+              @if (line.role === 'user') {
+                <span class="msg-sender">Você</span>
+              } @else if (line.role === 'assistant') {
+                <span class="msg-sender">Clara</span>
+              }
+
+              <div
+                class="msg-bubble"
+                [class.out]="line.role === 'user'"
+                [class.in]="line.role === 'assistant'"
+                [class.err]="line.role === 'error'"
+              >
+                @if (line.fallback) {
+                  <div class="fallback-banner">{{ fallbackHint(line.fallbackReason) }}</div>
                 }
+                <p>{{ line.text }}</p>
+                @if (line.actionLinks?.length) {
+                  <div class="action-links">
+                    @for (link of line.actionLinks; track link.path) {
+                      <a [routerLink]="link.path" (click)="close()">{{ link.label }}</a>
+                    }
+                  </div>
+                }
+              </div>
+              <time class="msg-time">{{ formatTime(line.at) }}</time>
+            </div>
+
+            @if (line.role === 'user') {
+              <div class="avatar-wrap user sm" [attr.title]="userName()">
+                <span class="avatar-circle user-bg">{{ userInitials() }}</span>
               </div>
             }
           </div>
         }
-        @if (loading()) {
-          <div class="typing">
-            <span></span><span></span><span></span>
+
+        @if (sending()) {
+          <div class="msg-row incoming">
+            <div class="avatar-wrap clara sm">
+              <span class="avatar-circle">C</span>
+            </div>
+            <div class="msg-stack">
+              <span class="msg-sender">Clara</span>
+              <div class="msg-bubble in typing-bubble">
+                <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+              </div>
+            </div>
           </div>
         }
       </div>
 
-      @if (lines().length <= 1 && !loading()) {
-        <div class="suggestions">
+      @if (lines().length <= 1 && !sending()) {
+        <div class="quick-replies">
           @for (s of suggestions; track s) {
             <button type="button" (click)="send(s)">{{ s }}</button>
           }
         </div>
       }
 
-      <form class="chat-input" [formGroup]="messageForm" (ngSubmit)="send()">
-        <input
-          type="text"
-          placeholder="Pergunte à Clara…"
-          formControlName="message"
-          autocomplete="off"
-        />
+      <!-- Composer -->
+      <div class="messenger-composer">
+        <div class="composer-avatar" [attr.title]="userName()">
+          <span class="avatar-circle user-bg sm-text">{{ userInitials() }}</span>
+        </div>
+        <div class="composer-field">
+          <textarea
+            #messageInput
+            rows="1"
+            placeholder="Mensagem para a Clara…"
+            [formControl]="draft"
+            (keydown)="onComposerKeydown($event)"
+            autocomplete="off"
+          ></textarea>
+        </div>
         <button
-          mat-icon-button
-          color="primary"
-          type="submit"
-          [disabled]="loading()"
-          aria-label="Enviar mensagem"
+          type="button"
+          class="send-btn"
+          [disabled]="sending() || !draft.value.trim()"
+          aria-label="Enviar"
+          (click)="send()"
         >
           <mat-icon>send</mat-icon>
         </button>
-      </form>
+      </div>
     </section>
   }
 
