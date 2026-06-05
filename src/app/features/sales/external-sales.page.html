@@ -1,0 +1,118 @@
+<div class="page-header">
+  <div>
+    <h1>Vendas externas</h1>
+    <p>Registre reservas feitas fora do app — Airbnb, WhatsApp, Instagram, PIX direto.</p>
+  </div>
+</div>
+
+<div class="grid">
+  <mat-card class="form-card">
+    <h2>Nova venda</h2>
+    <p class="hint">A reserva entra na agenda, no financeiro e nos relatórios por canal.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Chalé / imóvel</mat-label>
+        <mat-select formControlName="propertyId">
+          @for (p of properties(); track p.id) {
+            <mat-option [value]="p.id">{{ p.name }} — {{ p.city }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-checkbox formControlName="historical" class="full historical-toggle">
+        Estadia já concluída (histórico)
+      </mat-checkbox>
+
+      @if (form.controls.historical.value) {
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Competência financeira</mat-label>
+          <input matInput type="month" formControlName="competence" />
+          <mat-hint>Mês em que a receita entra no relatório (pode diferir do check-in).</mat-hint>
+        </mat-form-field>
+      }
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Canal da venda</mat-label>
+        <mat-select formControlName="channel">
+          @for (ch of channels; track ch.source) {
+            <mat-option [value]="ch.source">{{ ch.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      @if (selectedChannel(); as ch) {
+        <p class="fee-hint">
+          Taxa estimada no relatório:
+          {{ ch.fee > 0 ? ch.fee + '% (' + ch.platform + ')' : 'Sem taxa de plataforma' }}
+        </p>
+      }
+
+      <div class="row">
+        <mat-form-field appearance="outline">
+          <mat-label>Check-in</mat-label>
+          <input matInput type="date" formControlName="checkinDate" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Check-out</mat-label>
+          <input matInput type="date" formControlName="checkoutDate" />
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Valor bruto recebido (R$)</mat-label>
+        <input matInput type="number" step="0.01" formControlName="grossAmount" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Nome do hóspede (opcional)</mat-label>
+        <input matInput formControlName="guestName" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>E-mail do hóspede (opcional)</mat-label>
+        <input matInput type="email" formControlName="guestEmail" />
+        <mat-hint>Se informar, o Hosty pode convidar para o app depois.</mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Observações</mat-label>
+        <textarea matInput rows="2" formControlName="notes"></textarea>
+      </mat-form-field>
+
+      <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+        {{ saving() ? 'Salvando…' : 'Registrar venda' }}
+      </button>
+    </form>
+  </mat-card>
+
+  <mat-card class="list-card">
+    <h2>Últimas vendas registradas</h2>
+    @if (recentSales().length === 0) {
+      <p class="muted">Nenhuma venda ainda.</p>
+    } @else {
+      <ul>
+        @for (s of recentSales(); track s.id) {
+          <li>
+            <div>
+              <strong>{{ s.tenantName || s.tenantEmail || 'Hóspede' }}</strong>
+              <span>{{ s.propertyName }}</span>
+              <mat-chip>{{ channelLabel(s.reservationSource) }}</mat-chip>
+              @if (s.backfill) {
+                <mat-chip class="hist-chip">Histórico</mat-chip>
+              }
+            </div>
+            <div class="meta">
+              <span>{{ s.checkinDate }} → {{ s.checkoutDate }}</span>
+              <strong>{{ s.grossAmount | currencyBrl }}</strong>
+              <a [routerLink]="['/reservations', s.id]">Abrir</a>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+    <mat-divider />
+    <a routerLink="/reservations">Ver todas as reservas</a>
+    <a routerLink="/finance/health">Saúde financeira por chalé</a>
+  </mat-card>
+</div>

@@ -62,6 +62,15 @@ export const routes: Routes = [
         loadComponent: () => import('./features/finance/finance.page').then((m) => m.FinancePage),
       },
       {
+        path: 'finance/health',
+        loadComponent: () =>
+          import('./features/finance/financial-health.page').then((m) => m.FinancialHealthPage),
+      },
+      {
+        path: 'sales',
+        loadComponent: () => import('./features/sales/external-sales.page').then((m) => m.ExternalSalesPage),
+      },
+      {
         path: 'kits/pending',
         loadComponent: () => import('./features/kits/kits-pending.page').then((m) => m.KitsPendingPage),
       },

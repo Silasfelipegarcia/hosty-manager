@@ -87,9 +87,10 @@ export class ReservationsPage implements OnInit {
 
   async create(): Promise<void> {
     if (this.createForm.invalid) return;
-    const created = await firstValueFrom(this.ops.createBooking(this.createForm.getRawValue()));
+    const res = await firstValueFrom(this.ops.createBooking(this.createForm.getRawValue()));
     this.showCreate.set(false);
-    await this.router.navigate(['/reservations', created.id]);
+    const id = res.booking?.id;
+    if (id) await this.router.navigate(['/reservations', id]);
     await this.load();
   }
 

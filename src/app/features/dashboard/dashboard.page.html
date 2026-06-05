@@ -7,6 +7,8 @@
     <button mat-stroked-button (click)="load()"><mat-icon>refresh</mat-icon> Atualizar</button>
     <button mat-flat-button color="primary" routerLink="/reservations/new">Nova reserva</button>
     <button mat-flat-button routerLink="/properties/new">Novo imóvel</button>
+    <button mat-stroked-button routerLink="/sales"><mat-icon>point_of_sale</mat-icon> Vendas externas</button>
+    <button mat-stroked-button routerLink="/finance/health"><mat-icon>savings</mat-icon> Saúde financeira</button>
     <button mat-stroked-button (click)="exportCsv()">Exportar CSV</button>
   </div>
 </div>
@@ -85,7 +87,7 @@
         <tbody>
           @for (row of bundle()?.byProperty ?? []; track row.propertyId) {
             <tr>
-              <td>{{ row.propertyName || row.propertyId }}</td>
+              <td>{{ propertyLabel(row.propertyId, ownerProperties(), row.propertyName) }}</td>
               <td>{{ row.grossAmount | currencyBrl }}</td>
               <td>{{ row.profit | currencyBrl }}</td>
             </tr>

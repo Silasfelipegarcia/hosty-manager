@@ -14,8 +14,10 @@ import { BadgeService } from '../../core/api/badge.service';
 import { CurrencyBrlPipe } from '../../shared/pipes/currency-brl.pipe';
 import { CompetencePipe } from '../../shared/pipes/competence.pipe';
 import { FinanceDashboardBundle } from '../../core/models/finance.models';
+import { PropertyDto } from '../../core/models/property.models';
 import { StaysSummary } from '../../core/models/operations.models';
 import { AccessRequest } from '../../core/models/operations.models';
+import { propertyLabel } from '../../core/utils/property-label.util';
 
 @Component({
   selector: 'app-dashboard-page',
@@ -46,6 +48,8 @@ export class DashboardPage implements OnInit {
   readonly stays = signal<StaysSummary | null>(null);
   readonly accessRequests = signal<AccessRequest[]>([]);
   readonly inboxPreview = signal<{ bookingId: string; tenantName?: string; lastMessage?: string }[]>([]);
+  readonly ownerProperties = signal<PropertyDto[]>([]);
+  readonly propertyLabel = propertyLabel;
 
   platformChart: ChartConfiguration<'doughnut'>['data'] = { labels: [], datasets: [{ data: [] }] };
   platformChartOptions: ChartConfiguration<'doughnut'>['options'] = {
@@ -62,13 +66,15 @@ export class DashboardPage implements OnInit {
     this.error.set(null);
     try {
       const competence = this.competence();
-      const [bundle, stays, access, inbox, badges] = await Promise.all([
+      const [bundle, stays, access, inbox, badges, ownerProps] = await Promise.all([
         firstValueFrom(this.finance.getDashboardBundle(competence)),
         firstValueFrom(this.ops.getStaysSummary()),
         firstValueFrom(this.properties.listPendingAccessRequests(0, 5)),
         firstValueFrom(this.ops.listMessagesInbox(0, 5)),
         this.badges.refresh().then(() => this.badges),
+        firstValueFrom(this.properties.listOwner()),
       ]);
+      this.ownerProperties.set(ownerProps.content);
       this.bundle.set(bundle);
       this.stays.set(stays);
       this.accessRequests.set(access.content);

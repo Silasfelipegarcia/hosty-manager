@@ -6,6 +6,7 @@ import {
   BookingCounts,
   BookingDto,
   ChatMessage,
+  BackfillBookingRequest,
   CreateBookingRequest,
   FieldServiceOrder,
   KitOrder,
@@ -30,7 +31,17 @@ export class OperationsService {
   }
 
   createBooking(body: CreateBookingRequest) {
-    return this.http.post<BookingDto>(`${this.base}/bookings`, body);
+    return this.http.post<{ booking: BookingDto; pendingTenantInviteCreated?: boolean }>(
+      `${this.base}/bookings`,
+      body,
+    );
+  }
+
+  createBackfillBooking(body: BackfillBookingRequest) {
+    return this.http.post<{ booking: BookingDto; pendingTenantInviteCreated?: boolean }>(
+      `${this.base}/bookings/backfill`,
+      body,
+    );
   }
 
   deleteBooking(id: string) {

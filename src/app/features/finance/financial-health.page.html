@@ -1,0 +1,76 @@
+<div class="page-header">
+  <div>
+    <h1>Saúde financeira</h1>
+    <p>Reservas, custos fixos e margem por imóvel — {{ competence() | competence }}</p>
+  </div>
+  <div class="actions">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Competência</mat-label>
+      <input matInput type="month" [value]="competence()" (change)="setCompetence($any($event.target).value)" />
+    </mat-form-field>
+    <button mat-stroked-button routerLink="/finance">Voltar às finanças</button>
+    <button mat-stroked-button routerLink="/sales">Vendas externas</button>
+  </div>
+</div>
+
+@if (loading()) {
+  <p class="muted">Carregando…</p>
+} @else {
+  <div class="kpi-grid">
+    <mat-card>
+      <span>Bruto total</span>
+      <strong>{{ summary().totalGross | currencyBrl }}</strong>
+    </mat-card>
+    <mat-card>
+      <span>Lucro total</span>
+      <strong>{{ summary().totalProfit | currencyBrl }}</strong>
+    </mat-card>
+    <mat-card>
+      <span>Reserva recomendada</span>
+      <strong>{{ summary().totalRecommendedReserve | currencyBrl }}</strong>
+    </mat-card>
+    <mat-card>
+      <span>Retirada segura</span>
+      <strong>{{ summary().totalSafeToWithdraw | currencyBrl }}</strong>
+    </mat-card>
+    <mat-card>
+      <span>Imóveis críticos</span>
+      <strong>{{ summary().criticalCount }}</strong>
+    </mat-card>
+  </div>
+
+  @if (health().length === 0) {
+    <mat-card class="empty">
+      <p class="muted">Nenhum imóvel cadastrado.</p>
+    </mat-card>
+  } @else {
+    <div class="property-grid">
+      @for (h of health(); track h.propertyId) {
+        <mat-card [class]="statusClass(h.status)">
+          <div class="card-head">
+            <h3>{{ h.propertyName }}</h3>
+            <mat-chip>{{ h.statusLabel }}</mat-chip>
+          </div>
+
+          <mat-divider />
+
+          <dl class="metrics">
+            <div><dt>Bruto</dt><dd>{{ h.gross | currencyBrl }}</dd></div>
+            <div><dt>Custos</dt><dd>{{ h.totalCosts | currencyBrl }}</dd></div>
+            <div><dt>Lucro</dt><dd>{{ h.profit | currencyBrl }}</dd></div>
+            <div><dt>Margem</dt><dd>{{ (h.margin * 100) | number:'1.0-1' }}%</dd></div>
+            <div><dt>Custos fixos/mês</dt><dd>{{ h.monthlyFixedCosts | currencyBrl }}</dd></div>
+            <div><dt>Reserva operacional</dt><dd>{{ h.operationalReserve | currencyBrl }}</dd></div>
+            <div><dt>Contingência (12%)</dt><dd>{{ h.contingencyReserve | currencyBrl }}</dd></div>
+            <div><dt>Reserva recomendada</dt><dd>{{ h.recommendedReserve | currencyBrl }}</dd></div>
+            <div class="highlight"><dt>Retirada segura</dt><dd>{{ h.safeToWithdraw | currencyBrl }}</dd></div>
+          </dl>
+
+          <mat-divider />
+
+          <a [routerLink]="['/properties', h.propertyId]">Ver imóvel</a>
+        </mat-card>
+      }
+    </div>
+  }
+}

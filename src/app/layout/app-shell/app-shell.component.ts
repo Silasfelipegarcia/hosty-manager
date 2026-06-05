@@ -50,6 +50,8 @@ export class AppShellComponent implements OnInit {
       badge: () => this.badges.ownerActionRequired(),
     },
     { label: 'Finanças', path: '/finance', icon: 'payments' },
+    { label: 'Saúde', path: '/finance/health', icon: 'savings' },
+    { label: 'Vendas', path: '/sales', icon: 'point_of_sale' },
     { label: 'Mensagens', path: '/messages', icon: 'chat' },
     { label: 'Conta', path: '/account', icon: 'person' },
   ];

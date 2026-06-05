@@ -1,0 +1,24 @@
+.page-header { margin-bottom: 24px; }
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 960px) { .grid { grid-template-columns: 1fr; } }
+.form-card, .list-card { padding: 20px; }
+.full { width: 100%; display: block; }
+.row { display: flex; gap: 12px; flex-wrap: wrap; }
+.hint, .fee-hint { color: #64748b; font-size: 14px; }
+.fee-hint { background: #f0fdfa; padding: 8px 12px; border-radius: 8px; margin-bottom: 12px; }
+ul { list-style: none; padding: 0; margin: 0; }
+li {
+  padding: 12px 0;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.meta { text-align: right; display: flex; flex-direction: column; gap: 4px; }
+.muted { color: #64748b; }
+a { color: #0b5ed7; text-decoration: none; display: inline-block; margin-top: 12px; margin-right: 16px; }

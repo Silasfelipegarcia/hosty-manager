@@ -9,6 +9,9 @@ export interface BookingDto {
   lifecycleStatus?: string;
   operationalStatus?: string;
   grossAmount?: number;
+  amountToPay?: number;
+  backfill?: boolean;
+  backfillNotes?: string;
   platform?: string;
   reservationSource?: string;
   ownerActionRequired?: boolean;
@@ -74,6 +77,10 @@ export interface CreateBookingRequest {
   checkoutDate: string;
   tenantIdentifier?: string;
   reservationSource?: string;
+}
+
+export interface BackfillBookingRequest extends CreateBookingRequest {
+  notes?: string;
 }
 
 export interface KitOrder {

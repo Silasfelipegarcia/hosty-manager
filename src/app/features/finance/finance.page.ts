@@ -1,6 +1,7 @@
 import { DecimalPipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -12,6 +13,8 @@ import { firstValueFrom } from 'rxjs';
 import { FinanceService } from '../../core/api/finance.service';
 import { PropertiesService } from '../../core/api/properties.service';
 import { FinanceDashboardBundle, FixedCostRow } from '../../core/models/finance.models';
+import { PropertyDto } from '../../core/models/property.models';
+import { GLOBAL_PROPERTY_ID, propertyLabel, propertySelectLabel } from '../../core/utils/property-label.util';
 import { CurrencyBrlPipe } from '../../shared/pipes/currency-brl.pipe';
 import { CompetencePipe } from '../../shared/pipes/competence.pipe';
 
@@ -19,6 +22,7 @@ import { CompetencePipe } from '../../shared/pipes/competence.pipe';
   selector: 'app-finance-page',
   standalone: true,
   imports: [
+    RouterLink,
     ReactiveFormsModule,
     MatCardModule,
     MatButtonModule,
@@ -40,7 +44,11 @@ export class FinancePage implements OnInit {
 
   readonly bundle = signal<FinanceDashboardBundle | null>(null);
   readonly fixedCosts = signal<FixedCostRow[]>([]);
+  readonly properties = signal<PropertyDto[]>([]);
   readonly competence = signal(this.nowCompetence());
+  readonly propertySelectLabel = propertySelectLabel;
+  readonly propertyLabel = propertyLabel;
+  readonly globalPropertyId = GLOBAL_PROPERTY_ID;
 
   propertyChart: ChartConfiguration<'bar'>['data'] = { labels: [], datasets: [{ label: 'Lucro', data: [] }] };
 
@@ -58,15 +66,18 @@ export class FinancePage implements OnInit {
 
   async load(): Promise<void> {
     const c = this.competence();
-    const [bundle, costs] = await Promise.all([
+    const [bundle, costs, properties] = await Promise.all([
       firstValueFrom(this.finance.getDashboardBundle(c)),
       firstValueFrom(this.finance.listFixedCosts()),
+      firstValueFrom(this.props.listOwner()),
     ]);
+    this.properties.set(properties.content);
     this.bundle.set(bundle);
     this.fixedCosts.set(costs.content);
     const rows = bundle.byProperty ?? [];
+    const props = properties.content;
     this.propertyChart = {
-      labels: rows.map((r) => r.propertyName || r.propertyId),
+      labels: rows.map((r) => propertyLabel(r.propertyId, props, r.propertyName)),
       datasets: [{ label: 'Lucro', data: rows.map((r) => r.profit), backgroundColor: '#0F766E' }],
     };
   }

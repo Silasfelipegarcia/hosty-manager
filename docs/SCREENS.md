@@ -14,6 +14,8 @@
 | `create_booking_page.dart` | `/reservations/new` | Form criar |
 | `owner_guest_chat_page.dart` | painel reserva | Chat inline |
 | `finance_dashboard_page.dart` | `/finance` | Dashboard + fixos |
+| `external_sales_page.dart` (CRM) | `/sales` | Vendas externas por canal |
+| `financial_health_page.dart` (CRM) | `/finance/health` | Saúde financeira por imóvel |
 | `pending_kit_orders_page.dart` | `/kits/pending` | Fila |
 | `field_tasks_page.dart` | `/field-services/pending` | Fila |
 | `property_messages_hub_page.dart` | `/messages` | Inbox |
