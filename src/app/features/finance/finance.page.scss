@@ -27,3 +27,30 @@
 table { width: 100%; border-collapse: collapse; font-size: 14px; th, td { padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: left; } }
 .fixed-section { padding: 16px; }
 .inline-form { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.ytd-section, .breakeven-section { padding: 16px; margin-bottom: 16px; }
+.section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.ytd-status { font-size: 13px; font-weight: 600; }
+.tone-positive { color: #0F766E; }
+.tone-neutral { color: #64748b; }
+.tone-negative { color: #b91c1c; }
+.kpi-grid.compact mat-card { padding: 12px; }
+.gap-negative { color: #b91c1c; }
+.template-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.actions-cell { white-space: nowrap; }
+.edit-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  z-index: 1000;
+}
+.edit-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1001;
+  width: min(520px, calc(100vw - 32px));
+  padding: 20px;
+}
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; width: 100%; }
+.muted { color: #64748b; font-size: 13px; }

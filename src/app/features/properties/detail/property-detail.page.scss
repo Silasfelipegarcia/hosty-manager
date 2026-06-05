@@ -27,3 +27,14 @@ ul {
 .muted { color: #64748b; }
 
 a { color: #0b5ed7; text-decoration: none; }
+
+.finance-tab mat-card { padding: 16px; margin-bottom: 12px; }
+.finance-toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+  mat-card { padding: 12px; span { display: block; color: #64748b; font-size: 12px; } strong { font-size: 18px; } }
+}
+.health-mini h4 { margin: 0 0 8px; }

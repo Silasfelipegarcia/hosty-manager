@@ -45,8 +45,53 @@
   </div>
 }
 
+<mat-card class="ytd-section">
+  <div class="section-head">
+    <h3>Acumulado no ano (YTD)</h3>
+    <span class="ytd-status" [class]="'tone-' + ytdStatus().tone">{{ ytdStatus().label }}</span>
+  </div>
+  <div class="kpi-grid compact">
+    <mat-card><span>Bruto YTD</span><strong>{{ ytdSummary().gross | currencyBrl }}</strong></mat-card>
+    <mat-card><span>Lucro YTD</span><strong>{{ ytdSummary().profit | currencyBrl }}</strong></mat-card>
+    <mat-card><span>Custos YTD</span><strong>{{ ytdSummary().costs | currencyBrl }}</strong></mat-card>
+  </div>
+  <canvas baseChart type="line" [data]="ytdChart"></canvas>
+</mat-card>
+
+<mat-card class="breakeven-section">
+  <h3>Meta vs realizado e break-even</h3>
+  <p class="muted">Meta = 30 diárias × valor da diária cadastrada no imóvel.</p>
+  <table>
+    <tr>
+      <th>Imóvel</th>
+      <th>Fixos/mês</th>
+      <th>Diária</th>
+      <th>Noites p/ empatar</th>
+      <th>Meta 30d</th>
+      <th>Realizado</th>
+      <th>Gap</th>
+    </tr>
+    @for (row of breakEvenRows(); track row.propertyId) {
+      <tr>
+        <td>{{ row.propertyName }}</td>
+        <td>{{ row.monthlyFixed | currencyBrl }}</td>
+        <td>{{ row.nightlyRate | currencyBrl }}</td>
+        <td>{{ row.breakEvenNights }}</td>
+        <td>{{ row.revenueTarget30 | currencyBrl }}</td>
+        <td>{{ row.actualGross | currencyBrl }}</td>
+        <td [class.gap-negative]="row.gap < 0">{{ row.gap | currencyBrl }}</td>
+      </tr>
+    }
+  </table>
+</mat-card>
+
 <mat-card class="fixed-section">
   <h3>Custos fixos</h3>
+  <div class="template-row">
+    @for (t of fixedTemplates; track t.name) {
+      <button mat-stroked-button type="button" (click)="applyTemplate(t)">{{ t.name }}</button>
+    }
+  </div>
   <form [formGroup]="newFixed" (ngSubmit)="addFixedCost()" class="inline-form">
     <mat-form-field appearance="outline"><mat-label>Nome</mat-label><input matInput formControlName="name" /></mat-form-field>
     <mat-form-field appearance="outline"><mat-label>Valor</mat-label><input matInput type="number" formControlName="amount" /></mat-form-field>
@@ -59,6 +104,13 @@
         }
       </mat-select>
     </mat-form-field>
+    <mat-checkbox formControlName="recurring">Recorrente (todo mês)</mat-checkbox>
+    @if (!newFixed.controls.recurring.value) {
+      <mat-form-field appearance="outline">
+        <mat-label>Competência</mat-label>
+        <input matInput type="month" formControlName="competence" />
+      </mat-form-field>
+    }
     <button mat-stroked-button type="submit">Adicionar</button>
   </form>
   <table>
@@ -67,10 +119,36 @@
       <tr>
         <td>{{ c.name }}</td>
         <td>{{ propertyLabel(c.propertyId, properties(), c.propertyName) }}</td>
-        <td>{{ c.competence }}</td>
+        <td>{{ competenceLabel(c.competence) }}</td>
         <td>{{ c.amount | currencyBrl }}</td>
-        <td><button mat-button color="warn" (click)="deleteFixed(c.id)">Excluir</button></td>
+        <td class="actions-cell">
+          <button mat-button (click)="openEditFixed(c)">Editar</button>
+          <button mat-button color="warn" (click)="deleteFixed(c.id)">Excluir</button>
+        </td>
       </tr>
     }
   </table>
 </mat-card>
+
+@if (editingFixed(); as row) {
+  <div class="edit-overlay" (click)="closeEditFixed()"></div>
+  <mat-card class="edit-modal">
+    <h3>Editar custo fixo</h3>
+    <p class="muted">{{ row.name }} — {{ propertyLabel(row.propertyId, properties(), row.propertyName) }}</p>
+    <form [formGroup]="editFixed" (ngSubmit)="saveEditFixed()" class="inline-form">
+      <mat-form-field appearance="outline"><mat-label>Nome</mat-label><input matInput formControlName="name" /></mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Valor</mat-label><input matInput type="number" formControlName="amount" /></mat-form-field>
+      <mat-checkbox formControlName="recurring">Recorrente (todo mês)</mat-checkbox>
+      @if (!editFixed.controls.recurring.value) {
+        <mat-form-field appearance="outline">
+          <mat-label>Competência</mat-label>
+          <input matInput type="month" formControlName="competence" />
+        </mat-form-field>
+      }
+      <div class="modal-actions">
+        <button mat-button type="button" (click)="closeEditFixed()">Cancelar</button>
+        <button mat-flat-button color="primary" type="submit">Salvar</button>
+      </div>
+    </form>
+  </mat-card>
+}

@@ -115,3 +115,19 @@ a {
 .empty {
   padding: 24px;
 }
+
+.ytd-card {
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.ytd-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.ytd-positive { color: #0f766e; font-weight: 600; }
+.ytd-neutral { color: #64748b; font-weight: 600; }
+.ytd-negative { color: #b91c1c; font-weight: 600; }

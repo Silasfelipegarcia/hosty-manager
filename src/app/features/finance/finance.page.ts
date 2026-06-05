@@ -1,5 +1,5 @@
 import { DecimalPipe } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration } from 'chart.js';
 import { firstValueFrom } from 'rxjs';
@@ -15,8 +16,25 @@ import { PropertiesService } from '../../core/api/properties.service';
 import { FinanceDashboardBundle, FixedCostRow } from '../../core/models/finance.models';
 import { PropertyDto } from '../../core/models/property.models';
 import { GLOBAL_PROPERTY_ID, propertyLabel, propertySelectLabel } from '../../core/utils/property-label.util';
+import {
+  breakEvenNights,
+  buildYtdSeries,
+  revenueTarget,
+  yearStatus,
+  ytdTotals,
+  BreakEvenRow,
+} from '../../core/finance/portfolio-analytics';
+import { fixedCostsForProperty } from '../../core/finance/financial-health';
 import { CurrencyBrlPipe } from '../../shared/pipes/currency-brl.pipe';
 import { CompetencePipe } from '../../shared/pipes/competence.pipe';
+
+const FIXED_TEMPLATES = [
+  { name: 'Condomínio', amount: 0 },
+  { name: 'Água', amount: 0 },
+  { name: 'Luz', amount: 0 },
+  { name: 'Internet', amount: 0 },
+  { name: 'IPTU', amount: 0 },
+] as const;
 
 @Component({
   selector: 'app-finance-page',
@@ -29,6 +47,7 @@ import { CompetencePipe } from '../../shared/pipes/competence.pipe';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatCheckboxModule,
     BaseChartDirective,
     CurrencyBrlPipe,
     CompetencePipe,
@@ -41,19 +60,39 @@ export class FinancePage implements OnInit {
   private readonly finance = inject(FinanceService);
   private readonly props = inject(PropertiesService);
   private readonly fb = inject(FormBuilder);
-
   readonly bundle = signal<FinanceDashboardBundle | null>(null);
   readonly fixedCosts = signal<FixedCostRow[]>([]);
   readonly properties = signal<PropertyDto[]>([]);
   readonly competence = signal(this.nowCompetence());
+  readonly ytdSeries = signal<ReturnType<typeof buildYtdSeries>>([]);
+  readonly breakEvenRows = signal<BreakEvenRow[]>([]);
+  readonly editingFixed = signal<FixedCostRow | null>(null);
   readonly propertySelectLabel = propertySelectLabel;
   readonly propertyLabel = propertyLabel;
   readonly globalPropertyId = GLOBAL_PROPERTY_ID;
+  readonly fixedTemplates = FIXED_TEMPLATES;
+
+  readonly ytdStatus = computed(() => yearStatus(ytdTotals(this.ytdSeries()).profit));
+  readonly ytdSummary = computed(() => ytdTotals(this.ytdSeries()));
 
   propertyChart: ChartConfiguration<'bar'>['data'] = { labels: [], datasets: [{ label: 'Lucro', data: [] }] };
+  ytdChart: ChartConfiguration<'line'>['data'] = {
+    labels: [],
+    datasets: [
+      { label: 'Bruto', data: [], borderColor: '#0F766E', tension: 0.2 },
+      { label: 'Lucro', data: [], borderColor: '#0369A1', tension: 0.2 },
+    ],
+  };
 
   readonly newFixed = this.fb.nonNullable.group({
     propertyId: ['__GLOBAL__'],
+    name: [''],
+    amount: [0],
+    recurring: [false],
+    competence: [this.nowCompetence()],
+  });
+
+  readonly editFixed = this.fb.nonNullable.group({
     name: [''],
     amount: [0],
     recurring: [false],
@@ -66,25 +105,118 @@ export class FinancePage implements OnInit {
 
   async load(): Promise<void> {
     const c = this.competence();
-    const [bundle, costs, properties] = await Promise.all([
+    const [bundle, costs, properties, ytdBundles] = await Promise.all([
       firstValueFrom(this.finance.getDashboardBundle(c)),
       firstValueFrom(this.finance.listFixedCosts()),
       firstValueFrom(this.props.listOwner()),
+      this.loadYtdBundles(),
     ]);
     this.properties.set(properties.content);
     this.bundle.set(bundle);
     this.fixedCosts.set(costs.content);
+    this.ytdSeries.set(buildYtdSeries(ytdBundles));
+    this.breakEvenRows.set(this.buildBreakEven(properties.content, bundle, costs.content));
+
     const rows = bundle.byProperty ?? [];
     const props = properties.content;
     this.propertyChart = {
       labels: rows.map((r) => propertyLabel(r.propertyId, props, r.propertyName)),
       datasets: [{ label: 'Lucro', data: rows.map((r) => r.profit), backgroundColor: '#0F766E' }],
     };
+    const series = buildYtdSeries(ytdBundles);
+    this.ytdChart = {
+      labels: series.map((p) => p.label),
+      datasets: [
+        { label: 'Bruto', data: series.map((p) => p.gross), borderColor: '#0F766E', tension: 0.2 },
+        { label: 'Lucro', data: series.map((p) => p.profit), borderColor: '#0369A1', tension: 0.2 },
+      ],
+    };
+  }
+
+  private async loadYtdBundles() {
+    const year = new Date().getFullYear();
+    const months = Array.from({ length: 12 }, (_, i) => `${year}-${String(i + 1).padStart(2, '0')}`);
+    const bundles = await Promise.all(
+      months.map(async (competence) => ({
+        competence,
+        bundle: await firstValueFrom(this.finance.getDashboardBundle(competence)),
+      })),
+    );
+    return bundles;
+  }
+
+  private buildBreakEven(
+    properties: PropertyDto[],
+    bundle: FinanceDashboardBundle,
+    fixedCosts: FixedCostRow[],
+  ): BreakEvenRow[] {
+    const byId = new Map(bundle.byProperty.map((p) => [p.propertyId, p]));
+    const count = Math.max(properties.length, 1);
+    return properties.map((p) => {
+      const perf = byId.get(p.id);
+      const monthlyFixed = fixedCostsForProperty(fixedCosts, p.id, count);
+      const nightly = p.nightlyRate ?? 0;
+      const target = revenueTarget(nightly);
+      const actual = perf?.grossAmount ?? 0;
+      return {
+        propertyId: p.id,
+        propertyName: p.name,
+        monthlyFixed,
+        nightlyRate: nightly,
+        breakEvenNights: breakEvenNights(monthlyFixed, nightly),
+        revenueTarget30: target,
+        actualGross: actual,
+        gap: actual - target,
+      };
+    });
+  }
+
+  applyTemplate(t: { name: string; amount: number }): void {
+    this.newFixed.patchValue({ name: t.name, amount: t.amount });
   }
 
   async addFixedCost(): Promise<void> {
-    await firstValueFrom(this.finance.addFixedCost(this.newFixed.getRawValue()));
+    const raw = this.newFixed.getRawValue();
+    await firstValueFrom(
+      this.finance.addFixedCost({
+        propertyId: raw.propertyId,
+        name: raw.name,
+        amount: raw.amount,
+        recurring: raw.recurring,
+        competence: raw.recurring ? undefined : raw.competence,
+      }),
+    );
     this.newFixed.patchValue({ name: '', amount: 0 });
+    await this.load();
+  }
+
+  openEditFixed(row: FixedCostRow): void {
+    this.editingFixed.set(row);
+    this.editFixed.patchValue({
+      name: row.name,
+      amount: row.amount,
+      recurring: !!row.recurring,
+      competence: row.recurring ? this.nowCompetence() : row.competence,
+    });
+  }
+
+  closeEditFixed(): void {
+    this.editingFixed.set(null);
+  }
+
+  async saveEditFixed(): Promise<void> {
+    const row = this.editingFixed();
+    if (!row) return;
+    const raw = this.editFixed.getRawValue();
+    await firstValueFrom(
+      this.finance.updateFixedCost(row.id, {
+        name: raw.name,
+        amount: raw.amount,
+        recurring: raw.recurring,
+        competence: raw.recurring ? undefined : raw.competence,
+      }),
+    );
+    this.closeEditFixed();
     await this.load();
   }
 
@@ -107,6 +239,10 @@ export class FinancePage implements OnInit {
   setCompetence(value: string): void {
     this.competence.set(value);
     void this.load();
+  }
+
+  competenceLabel(value: string): string {
+    return value === '9999-12' ? 'Recorrente' : value;
   }
 
   private nowCompetence(): string {

@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -51,6 +51,7 @@ export class ExternalSalesPage implements OnInit {
   private readonly props = inject(PropertiesService);
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly snack = inject(MatSnackBar);
 
   readonly channels = CHANNELS;
@@ -82,7 +83,10 @@ export class ExternalSalesPage implements OnInit {
       firstValueFrom(this.ops.listBookings(0, 30)),
     ]);
     this.properties.set(properties.content);
-    if (properties.content.length && !this.form.controls.propertyId.value) {
+    const queryPropertyId = this.route.snapshot.queryParamMap.get('propertyId');
+    if (queryPropertyId && properties.content.some((p) => p.id === queryPropertyId)) {
+      this.form.patchValue({ propertyId: queryPropertyId });
+    } else if (properties.content.length && !this.form.controls.propertyId.value) {
       this.form.patchValue({ propertyId: properties.content[0].id });
     }
     const external = bookings.content.filter(

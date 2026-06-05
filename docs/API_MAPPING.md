@@ -52,14 +52,17 @@ Base URL: `environment.apiBaseUrl` + `/api/v1`
 |------|--------|------|
 | Bundle | GET | `/finance/dashboard/bundle` |
 | Custos fixos | GET/POST/PUT/DELETE | `/finance/fixed-costs` |
+| Despesas por imóvel | GET/POST/PUT/DELETE | `/finance/properties/{propertyId}/expenses` |
 | Custos variáveis | POST | `/finance/bookings/{id}/variable-costs` |
 | Saúde financeira (`/finance/health`) | GET | `/finance/dashboard/bundle`, `/finance/fixed-costs`, `/properties/owner` |
+| YTD / break-even (`/finance`) | GET | 12× `/finance/dashboard/bundle?competence=yyyy-MM` (paralelo) |
 
 ## Vendas externas (`/sales`)
 
 | Ação | Method | Path |
 |------|--------|------|
 | Registrar venda | POST | `/operations/bookings` |
+| Estadia histórica (backfill) | POST | `/operations/bookings/backfill` |
 | Últimas vendas | GET | `/operations/bookings` |
 | Imóveis | GET | `/properties/owner` |
 

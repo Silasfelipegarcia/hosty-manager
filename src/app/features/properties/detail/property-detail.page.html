@@ -81,5 +81,73 @@
         <button mat-flat-button color="primary" type="submit">Salvar guia</button>
       </form>
     </mat-tab>
+
+    <mat-tab label="Financeiro">
+      <div class="tab-body finance-tab">
+        <div class="finance-toolbar">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>Competência</mat-label>
+            <input matInput type="month" [value]="financeCompetence()" (change)="setFinanceCompetence($any($event.target).value)" />
+          </mat-form-field>
+          <a mat-stroked-button [routerLink]="['/sales']" [queryParams]="{ propertyId: propertyId }">Ver vendas</a>
+        </div>
+
+        <div class="kpi-grid">
+          <mat-card><span>Bruto</span><strong>{{ financeKpis().gross | currencyBrl }}</strong></mat-card>
+          <mat-card><span>Custos</span><strong>{{ financeKpis().costs | currencyBrl }}</strong></mat-card>
+          <mat-card><span>Lucro</span><strong>{{ financeKpis().profit | currencyBrl }}</strong></mat-card>
+          <mat-card><span>Margem</span><strong>{{ (financeKpis().margin * 100) | number:'1.0-1' }}%</strong></mat-card>
+        </div>
+
+        <mat-card class="health-mini">
+          <h4>Saúde financeira</h4>
+          <p>Retirada segura neste mês: <strong>{{ safeToWithdraw() | currencyBrl }}</strong></p>
+          <a routerLink="/finance/health">Ver carteira completa</a>
+        </mat-card>
+
+        <mat-card>
+          <h4>Custos fixos</h4>
+          @if (propertyFixedCosts().length === 0) {
+            <p class="muted">Nenhum custo fixo para este imóvel.</p>
+          } @else {
+            <ul>
+              @for (c of propertyFixedCosts(); track c.id) {
+                <li>{{ c.name }} — {{ competenceLabel(c.competence) }} — {{ c.amount | currencyBrl }}</li>
+              }
+            </ul>
+          }
+        </mat-card>
+
+        <mat-card>
+          <h4>Despesas do mês</h4>
+          <form [formGroup]="newExpense" (ngSubmit)="addExpense()" class="inline-form">
+            <mat-form-field appearance="outline"><mat-label>Nome</mat-label><input matInput formControlName="name" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Valor</mat-label><input matInput type="number" formControlName="amount" /></mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Categoria</mat-label>
+              <mat-select formControlName="category">
+                @for (cat of expenseCategories; track cat.value) {
+                  <mat-option [value]="cat.value">{{ cat.label }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Observações</mat-label><input matInput formControlName="notes" /></mat-form-field>
+            <button mat-stroked-button type="submit">Adicionar despesa</button>
+          </form>
+          @if (propertyExpenses().length === 0) {
+            <p class="muted">Nenhuma despesa nesta competência.</p>
+          } @else {
+            <ul>
+              @for (e of propertyExpenses(); track e.id) {
+                <li>
+                  <span>{{ e.name }} — {{ e.categoryLabel || e.category }} — {{ e.amount | currencyBrl }}</span>
+                  <button mat-button color="warn" (click)="deleteExpense(e.id)">Excluir</button>
+                </li>
+              }
+            </ul>
+          }
+        </mat-card>
+      </div>
+    </mat-tab>
   </mat-tab-group>
 }

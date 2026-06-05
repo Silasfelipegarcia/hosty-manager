@@ -1,3 +1,4 @@
+import { DecimalPipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -7,10 +8,19 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatSelectModule } from '@angular/material/select';
+import { MatChipsModule } from '@angular/material/chips';
 import { firstValueFrom } from 'rxjs';
 import { PropertiesService } from '../../../core/api/properties.service';
 import { PlaybookService, ChecklistItem, LocalGuideConfig } from '../../../core/api/playbook.service';
+import { FinanceService } from '../../../core/api/finance.service';
+import { PropertyExpensesService } from '../../../core/api/property-expenses.service';
 import { PropertyDto, LocalRecommendation, PropertyKit, CoOwner } from '../../../core/models/property.models';
+import { FixedCostRow } from '../../../core/models/finance.models';
+import { PropertyExpense, EXPENSE_CATEGORIES } from '../../../core/models/property-expense.models';
+import { buildPropertyHealth } from '../../../core/finance/financial-health';
+import { CurrencyBrlPipe } from '../../../shared/pipes/currency-brl.pipe';
+import { CompetencePipe } from '../../../shared/pipes/competence.pipe';
 
 @Component({
   selector: 'app-property-detail-page',
@@ -24,6 +34,11 @@ import { PropertyDto, LocalRecommendation, PropertyKit, CoOwner } from '../../..
     MatInputModule,
     MatButtonModule,
     MatCheckboxModule,
+    MatSelectModule,
+    MatChipsModule,
+    CurrencyBrlPipe,
+    CompetencePipe,
+    DecimalPipe,
   ],
   templateUrl: './property-detail.page.html',
   styleUrl: './property-detail.page.scss',
@@ -33,6 +48,8 @@ export class PropertyDetailPage implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(PropertiesService);
   private readonly playbook = inject(PlaybookService);
+  private readonly finance = inject(FinanceService);
+  private readonly expensesApi = inject(PropertyExpensesService);
 
   readonly property = signal<PropertyDto | null>(null);
   readonly recommendations = signal<LocalRecommendation[]>([]);
@@ -40,6 +57,12 @@ export class PropertyDetailPage implements OnInit {
   readonly coOwners = signal<CoOwner[]>([]);
   readonly checklist = signal<ChecklistItem[]>([]);
   readonly localGuide = signal<LocalGuideConfig | null>(null);
+  readonly financeCompetence = signal(this.nowCompetence());
+  readonly propertyFixedCosts = signal<FixedCostRow[]>([]);
+  readonly propertyExpenses = signal<PropertyExpense[]>([]);
+  readonly safeToWithdraw = signal(0);
+  readonly financeKpis = signal({ gross: 0, costs: 0, profit: 0, margin: 0 });
+  readonly expenseCategories = EXPENSE_CATEGORIES;
 
   readonly editForm = this.fb.group({
     name: [''],
@@ -78,6 +101,14 @@ export class PropertyDetailPage implements OnInit {
     releasedToTenant: [false],
   });
 
+  readonly newExpense = this.fb.nonNullable.group({
+    competence: [this.nowCompetence()],
+    category: ['OTHER'],
+    name: [''],
+    amount: [0],
+    notes: [''],
+  });
+
   get propertyId(): string {
     return this.route.snapshot.paramMap.get('id') ?? '';
   }
@@ -106,6 +137,53 @@ export class PropertyDetailPage implements OnInit {
     this.checklist.set(checklist);
     this.localGuide.set(guide);
     if (guide) this.guideForm.patchValue(guide);
+    await this.loadFinanceTab();
+  }
+
+  async loadFinanceTab(): Promise<void> {
+    const c = this.financeCompetence();
+    const [bundle, allFixed, expenses] = await Promise.all([
+      firstValueFrom(this.finance.getDashboardBundle(c)),
+      firstValueFrom(this.finance.listFixedCosts()),
+      firstValueFrom(this.expensesApi.list(this.propertyId, c)),
+    ]);
+    const perf = bundle.byProperty.find((row) => row.propertyId === this.propertyId);
+    const gross = perf?.grossAmount ?? 0;
+    const costs = perf?.totalCosts ?? 0;
+    const profit = perf?.profit ?? 0;
+    this.financeKpis.set({ gross, costs, profit, margin: gross > 0 ? profit / gross : 0 });
+    const fixedForProperty = allFixed.content.filter(
+      (row) => row.propertyId === this.propertyId || row.propertyId === '__GLOBAL__',
+    );
+    this.propertyFixedCosts.set(fixedForProperty);
+    this.propertyExpenses.set(expenses);
+    const p = this.property();
+    if (p) {
+      const health = buildPropertyHealth([p], bundle, allFixed.content);
+      this.safeToWithdraw.set(health[0]?.safeToWithdraw ?? 0);
+    }
+  }
+
+  async setFinanceCompetence(value: string): Promise<void> {
+    this.financeCompetence.set(value);
+    await this.loadFinanceTab();
+  }
+
+  async addExpense(): Promise<void> {
+    const raw = this.newExpense.getRawValue();
+    if (!raw.name.trim()) return;
+    await firstValueFrom(this.expensesApi.add(this.propertyId, raw));
+    this.newExpense.patchValue({ name: '', amount: 0, notes: '' });
+    await this.loadFinanceTab();
+  }
+
+  async deleteExpense(id: string): Promise<void> {
+    await firstValueFrom(this.expensesApi.delete(this.propertyId, id));
+    await this.loadFinanceTab();
+  }
+
+  competenceLabel(value: string): string {
+    return value === '9999-12' ? 'Recorrente' : value;
   }
 
   async saveProperty(): Promise<void> {
@@ -148,5 +226,10 @@ export class PropertyDetailPage implements OnInit {
     if (!confirm('Excluir este imóvel?')) return;
     await firstValueFrom(this.api.delete(this.propertyId));
     window.history.back();
+  }
+
+  private nowCompetence(): string {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   }
 }

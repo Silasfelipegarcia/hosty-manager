@@ -16,6 +16,14 @@
 @if (loading()) {
   <p class="muted">Carregando…</p>
 } @else {
+  <mat-card class="ytd-card">
+    <div class="ytd-head">
+      <h3>Lucro acumulado no ano</h3>
+      <span [class]="'ytd-' + ytdStatus().tone">{{ ytdStatus().label }}</span>
+    </div>
+    <canvas baseChart type="line" [data]="ytdChart"></canvas>
+  </mat-card>
+
   <div class="kpi-grid">
     <mat-card>
       <span>Bruto total</span>
