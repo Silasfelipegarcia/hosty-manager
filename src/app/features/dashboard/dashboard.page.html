@@ -11,7 +11,7 @@
   </div>
 
   @if (loading()) {
-    <mat-spinner diameter="40" />
+    <app-portal-skeleton variant="dashboard" />
   } @else if (error()) {
     <mat-card class="portal-error-card">{{ error() }}</mat-card>
   } @else {
@@ -41,31 +41,39 @@
     </mat-card>
 
     <div class="portal-kpi-grid">
-      <mat-card class="portal-kpi-clickable" routerLink="/reservations">
-        <span class="portal-kpi-label">Ações pendentes</span>
-        <strong>{{ badges.ownerActionRequired() }}</strong>
-      </mat-card>
-      <mat-card class="portal-kpi-clickable" routerLink="/reservations">
-        <span class="portal-kpi-label">Pedidos de acesso</span>
-        <strong>{{ badges.pendingAccessRequests() }}</strong>
-      </mat-card>
-      <mat-card class="portal-kpi-clickable" routerLink="/kits/pending">
-        <span class="portal-kpi-label">Kits pendentes</span>
-        <strong>{{ badges.pendingKitOrders() }}</strong>
-      </mat-card>
-      <mat-card class="portal-kpi-clickable" routerLink="/field-services/pending">
-        <span class="portal-kpi-label">Serviços de campo</span>
-        <strong>{{ badges.pendingFieldServices() }}</strong>
-      </mat-card>
-      <mat-card class="portal-kpi-clickable" routerLink="/reservations">
-        <span class="portal-kpi-label">Estadias ativas</span>
-        <strong>{{ stays()?.active ?? 0 }}</strong>
-      </mat-card>
-      <mat-card class="portal-kpi-clickable finance-kpi" routerLink="/finance">
-        <span class="portal-kpi-label">Lucro do mês</span>
-        <strong>{{ bundle()?.dashboard?.totalProfit | currencyBrl }}</strong>
-        <small class="kpi-hint">Abrir finanças →</small>
-      </mat-card>
+      <app-portal-kpi
+        label="Ações pendentes"
+        [value]="badges.ownerActionRequired()"
+        routerLink="/reservations"
+      />
+      <app-portal-kpi
+        label="Pedidos de acesso"
+        [value]="badges.pendingAccessRequests()"
+        routerLink="/reservations"
+      />
+      <app-portal-kpi
+        label="Kits pendentes"
+        [value]="badges.pendingKitOrders()"
+        routerLink="/kits/pending"
+      />
+      <app-portal-kpi
+        label="Serviços de campo"
+        [value]="badges.pendingFieldServices()"
+        routerLink="/field-services/pending"
+      />
+      <app-portal-kpi
+        label="Estadias ativas"
+        [value]="activeStaysCount(stays())"
+        routerLink="/reservations"
+      />
+      <app-portal-kpi
+        label="Lucro do mês"
+        [value]="profitLabel()"
+        [delta]="profitMargin()"
+        deltaLabel="margem"
+        [sparkline]="profitSparkline()"
+        routerLink="/finance"
+      />
     </div>
 
     <div class="portal-grid-2">
@@ -100,7 +108,7 @@
                   <strong>{{ msg.tenantName || 'Hóspede' }}</strong>
                   <span>{{ msg.lastMessage }}</span>
                 </div>
-                <a class="portal-link" [routerLink]="['/reservations', msg.bookingId]">Abrir →</a>
+                <a class="portal-link" [routerLink]="['/reservations']" [queryParams]="{ id: msg.bookingId }">Abrir →</a>
               </li>
             }
           </ul>

@@ -151,7 +151,9 @@ export class ExternalSalesPage implements OnInit {
       }
       const snackRef = this.snack.open(message, bookingId ? 'Ver reserva' : 'OK', { duration: 5000 });
       if (bookingId) {
-        snackRef.onAction().subscribe(() => void this.router.navigate(['/reservations', bookingId]));
+        snackRef.onAction().subscribe(() =>
+          void this.router.navigate(['/reservations'], { queryParams: { id: bookingId } }),
+        );
       }
       this.form.patchValue({
         guestName: '',

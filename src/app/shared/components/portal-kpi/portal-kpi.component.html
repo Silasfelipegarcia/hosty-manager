@@ -1,0 +1,35 @@
+@if (routerLink(); as link) {
+  <a class="portal-kpi-card is-clickable" [routerLink]="link">
+    <span class="portal-kpi-label">{{ label() }}</span>
+    <div class="portal-kpi-main">
+      <strong class="portal-tabular">{{ value() }}</strong>
+      @if (delta() !== null) {
+        <span class="portal-kpi-delta" [class.up]="deltaPositive()" [class.down]="!deltaPositive()">
+          {{ deltaPositive() ? '+' : '' }}{{ delta() }}%{{ deltaLabel() ? ' ' + deltaLabel() : '' }}
+        </span>
+      }
+    </div>
+    @if (sparkline().length > 1) {
+      <svg class="portal-kpi-spark" viewBox="0 0 64 24" aria-hidden="true">
+        <path [attr.d]="sparklinePath()" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+      </svg>
+    }
+  </a>
+} @else {
+  <button type="button" class="portal-kpi-card is-clickable" (click)="clicked.emit()">
+    <span class="portal-kpi-label">{{ label() }}</span>
+    <div class="portal-kpi-main">
+      <strong class="portal-tabular">{{ value() }}</strong>
+      @if (delta() !== null) {
+        <span class="portal-kpi-delta" [class.up]="deltaPositive()" [class.down]="!deltaPositive()">
+          {{ deltaPositive() ? '+' : '' }}{{ delta() }}%{{ deltaLabel() ? ' ' + deltaLabel() : '' }}
+        </span>
+      }
+    </div>
+    @if (sparkline().length > 1) {
+      <svg class="portal-kpi-spark" viewBox="0 0 64 24" aria-hidden="true">
+        <path [attr.d]="sparklinePath()" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+      </svg>
+    }
+  </button>
+}

@@ -15,7 +15,7 @@ import { MessageInboxItem } from '../../core/models/operations.models';
     <mat-card>
       <mat-list>
         @for (m of items(); track m.bookingId) {
-          <a mat-list-item [routerLink]="['/reservations', m.bookingId]">
+          <a mat-list-item [routerLink]="['/reservations']" [queryParams]="{ id: m.bookingId }">
             <span matListItemTitle>{{ m.tenantName || 'Hóspede' }}</span>
             <span matListItemLine>{{ m.propertyName }} — {{ m.lastMessage }}</span>
             <span matListItemMeta>{{ m.lastMessageAt }}</span>

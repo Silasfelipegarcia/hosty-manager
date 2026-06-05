@@ -1,31 +1,51 @@
-<div class="page-header">
-  <h1>Imóveis</h1>
-  <button mat-flat-button color="primary" routerLink="/properties/new">Novo imóvel</button>
-</div>
-
-@if (loading()) {
-  <p>Carregando…</p>
-} @else if (items().length === 0) {
-  <mat-card class="empty">
-    <p>Nenhum imóvel cadastrado.</p>
-    <button mat-flat-button color="primary" routerLink="/properties/new">Cadastrar primeiro imóvel</button>
-  </mat-card>
-} @else {
-  <div class="grid">
-    @for (p of items(); track p.id) {
-      <mat-card class="property-card">
-        @if (p.coverPhotoUrl) {
-          <img [src]="p.coverPhotoUrl" [alt]="p.name" />
-        }
-        <div class="body">
-          <h3>{{ p.name }}</h3>
-          <p>{{ p.city }} · {{ p.operationalStatus }}</p>
-          @if (p.nightlyRate) {
-            <p class="rate">{{ p.nightlyRate | currencyBrl }}/noite</p>
-          }
-          <button mat-stroked-button [routerLink]="['/properties', p.id]">Gerenciar</button>
-        </div>
-      </mat-card>
-    }
+<div class="portal-page">
+  <div class="portal-page-header">
+    <div>
+      <h1>Imóveis</h1>
+      <p class="portal-subtitle">Sua carteira de propriedades e operação</p>
+    </div>
+    <div class="portal-actions">
+      <button mat-flat-button color="primary" routerLink="/properties/new">
+        <mat-icon>add</mat-icon>
+        Novo imóvel
+      </button>
+    </div>
   </div>
-}
+
+  @if (loading()) {
+    <div class="properties-skeleton">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="portal-skeleton property-skeleton-card"></div>
+      }
+    </div>
+  } @else if (items().length === 0) {
+    <mat-card class="portal-surface empty-state">
+      <mat-icon>home_work</mat-icon>
+      <h3>Nenhum imóvel cadastrado</h3>
+      <p>Comece cadastrando sua primeira propriedade para operar reservas e finanças.</p>
+      <button mat-flat-button color="primary" routerLink="/properties/new">Cadastrar primeiro imóvel</button>
+    </mat-card>
+  } @else {
+    <div class="properties-grid">
+      @for (p of items(); track p.id) {
+        <mat-card class="property-card portal-surface">
+          @if (p.coverPhotoUrl) {
+            <img class="property-cover" [src]="p.coverPhotoUrl" [alt]="p.name" />
+          } @else {
+            <div class="property-cover placeholder">
+              <mat-icon>home_work</mat-icon>
+            </div>
+          }
+          <div class="property-body">
+            <h3>{{ p.name }}</h3>
+            <p class="property-meta">{{ p.city }} · {{ p.operationalStatus }}</p>
+            @if (p.nightlyRate) {
+              <p class="property-rate portal-tabular">{{ p.nightlyRate | currencyBrl }}/noite</p>
+            }
+            <a mat-stroked-button [routerLink]="['/properties', p.id]">Gerenciar</a>
+          </div>
+        </mat-card>
+      }
+    </div>
+  }
+</div>

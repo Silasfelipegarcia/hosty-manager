@@ -1,0 +1,50 @@
+@if (palette.open()) {
+  <div class="cmdk-backdrop" (click)="onBackdropClick($event)" role="presentation">
+    <div class="cmdk-panel" role="dialog" aria-label="Busca rápida">
+      <div class="cmdk-input-wrap">
+        <mat-icon>search</mat-icon>
+        <input
+          id="cmdk-input"
+          type="text"
+          placeholder="Buscar páginas, imóveis, reservas…"
+          [value]="palette.query()"
+          (input)="onInput($any($event.target).value)"
+          autocomplete="off"
+        />
+        <kbd class="cmdk-kbd">esc</kbd>
+      </div>
+
+      @if (palette.results().length === 0) {
+        <p class="cmdk-empty">Nenhum resultado.</p>
+      } @else {
+        <ul class="cmdk-list">
+          @for (item of palette.results(); track item.id; let i = $index) {
+            <li>
+              <button
+                type="button"
+                class="cmdk-item"
+                [class.active]="palette.activeIndex() === i"
+                (click)="select(item, i)"
+              >
+                <mat-icon>{{ item.icon }}</mat-icon>
+                <span class="cmdk-copy">
+                  <strong>{{ item.label }}</strong>
+                  @if (item.detail) {
+                    <small>{{ item.detail }}</small>
+                  }
+                </span>
+                <span class="cmdk-group">{{ item.group }}</span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+
+      <div class="cmdk-footer">
+        <span><kbd>↑↓</kbd> navegar</span>
+        <span><kbd>↵</kbd> abrir</span>
+        <span><kbd>⌘K</kbd> alternar</span>
+      </div>
+    </div>
+  </div>
+}

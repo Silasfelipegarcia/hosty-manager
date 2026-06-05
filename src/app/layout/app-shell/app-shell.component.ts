@@ -2,17 +2,17 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
-import { MatBadgeModule } from '@angular/material/badge';
 import { AuthService } from '../../core/auth/auth.service';
 import { BadgeService } from '../../core/api/badge.service';
 import { OwnerProfileStore } from '../../core/profile/owner-profile.store';
 import { ProfileAvatarComponent } from '../../shared/components/profile-avatar/profile-avatar.component';
 import { environment } from '../../../environments/environment';
 import { ClaraAssistantWidget } from '../clara-assistant/clara-assistant.widget';
+import { CommandPaletteComponent } from '../../shared/components/command-palette/command-palette.component';
+import { CommandPaletteService } from '../../core/command-palette/command-palette.service';
 import { OWNER_LABELS } from '../../core/i18n/owner-labels';
 
 interface NavItem {
@@ -49,12 +49,11 @@ const PAGE_TITLES: Record<string, string> = {
     RouterLink,
     RouterLinkActive,
     MatSidenavModule,
-    MatListModule,
     MatIconModule,
     MatToolbarModule,
     MatButtonModule,
-    MatBadgeModule,
     ClaraAssistantWidget,
+    CommandPaletteComponent,
     ProfileAvatarComponent,
   ],
   templateUrl: './app-shell.component.html',
@@ -64,6 +63,7 @@ export class AppShellComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   readonly badges = inject(BadgeService);
+  readonly palette = inject(CommandPaletteService);
   readonly profileStore = inject(OwnerProfileStore);
 
   readonly appName = environment.appName;

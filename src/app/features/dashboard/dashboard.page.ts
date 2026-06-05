@@ -3,16 +3,16 @@ import { RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { PortalKpiComponent } from '../../shared/components/portal-kpi/portal-kpi.component';
+import { PortalSkeletonComponent } from '../../shared/components/portal-skeleton/portal-skeleton.component';
 import { firstValueFrom } from 'rxjs';
 import { OperationsService } from '../../core/api/operations.service';
 import { FinanceService } from '../../core/api/finance.service';
 import { PropertiesService } from '../../core/api/properties.service';
 import { BadgeService } from '../../core/api/badge.service';
-import { CurrencyBrlPipe } from '../../shared/pipes/currency-brl.pipe';
 import { CompetencePipe } from '../../shared/pipes/competence.pipe';
 import { FinanceDashboardBundle } from '../../core/models/finance.models';
-import { StaysSummary } from '../../core/models/operations.models';
+import { activeStaysCount, StaysSummary } from '../../core/models/operations.models';
 import { AccessRequest } from '../../core/models/operations.models';
 import { currentCompetence } from '../../core/dates/competence';
 import { OWNER_LABELS } from '../../core/i18n/owner-labels';
@@ -33,8 +33,8 @@ interface ActionItem {
     MatCardModule,
     MatButtonModule,
     MatIconModule,
-    MatProgressSpinnerModule,
-    CurrencyBrlPipe,
+    PortalKpiComponent,
+    PortalSkeletonComponent,
     CompetencePipe,
   ],
   templateUrl: './dashboard.page.html',
@@ -54,6 +54,24 @@ export class DashboardPage implements OnInit {
   readonly stays = signal<StaysSummary | null>(null);
   readonly accessRequests = signal<AccessRequest[]>([]);
   readonly inboxPreview = signal<{ bookingId: string; tenantName?: string; lastMessage?: string }[]>([]);
+  readonly activeStaysCount = activeStaysCount;
+
+  readonly profitSparkline = computed(() => {
+    const rows = this.bundle()?.byProperty ?? [];
+    if (rows.length < 2) return [];
+    return rows.map((r) => Math.max(0, r.profit));
+  });
+
+  readonly profitMargin = computed(() => {
+    const margin = this.bundle()?.dashboard?.margin;
+    return margin != null && margin > 0 ? Math.round(margin) : null;
+  });
+
+  readonly profitLabel = computed(() => {
+    const profit = this.bundle()?.dashboard?.totalProfit;
+    if (profit == null) return '—';
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(profit);
+  });
 
   readonly actionItems = computed(() => {
     const items: ActionItem[] = [];

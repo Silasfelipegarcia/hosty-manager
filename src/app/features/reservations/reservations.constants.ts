@@ -8,4 +8,8 @@ export const RESERVATION_FILTER_OPTIONS: { id: ReservationFilter; label: string 
   { id: 'completed', label: 'Encerradas' },
 ];
 
+/** Tamanho de cada página na API. */
 export const RESERVATIONS_PAGE_SIZE = 30;
+
+/** Itens visíveis por página na listagem lateral. */
+export const RESERVATIONS_LIST_UI_PAGE_SIZE = 6;

@@ -6,7 +6,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatListModule } from '@angular/material/list';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -17,6 +16,8 @@ import { firstValueFrom } from 'rxjs';
 import { OperationsService } from '../../core/api/operations.service';
 import { PropertiesService } from '../../core/api/properties.service';
 import {
+  activeStaysCount,
+  upcomingStaysCount,
   AccessRequest,
   BookingDto,
   ChatMessage,
@@ -50,10 +51,16 @@ import {
   WEEKDAY_LABELS,
 } from '../../core/utils/reservation-calendar.util';
 import { CurrencyBrlPipe } from '../../shared/pipes/currency-brl.pipe';
+import { PortalSkeletonComponent } from '../../shared/components/portal-skeleton/portal-skeleton.component';
 
-import { RESERVATION_FILTER_OPTIONS, RESERVATIONS_PAGE_SIZE } from './reservations.constants';
+import {
+  RESERVATION_FILTER_OPTIONS,
+  RESERVATIONS_LIST_UI_PAGE_SIZE,
+  RESERVATIONS_PAGE_SIZE,
+} from './reservations.constants';
 
 const PAGE_SIZE = RESERVATIONS_PAGE_SIZE;
+const LIST_UI_PAGE_SIZE = RESERVATIONS_LIST_UI_PAGE_SIZE;
 
 @Component({
   selector: 'app-reservations-page',
@@ -65,13 +72,13 @@ const PAGE_SIZE = RESERVATIONS_PAGE_SIZE;
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatListModule,
     MatChipsModule,
     MatDividerModule,
     MatButtonToggleModule,
     MatIconModule,
     ProfileAvatarComponent,
     CurrencyBrlPipe,
+    PortalSkeletonComponent,
     DatePipe,
   ],
   templateUrl: './reservations.page.html',
@@ -102,9 +109,11 @@ export class ReservationsPage implements OnInit {
   readonly viewMode = signal<'list' | 'calendar'>('list');
   readonly calendarMonth = signal(currentCompetence());
   readonly loading = signal(true);
+  readonly detailLoading = signal(false);
   readonly loadingMore = signal(false);
   readonly hasMore = signal(false);
   readonly bookingsPage = signal(0);
+  readonly listUiPage = signal(0);
   readonly staysActive = signal(0);
   readonly staysUpcoming = signal(0);
   readonly ownerActions = signal(0);
@@ -121,6 +130,30 @@ export class ReservationsPage implements OnInit {
       if (day && !this.bookingOnDay(b, day)) return false;
       return matchesReservationFilter(b, filter);
     });
+  });
+
+  readonly totalListPages = computed(() => {
+    const count = this.filteredBookings().length;
+    return Math.max(1, Math.ceil(count / LIST_UI_PAGE_SIZE));
+  });
+
+  readonly paginatedBookings = computed(() => {
+    const all = this.filteredBookings();
+    const start = this.listUiPage() * LIST_UI_PAGE_SIZE;
+    return all.slice(start, start + LIST_UI_PAGE_SIZE);
+  });
+
+  readonly listPageLabel = computed(() => {
+    const total = this.filteredBookings().length;
+    if (total === 0) return 'Nenhuma estadia';
+    const from = this.listUiPage() * LIST_UI_PAGE_SIZE + 1;
+    const to = Math.min(total, (this.listUiPage() + 1) * LIST_UI_PAGE_SIZE);
+    return `${from}–${to} de ${total}`;
+  });
+
+  readonly canGoNextListPage = computed(() => {
+    if (this.listUiPage() < this.totalListPages() - 1) return true;
+    return this.hasMore() && !this.loadingMore();
   });
 
   readonly filterCounts = computed(() => {
@@ -154,9 +187,17 @@ export class ReservationsPage implements OnInit {
   ngOnInit(): void {
     void this.profileStore.ensureLoaded();
     void this.load(true);
-    this.route.paramMap.subscribe((p) => {
-      const id = p.get('id');
-      if (id && id !== 'new') void this.select(id);
+    this.route.queryParamMap.subscribe((params) => {
+      const id = params.get('id');
+      if (!id || id === 'new') {
+        this.selected.set(null);
+        this.messages.set([]);
+        this.kitOrders.set([]);
+        return;
+      }
+      const preview = this.bookings().find((b) => b.id === id);
+      if (preview) this.selected.set(preview);
+      void this.loadBookingDetail(id);
     });
   }
 
@@ -184,13 +225,11 @@ export class ReservationsPage implements OnInit {
       this.properties.set(properties.content);
       this.accessRequests.set(access.content);
       this.ownerActions.set(counts.ownerActionRequired ?? 0);
-      this.staysActive.set(stays.active ?? 0);
-      this.staysUpcoming.set(stays.upcoming ?? 0);
+      this.staysActive.set(activeStaysCount(stays));
+      this.staysUpcoming.set(upcomingStaysCount(stays));
 
       await this.loadOccupancy();
-
-      const id = this.route.snapshot.paramMap.get('id');
-      if (id && id !== 'new') await this.select(id);
+      this.clampListUiPage();
     } finally {
       this.loading.set(false);
       this.loadingMore.set(false);
@@ -215,25 +254,71 @@ export class ReservationsPage implements OnInit {
     }
   }
 
-  async select(id: string): Promise<void> {
-    const [booking, msgs, kits] = await Promise.all([
-      firstValueFrom(this.ops.getBooking(id)),
-      firstValueFrom(this.ops.listBookingMessages(id)),
-      firstValueFrom(this.ops.listBookingKitOrders(id)),
-    ]);
+  openBooking(booking: BookingDto): void {
+    if (this.route.snapshot.queryParamMap.get('id') === booking.id) return;
     this.selected.set(booking);
-    this.messages.set(msgs);
-    this.kitOrders.set(kits);
-    queueMicrotask(() => this.scrollChatToBottom());
+    this.messages.set([]);
+    this.kitOrders.set([]);
+    void this.router.navigate(['/reservations'], {
+      queryParams: { id: booking.id },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  async loadBookingDetail(id: string): Promise<void> {
+    this.detailLoading.set(true);
+    try {
+      const [booking, msgs, kits] = await Promise.all([
+        firstValueFrom(this.ops.getBooking(id)),
+        firstValueFrom(this.ops.listBookingMessages(id)),
+        firstValueFrom(this.ops.listBookingKitOrders(id)),
+      ]);
+      if (this.selected()?.id !== id && this.route.snapshot.queryParamMap.get('id') !== id) return;
+      this.selected.set(booking);
+      this.messages.set(msgs);
+      this.kitOrders.set(kits);
+      queueMicrotask(() => this.scrollChatToBottom());
+    } finally {
+      this.detailLoading.set(false);
+    }
+  }
+
+  /** Recarrega painel após ação do proprietário. */
+  private async refreshBooking(id: string): Promise<void> {
+    await this.loadBookingDetail(id);
   }
 
   setFilter(filter: ReservationFilter): void {
     this.activeFilter.set(filter);
+    this.resetListUiPage();
   }
 
   setPropertyFilter(value: string): void {
     this.propertyFilter.set(value);
+    this.resetListUiPage();
     void this.loadOccupancy();
+  }
+
+  prevListPage(): void {
+    if (this.listUiPage() > 0) {
+      this.listUiPage.update((p) => p - 1);
+    }
+  }
+
+  async nextListPage(): Promise<void> {
+    if (this.listUiPage() < this.totalListPages() - 1) {
+      this.listUiPage.update((p) => p + 1);
+      return;
+    }
+    if (!this.hasMore() || this.loadingMore()) return;
+    await this.loadMore();
+    if (this.listUiPage() < this.totalListPages() - 1) {
+      this.listUiPage.update((p) => p + 1);
+    }
+  }
+
+  private resetListUiPage(): void {
+    this.listUiPage.set(0);
   }
 
   setViewMode(mode: 'list' | 'calendar'): void {
@@ -246,12 +331,14 @@ export class ReservationsPage implements OnInit {
   setCalendarMonth(value: string): void {
     this.calendarMonth.set(value);
     this.calendarDayFilter.set('');
+    this.resetListUiPage();
     void this.loadOccupancy();
   }
 
   selectCalendarDay(cell: CalendarCell): void {
     if (!cell.inMonth) return;
     this.calendarDayFilter.set(this.calendarDayFilter() === cell.date ? '' : cell.date);
+    this.resetListUiPage();
   }
 
   propertyName(id: string): string {
@@ -275,75 +362,77 @@ export class ReservationsPage implements OnInit {
     const b = this.selected();
     if (!b) return;
     await firstValueFrom(this.ops.ownerConfirm(b.id));
-    await this.select(b.id);
-    await this.load(true);
+    await this.refreshBooking(b.id);
+    await this.refreshListQuietly();
   }
 
   async approveCheckout(): Promise<void> {
     const b = this.selected();
     if (!b) return;
     await firstValueFrom(this.ops.approveCheckout(b.id));
-    await this.select(b.id);
-    await this.load(true);
+    await this.refreshBooking(b.id);
+    await this.refreshListQuietly();
   }
 
   async rejectCheckout(): Promise<void> {
     const b = this.selected();
     if (!b) return;
     await firstValueFrom(this.ops.rejectCheckout(b.id));
-    await this.select(b.id);
-    await this.load(true);
+    await this.refreshBooking(b.id);
+    await this.refreshListQuietly();
   }
 
   async acknowledgeCheckin(): Promise<void> {
     const b = this.selected();
     if (!b) return;
     await firstValueFrom(this.ops.acknowledgeCheckin(b.id));
-    await this.select(b.id);
-    await this.load(true);
+    await this.refreshBooking(b.id);
+    await this.refreshListQuietly();
   }
 
   async cancelBooking(): Promise<void> {
     const b = this.selected();
     if (!b || !confirm('Cancelar esta reserva?')) return;
     await firstValueFrom(this.ops.cancelBookingByOwner(b.id));
-    await this.load(true);
     this.selected.set(null);
-    await this.router.navigate(['/reservations']);
+    this.messages.set([]);
+    this.kitOrders.set([]);
+    await this.router.navigate(['/reservations'], { queryParams: { id: null }, queryParamsHandling: 'merge' });
+    await this.refreshListQuietly();
   }
 
   async approveCancellation(): Promise<void> {
     const b = this.selected();
     if (!b) return;
     await firstValueFrom(this.ops.approveTenantCancellation(b.id));
-    await this.select(b.id);
-    await this.load(true);
+    await this.refreshBooking(b.id);
+    await this.refreshListQuietly();
   }
 
   async rejectCancellation(): Promise<void> {
     const b = this.selected();
     if (!b) return;
     await firstValueFrom(this.ops.rejectTenantCancellation(b.id));
-    await this.select(b.id);
-    await this.load(true);
+    await this.refreshBooking(b.id);
+    await this.refreshListQuietly();
   }
 
   async approveKitOrder(order: KitOrder): Promise<void> {
     const total = this.kitOrderTotal(order);
     await firstValueFrom(this.ops.approveKitOrder(order.id, total));
     const b = this.selected();
-    if (b) await this.select(b.id);
+    if (b) await this.refreshBooking(b.id);
   }
 
   async rejectKitOrder(order: KitOrder): Promise<void> {
     await firstValueFrom(this.ops.rejectKitOrder(order.id));
     const b = this.selected();
-    if (b) await this.select(b.id);
+    if (b) await this.refreshBooking(b.id);
   }
 
   async approveAccessRequest(req: AccessRequest): Promise<void> {
     await firstValueFrom(this.props.approveAccessRequest(req.id));
-    await this.load(true);
+    await this.refreshListQuietly();
   }
 
   chatSenderLabel(role: string | undefined): string {
@@ -428,6 +517,35 @@ export class ReservationsPage implements OnInit {
   private parseMonth(value: string): { year: number; month: number } {
     const [y, m] = value.split('-').map(Number);
     return { year: y, month: m };
+  }
+
+  /** Atualiza lista/KPIs sem skeleton nem recriar o componente. */
+  private async refreshListQuietly(): Promise<void> {
+    try {
+      const [bookingsRes, counts, stays, access] = await Promise.all([
+        firstValueFrom(this.ops.listBookings(0, PAGE_SIZE)),
+        firstValueFrom(this.ops.getCounts()),
+        firstValueFrom(this.ops.getStaysSummary()),
+        firstValueFrom(this.props.listPendingAccessRequests(0, 20)),
+      ]);
+      this.bookings.set(bookingsRes.content);
+      this.bookingsPage.set(0);
+      this.hasMore.set(bookingsRes.hasNext);
+      this.accessRequests.set(access.content);
+      this.ownerActions.set(counts.ownerActionRequired ?? 0);
+      this.staysActive.set(activeStaysCount(stays));
+      this.staysUpcoming.set(upcomingStaysCount(stays));
+      this.clampListUiPage();
+    } catch {
+      // mantém lista atual
+    }
+  }
+
+  private clampListUiPage(): void {
+    const max = Math.max(0, this.totalListPages() - 1);
+    if (this.listUiPage() > max) {
+      this.listUiPage.set(max);
+    }
   }
 
 }

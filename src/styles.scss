@@ -1,6 +1,7 @@
 
 @use '@angular/material' as mat;
 @use './styles/portal-tokens';
+@use './styles/portal-shell-theme';
 @use './styles/portal-ui';
 
 html {
@@ -50,5 +51,15 @@ a:not(.mdc-button):not(.mat-mdc-button):not(.mat-mdc-list-item):not(.nav-item) {
 
 mat-card {
   border: 1px solid var(--portal-border);
-  box-shadow: var(--portal-shadow-sm) !important;
+  box-shadow: none !important;
+}
+
+.portal-mono {
+  font-family: var(--portal-font-mono);
+  font-size: 0.8125em;
+  font-variant-numeric: tabular-nums;
+}
+
+.portal-tabular {
+  font-variant-numeric: tabular-nums;
 }

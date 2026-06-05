@@ -7,30 +7,52 @@
   <a mat-flat-button color="primary" routerLink="/sales">Registrar estadia</a>
 </div>
 
-<div class="portal-kpi-grid kpi-strip">
-  <mat-card><span class="portal-kpi-label">Ações pendentes</span><strong>{{ ownerActions() }}</strong></mat-card>
-  <mat-card><span class="portal-kpi-label">Em estadia</span><strong>{{ staysActive() }}</strong></mat-card>
-  <mat-card><span class="portal-kpi-label">Próximas</span><strong>{{ staysUpcoming() }}</strong></mat-card>
-  <mat-card><span class="portal-kpi-label">Pedidos de acesso</span><strong>{{ accessRequests().length }}</strong></mat-card>
+<div class="portal-kpi-grid reservations-kpis">
+  <button type="button" class="portal-kpi-clickable" (click)="setFilter('approval')">
+    <span class="portal-kpi-label">Ações pendentes</span>
+    <strong>{{ ownerActions() }}</strong>
+  </button>
+  <button type="button" class="portal-kpi-clickable" (click)="setFilter('in_progress')">
+    <span class="portal-kpi-label">Em estadia</span>
+    <strong>{{ staysActive() }}</strong>
+  </button>
+  <button type="button" class="portal-kpi-clickable" (click)="setFilter('waiting')">
+    <span class="portal-kpi-label">Próximas</span>
+    <strong>{{ staysUpcoming() }}</strong>
+  </button>
+  <button type="button" class="portal-kpi-clickable" (click)="setFilter('approval')">
+    <span class="portal-kpi-label">Pedidos de acesso</span>
+    <strong>{{ accessRequests().length }}</strong>
+  </button>
 </div>
 
-<div class="filters-bar">
-  <div class="filter-pills">
+<div class="portal-filters reservations-filters">
+  <div class="portal-chip-row">
+    <span class="portal-chip-label">Status</span>
     @for (f of filterOptions; track f.id) {
-      <button mat-stroked-button [class.active-filter]="activeFilter() === f.id" (click)="setFilter(f.id)">
+      <button type="button" class="portal-chip" [class.active]="activeFilter() === f.id" (click)="setFilter(f.id)">
         {{ f.label }} ({{ filterCounts()[f.id] }})
       </button>
     }
   </div>
-  <div class="filter-right">
-    <mat-button-toggle-group [value]="viewMode()" (change)="setViewMode($event.value)">
-      <mat-button-toggle value="list">Lista</mat-button-toggle>
-      <mat-button-toggle value="calendar">Calendário</mat-button-toggle>
-    </mat-button-toggle-group>
-    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+  <div class="filters-toolbar">
+    <div class="view-toggle">
+      <span class="toolbar-label">Visualização</span>
+      <mat-button-toggle-group class="view-toggle-group" [value]="viewMode()" (change)="setViewMode($event.value)">
+        <mat-button-toggle value="list">
+          <mat-icon>view_list</mat-icon>
+          Lista
+        </mat-button-toggle>
+        <mat-button-toggle value="calendar">
+          <mat-icon>calendar_month</mat-icon>
+          Calendário
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+    <mat-form-field class="property-filter" appearance="outline" subscriptSizing="dynamic">
       <mat-label>Imóvel</mat-label>
       <mat-select [value]="propertyFilter()" (selectionChange)="setPropertyFilter($event.value)">
-        <mat-option value="">Todos</mat-option>
+        <mat-option value="">Todos os imóveis</mat-option>
         @for (p of properties(); track p.id) {
           <mat-option [value]="p.id">{{ p.name }}</mat-option>
         }
@@ -40,7 +62,7 @@
 </div>
 
 @if (viewMode() === 'calendar') {
-  <mat-card class="calendar-card">
+  <mat-card class="calendar-card portal-surface">
     <div class="calendar-toolbar">
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>Mês</mat-label>
@@ -85,60 +107,109 @@
 }
 
 @if (loading()) {
-  <p class="muted">Carregando…</p>
+  <app-portal-skeleton variant="list" [rows]="8" />
 } @else {
   <div class="master-detail">
-    <mat-card class="list-pane">
+    <mat-card class="list-pane portal-surface">
+      <div class="pane-header">
+        <div>
+          <h3>Estadias</h3>
+          <p class="pane-sub">{{ listPageLabel() }}</p>
+        </div>
+        @if (ownerActions() > 0) {
+          <span class="pane-alert">{{ ownerActions() }} ação{{ ownerActions() > 1 ? 'ões' : '' }}</span>
+        }
+      </div>
+
       @if (activeFilter() === 'approval' && accessRequests().length > 0) {
-        <div class="approval-queue">
+        <section class="approval-queue">
           <h4>Pedidos de estadia</h4>
           @for (req of accessRequests(); track req.id) {
-            <div class="approval-item">
-              <strong>{{ req.tenantFullName || req.tenantName || req.tenantEmail || 'Inquilino' }}</strong>
-              <span>{{ req.propertyName }}</span>
-              <small>{{ req.requestedCheckinDate }} → {{ req.requestedCheckoutDate }}</small>
-              <button mat-stroked-button color="primary" (click)="approveAccessRequest(req)">Aprovar estadia</button>
-            </div>
+            <article class="approval-item">
+              <div class="approval-copy">
+                <strong>{{ req.tenantFullName || req.tenantName || req.tenantEmail || 'Inquilino' }}</strong>
+                <span>{{ req.propertyName }}</span>
+                <small>{{ req.requestedCheckinDate }} → {{ req.requestedCheckoutDate }}</small>
+              </div>
+              <button mat-flat-button color="primary" (click)="approveAccessRequest(req)">Aprovar</button>
+            </article>
           }
-          <mat-divider />
-        </div>
+        </section>
       }
 
+      <div class="list-pane-body">
       @if (filteredBookings().length === 0) {
-        <p class="muted empty-list">Nenhuma reserva neste filtro.</p>
+        <div class="list-empty">
+          <mat-icon>event_busy</mat-icon>
+          <p>Nenhuma reserva neste filtro.</p>
+          <button mat-stroked-button (click)="setFilter('all')">Ver todas</button>
+        </div>
       } @else {
-        <mat-list>
-          @for (b of filteredBookings(); track b.id) {
-            <a mat-list-item [routerLink]="['/reservations', b.id]" [class.active]="selected()?.id === b.id" class="booking-row">
-              <div class="row-main">
-                <span class="guest">{{ displayGuestName(b) }}</span>
-                <span class="property">{{ b.propertyName }}</span>
-                <span class="dates">{{ formatStayDates(b.checkinDate, b.checkoutDate) }}</span>
-                <div class="row-meta">
+        <ul class="booking-list">
+          @for (b of paginatedBookings(); track b.id) {
+            <li>
+              <button
+                type="button"
+                class="booking-card"
+                (click)="openBooking(b)"
+                [class.active]="selected()?.id === b.id"
+                [class.needs-action]="bookingNeedsOwnerAction(b)"
+              >
+                <div class="booking-card-main">
+                  <span class="guest">{{ displayGuestName(b) }}</span>
+                  <span class="property">{{ b.propertyName }}</span>
+                  <span class="dates">{{ formatStayDates(b.checkinDate, b.checkoutDate) }}</span>
+                </div>
+                <div class="booking-card-meta">
                   <span class="chip" [class]="'tone-' + flowStageTone(flowStageKey(b))">{{ flowStageDisplayLabel(flowStageKey(b)) }}</span>
-                  <span class="source">{{ reservationSourceLabel(b) }}</span>
-                  <strong class="amount">{{ displayAmount(b) | currencyBrl }}</strong>
+                  <div class="booking-card-foot">
+                    <span class="source">{{ reservationSourceLabel(b) }}</span>
+                    <strong class="amount">{{ displayAmount(b) | currencyBrl }}</strong>
+                  </div>
                   @if (b.backfill) { <span class="badge-hist">Histórico</span> }
                   @if (bookingNeedsOwnerAction(b)) { <span class="badge-action">Ação</span> }
                 </div>
-              </div>
-            </a>
+              </button>
+            </li>
           }
-        </mat-list>
+        </ul>
       }
+      </div>
 
-      @if (hasMore()) {
-        <div class="load-more">
-          <button mat-stroked-button (click)="loadMore()" [disabled]="loadingMore()">
-            {{ loadingMore() ? 'Carregando…' : 'Carregar mais reservas' }}
+      @if (filteredBookings().length > 0) {
+        <div class="list-pagination">
+          <button
+            type="button"
+            mat-stroked-button
+            class="page-btn"
+            [disabled]="listUiPage() === 0"
+            (click)="prevListPage()"
+            aria-label="Página anterior"
+          >
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+          <span class="page-indicator">{{ listUiPage() + 1 }} / {{ totalListPages() }}</span>
+          <button
+            type="button"
+            mat-stroked-button
+            class="page-btn"
+            [disabled]="!canGoNextListPage()"
+            (click)="nextListPage()"
+            aria-label="Próxima página"
+          >
+            <mat-icon>chevron_right</mat-icon>
           </button>
         </div>
       }
     </mat-card>
 
-    <mat-card class="detail-pane">
+    <mat-card class="detail-pane portal-surface" [class.is-loading]="detailLoading()">
       @if (!selected()) {
-        <p class="muted">Selecione uma reserva.</p>
+        <div class="detail-empty">
+          <mat-icon>touch_app</mat-icon>
+          <h3>Selecione uma reserva</h3>
+          <p>Escolha uma estadia na lista para ver detalhes, aprovar ações e conversar com o hóspede.</p>
+        </div>
       } @else if (selected(); as b) {
         <div class="detail-head">
           <div class="guest-block">

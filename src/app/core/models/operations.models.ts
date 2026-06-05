@@ -39,10 +39,25 @@ export interface BookingCounts {
   total?: number;
 }
 
+/** Resposta de GET /bookings/stays-summary (alinhado à API Java). */
 export interface StaysSummary {
-  active?: number;
-  upcoming?: number;
+  activeAll?: number;
+  running?: number;
+  waiting?: number;
+  hostPending?: number;
   completed?: number;
+  noShow?: number;
+  totalBookings?: number;
+}
+
+export function activeStaysCount(summary: StaysSummary | null | undefined): number {
+  if (!summary) return 0;
+  return summary.running ?? summary.activeAll ?? 0;
+}
+
+export function upcomingStaysCount(summary: StaysSummary | null | undefined): number {
+  if (!summary) return 0;
+  return summary.waiting ?? 0;
 }
 
 export interface MessageInboxItem {

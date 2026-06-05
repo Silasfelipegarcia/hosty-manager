@@ -1,0 +1,121 @@
+@use './portal-tokens';
+
+/* Workspace ambient background */
+.shell-main {
+  position: relative;
+  background: var(--portal-bg);
+
+  &::before {
+    content: '';
+    position: fixed;
+    inset: var(--portal-sidebar) 0 0 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      linear-gradient(var(--portal-grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--portal-grid-line) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: linear-gradient(180deg, #000 0%, transparent 90%);
+  }
+}
+
+.shell-main > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Dark sidebar */
+.shell-sidenav {
+  background: var(--portal-nav-bg) !important;
+  border-right: 1px solid var(--portal-nav-border) !important;
+}
+
+.shell-sidenav .brand {
+  border-bottom-color: var(--portal-nav-border);
+}
+
+.shell-sidenav .brand-text strong {
+  color: #f1f5f9;
+}
+
+.shell-sidenav .brand-text span {
+  color: var(--portal-nav-text);
+}
+
+.shell-sidenav .nav-group-title {
+  color: rgba(148, 163, 184, 0.7);
+}
+
+.shell-sidenav .nav-item {
+  color: var(--portal-nav-text) !important;
+
+  mat-icon {
+    color: var(--portal-nav-text);
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: var(--portal-nav-text-hover) !important;
+
+    mat-icon {
+      color: var(--portal-nav-text-hover);
+    }
+  }
+
+  &.active {
+    background: rgba(13, 148, 136, 0.18) !important;
+    color: var(--portal-accent-glow) !important;
+    box-shadow: inset 2px 0 0 var(--portal-brand);
+
+    mat-icon {
+      color: var(--portal-accent-glow);
+    }
+  }
+
+  .nav-item-badge {
+    box-shadow: 0 0 0 2px var(--portal-nav-bg);
+  }
+}
+
+.shell-sidenav .sidenav-footer {
+  background: var(--portal-nav-bg);
+  border-top-color: var(--portal-nav-border);
+}
+
+.shell-sidenav .user-meta strong {
+  color: #e2e8f0;
+}
+
+.shell-sidenav .user-email {
+  color: var(--portal-nav-text);
+}
+
+.shell-sidenav .user-block:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.shell-sidenav .logout-btn {
+  border-color: var(--portal-nav-border) !important;
+  color: var(--portal-nav-text) !important;
+  background: transparent !important;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: var(--portal-nav-text-hover) !important;
+  }
+}
+
+/* Glass topbar */
+.shell-main .topbar {
+  background: var(--portal-topbar-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--portal-border);
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell-main::before {
+    mask-image: none;
+  }
+}

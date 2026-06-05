@@ -15,17 +15,15 @@
           @for (item of group.items; track item.path) {
             <a
               class="nav-item"
-              mat-list-item
               [routerLink]="item.path"
               routerLinkActive="active"
               [routerLinkActiveOptions]="item.exact ? { exact: true } : { exact: false }"
-              [matBadge]="item.badge?.() || null"
-              [matBadgeHidden]="!item.badge?.()"
-              matBadgeColor="warn"
-              matBadgeSize="small"
             >
-              <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-              <span matListItemTitle>{{ item.label }}</span>
+              <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
+              <span class="nav-item-label">{{ item.label }}</span>
+              @if (item.badge?.()) {
+                <span class="nav-item-badge" aria-hidden="true"></span>
+              }
             </a>
           }
         </div>
@@ -59,16 +57,24 @@
         <span class="topbar-sub">Portal do proprietário</span>
       </div>
       <span class="spacer"></span>
+      <div class="topbar-actions">
+        <button type="button" class="cmdk-trigger" (click)="palette.show()" aria-label="Busca rápida">
+          <mat-icon>search</mat-icon>
+          <span>Buscar</span>
+          <kbd>⌘K</kbd>
+        </button>
       @if (badges.totalBadges > 0) {
         <a class="pending-pill" routerLink="/reservations">
           <mat-icon>notifications_active</mat-icon>
           {{ badges.totalBadges }} pendência{{ badges.totalBadges > 1 ? 's' : '' }}
         </a>
       }
+      </div>
     </header>
     <main class="content">
       <router-outlet />
     </main>
     <app-clara-assistant />
+    <app-command-palette />
   </mat-sidenav-content>
 </mat-sidenav-container>

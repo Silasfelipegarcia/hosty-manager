@@ -1,15 +1,5 @@
 .finance-hub-header {
   margin-bottom: 8px;
-
-  h1 {
-    margin-bottom: 4px;
-  }
-
-  p {
-    margin: 0;
-    color: #64748b;
-    font-size: 14px;
-  }
 }
 
 .finance-tabs {
@@ -22,6 +12,11 @@
   padding-top: 16px;
 }
 
-.tab-body ::ng-deep .page-header h1 {
-  font-size: 20px;
+.tab-body ::ng-deep .portal-page-header h1 {
+  font-size: 1.25rem;
+}
+
+.tab-body ::ng-deep mat-card {
+  box-shadow: none !important;
+  border: 1px solid var(--portal-border);
 }

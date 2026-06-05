@@ -65,14 +65,6 @@
   }
 }
 
-.finance-kpi small.kpi-hint {
-  display: block;
-  margin-top: 6px;
-  color: var(--portal-text-muted);
-  font-size: 0.6875rem;
-  font-weight: 500;
-}
-
 .action-list {
   list-style: none;
   padding: 0;
@@ -82,12 +74,23 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
-    padding: 12px 0;
+    gap: 16px;
+    padding: 14px 12px;
     border-bottom: 1px solid var(--portal-border);
+    border-radius: var(--portal-radius-sm);
+    transition: background var(--portal-transition), border-color var(--portal-transition);
+
+    &:hover {
+      background: var(--portal-brand-muted);
+    }
 
     &:last-child {
       border-bottom: none;
+      padding-bottom: 4px;
+    }
+
+    &:first-child {
+      padding-top: 4px;
     }
   }
 
@@ -113,13 +116,22 @@
 
   &.priority li {
     border-left: 3px solid var(--portal-brand);
-    padding-left: 12px;
-    margin-left: -12px;
+    padding-left: 14px;
+    margin-left: 0;
   }
 }
 
 mat-card h3 {
   font-size: 0.9375rem;
   font-weight: 600;
-  margin-bottom: 12px;
+  margin: 0 0 14px;
+}
+
+mat-card .portal-link-subtle {
+  display: inline-block;
+  margin-top: 14px;
+}
+
+mat-card > .muted {
+  margin: 0;
 }

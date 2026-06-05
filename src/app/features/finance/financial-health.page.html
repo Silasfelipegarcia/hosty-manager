@@ -1,9 +1,10 @@
-<div class="page-header">
+<div class="portal-page">
+<div class="portal-page-header">
   <div>
     <h1>Caixa</h1>
-    <p>Quanto manter em caixa neste mês — {{ competence() | competence }}</p>
+    <p class="portal-subtitle">Quanto manter em caixa neste mês — {{ competence() | competence }}</p>
   </div>
-  <div class="actions">
+  <div class="portal-actions">
     <mat-form-field appearance="outline" subscriptSizing="dynamic">
       <mat-label>Mês de referência</mat-label>
       <input matInput type="month" [value]="competence()" (change)="setCompetence($any($event.target).value)" />
@@ -12,28 +13,28 @@
 </div>
 
 @if (loading()) {
-  <p class="muted">Carregando…</p>
+  <app-portal-skeleton variant="kpis" />
 } @else {
-  <div class="kpi-grid">
-    <mat-card>
-      <span>Bruto do mês</span>
-      <strong>{{ summary().totalGross | currencyBrl }}</strong>
+  <div class="portal-kpi-grid">
+    <mat-card class="portal-surface">
+      <span class="portal-kpi-label">Bruto do mês</span>
+      <strong class="portal-tabular">{{ summary().totalGross | currencyBrl }}</strong>
     </mat-card>
-    <mat-card>
-      <span>Lucro do mês</span>
-      <strong>{{ summary().totalProfit | currencyBrl }}</strong>
+    <mat-card class="portal-surface">
+      <span class="portal-kpi-label">Lucro do mês</span>
+      <strong class="portal-tabular">{{ summary().totalProfit | currencyBrl }}</strong>
     </mat-card>
-    <mat-card>
-      <span>Reserva recomendada</span>
-      <strong>{{ summary().totalRecommendedReserve | currencyBrl }}</strong>
+    <mat-card class="portal-surface">
+      <span class="portal-kpi-label">Reserva recomendada</span>
+      <strong class="portal-tabular">{{ summary().totalRecommendedReserve | currencyBrl }}</strong>
     </mat-card>
-    <mat-card>
-      <span>Retirada segura</span>
-      <strong>{{ summary().totalSafeToWithdraw | currencyBrl }}</strong>
+    <mat-card class="portal-surface">
+      <span class="portal-kpi-label">Retirada segura</span>
+      <strong class="portal-tabular">{{ summary().totalSafeToWithdraw | currencyBrl }}</strong>
     </mat-card>
-    <mat-card>
-      <span>Imóveis críticos</span>
-      <strong>{{ summary().criticalCount }}</strong>
+    <mat-card class="portal-surface">
+      <span class="portal-kpi-label">Imóveis críticos</span>
+      <strong class="portal-tabular">{{ summary().criticalCount }}</strong>
     </mat-card>
   </div>
 
@@ -79,3 +80,4 @@
     </div>
   }
 }
+</div>

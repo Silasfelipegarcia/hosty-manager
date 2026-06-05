@@ -1,24 +1,150 @@
-.login-wrap {
+.login-page {
+  min-height: 100vh;
+  background: var(--portal-navy);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-ambient {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.4;
+  }
+
+  .o1 {
+    width: 420px;
+    height: 420px;
+    background: #0f766e;
+    top: -80px;
+    left: -60px;
+  }
+
+  .o2 {
+    width: 320px;
+    height: 320px;
+    background: #0284c7;
+    bottom: 10%;
+    right: 20%;
+    opacity: 0.25;
+  }
+
+  .grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: linear-gradient(180deg, #000 0%, transparent 80%);
+  }
+}
+
+.login-layout {
+  position: relative;
+  z-index: 1;
   min-height: 100vh;
   display: grid;
-  place-items: center;
-  background: linear-gradient(135deg, #0f766e, #14b8a6);
-  padding: 24px;
+  grid-template-columns: 1fr minmax(320px, 420px);
+  gap: 48px;
+  align-items: center;
+  padding: clamp(24px, 5vw, 64px);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.login-brand-panel {
+  color: #e2e8f0;
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none !important;
+    color: #fff !important;
+    font-weight: 800;
+    font-size: 1.125rem;
+    margin-bottom: 32px;
+  }
+
+  .brand-mark {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #0f766e, #0d9488);
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    box-shadow: 0 4px 20px rgba(13, 148, 136, 0.4);
+  }
+
+  h2 {
+    margin: 0 0 12px;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #fff;
+  }
+
+  > p {
+    margin: 0 0 28px;
+    color: #94a3b8;
+    font-size: 1rem;
+    line-height: 1.55;
+    max-width: 400px;
+  }
+}
+
+.login-features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.875rem;
+    color: #cbd5e1;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: var(--portal-accent-glow);
+    }
+  }
 }
 
 .login-card {
-  width: min(420px, 100%);
-  padding: 32px;
+  width: 100%;
+  padding: 32px !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: var(--portal-radius-lg) !important;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.25) !important;
 }
 
 h1 {
   margin: 0;
-  color: #0f766e;
+  color: var(--portal-text);
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
 }
 
 .subtitle {
-  color: #64748b;
+  color: var(--portal-text-secondary);
   margin: 4px 0 24px;
+  font-size: 0.875rem;
 }
 
 .full {
@@ -26,16 +152,52 @@ h1 {
 }
 
 .error {
-  color: #b91c1c;
-  background: #fef2f2;
-  padding: 8px 12px;
-  border-radius: 8px;
+  color: var(--portal-danger);
+  background: var(--portal-danger-soft);
+  padding: 10px 12px;
+  border-radius: var(--portal-radius-sm);
   margin-bottom: 12px;
+  font-size: 0.875rem;
 }
 
 .link {
   display: block;
-  margin-top: 16px;
-  color: #0b5ed7;
+  margin-top: 14px;
+  color: var(--portal-brand);
+  font-weight: 500;
+  font-size: 0.875rem;
   text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &.back {
+    color: var(--portal-text-secondary);
+    margin-top: 8px;
+  }
+}
+
+@media (max-width: 800px) {
+  .login-layout {
+    grid-template-columns: 1fr;
+    max-width: 440px;
+  }
+
+  .login-brand-panel {
+    text-align: center;
+
+    .brand {
+      justify-content: center;
+    }
+
+    > p {
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .login-features {
+      align-items: center;
+    }
+  }
 }

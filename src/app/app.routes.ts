@@ -1,6 +1,23 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { RedirectFunction, Router, Routes } from '@angular/router';
 import { authGuard, guestGuard, landingGuard } from './core/auth/auth.guard';
 import { AppShellComponent } from './layout/app-shell/app-shell.component';
+
+const reservationIdRedirect: RedirectFunction = (snapshot) => {
+  const router = inject(Router);
+  const id = snapshot.params['id'];
+  return router.createUrlTree(['/reservations'], { queryParams: id ? { id } : {} });
+};
+
+const financeHealthRedirect: RedirectFunction = () => {
+  const router = inject(Router);
+  return router.createUrlTree(['/finance'], { queryParams: { tab: 'caixa' } });
+};
+
+const financeCrmRedirect: RedirectFunction = () => {
+  const router = inject(Router);
+  return router.createUrlTree(['/finance'], { queryParams: { tab: 'performance' } });
+};
 
 export const routes: Routes = [
   {
@@ -60,7 +77,7 @@ export const routes: Routes = [
       },
       {
         path: 'reservations/:id',
-        loadComponent: () => import('./features/reservations/reservations.page').then((m) => m.ReservationsPage),
+        redirectTo: reservationIdRedirect,
       },
       {
         path: 'finance',
@@ -68,13 +85,11 @@ export const routes: Routes = [
       },
       {
         path: 'finance/health',
-        loadComponent: () => import('./features/finance/finance-hub.page').then((m) => m.FinanceHubPage),
-        data: { tab: 'caixa' },
+        redirectTo: financeHealthRedirect,
       },
       {
         path: 'finance/crm',
-        loadComponent: () => import('./features/finance/finance-hub.page').then((m) => m.FinanceHubPage),
-        data: { tab: 'performance' },
+        redirectTo: financeCrmRedirect,
       },
       {
         path: 'sales/import',

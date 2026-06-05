@@ -1,26 +1,49 @@
-<div class="login-wrap">
-  <mat-card class="login-card">
-    <h1>{{ appName }}</h1>
-    <p class="subtitle">Portal do proprietário</p>
+<div class="login-page">
+  <div class="login-ambient" aria-hidden="true">
+    <span class="orb o1"></span>
+    <span class="orb o2"></span>
+    <div class="grid"></div>
+  </div>
 
-    @if (error()) {
-      <p class="error">{{ error() }}</p>
-    }
+  <div class="login-layout">
+    <section class="login-brand-panel">
+      <a class="brand" routerLink="/">
+        <span class="brand-mark">H</span>
+        <span>{{ appName }}</span>
+      </a>
+      <h2>Portal do proprietário</h2>
+      <p>Operação, finanças e experiência do hóspede — em um só lugar.</p>
+      <ul class="login-features">
+        <li><mat-icon>calendar_month</mat-icon> Reservas e aprovações</li>
+        <li><mat-icon>insights</mat-icon> Finanças por imóvel</li>
+        <li><mat-icon>forum</mat-icon> Chat com hóspedes</li>
+      </ul>
+    </section>
 
-    <form [formGroup]="form" (ngSubmit)="submit()">
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>E-mail</mat-label>
-        <input matInput type="email" formControlName="email" autocomplete="username" />
-      </mat-form-field>
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Senha</mat-label>
-        <input matInput type="password" formControlName="password" autocomplete="current-password" />
-      </mat-form-field>
-      <button mat-flat-button color="primary" class="full" type="submit" [disabled]="loading()">
-        {{ loading() ? 'Entrando…' : 'Entrar' }}
-      </button>
-    </form>
+    <mat-card class="login-card">
+      <h1>Entrar</h1>
+      <p class="subtitle">Acesse sua conta de proprietário</p>
 
-    <a routerLink="/forgot-password" class="link">Esqueci minha senha</a>
-  </mat-card>
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>E-mail</mat-label>
+          <input matInput type="email" formControlName="email" autocomplete="username" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Senha</mat-label>
+          <input matInput type="password" formControlName="password" autocomplete="current-password" />
+        </mat-form-field>
+        <button mat-flat-button color="primary" class="full" type="submit" [disabled]="loading()">
+          {{ loading() ? 'Entrando…' : 'Entrar' }}
+        </button>
+      </form>
+
+      <a routerLink="/forgot-password" class="link">Esqueci minha senha</a>
+      <a routerLink="/" class="link back">← Voltar ao site</a>
+    </mat-card>
+  </div>
 </div>

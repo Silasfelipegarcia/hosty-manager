@@ -41,7 +41,7 @@
     <p>O período é inválido: a data inicial deve ser anterior ou igual à final.</p>
   </mat-card>
 } @else if (loading()) {
-  <p class="muted">Carregando…</p>
+  <app-portal-skeleton variant="dashboard" />
 } @else if (loadError()) {
   <mat-card class="error-card">
     <p>Não foi possível carregar a performance: {{ loadError() }}</p>

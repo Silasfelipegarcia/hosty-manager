@@ -106,7 +106,7 @@
             <div class="meta">
               <span>{{ s.checkinDate }} → {{ s.checkoutDate }}</span>
               <strong>{{ s.grossAmount | currencyBrl }}</strong>
-              <a [routerLink]="['/reservations', s.id]">Abrir</a>
+              <a [routerLink]="['/reservations']" [queryParams]="{ id: s.id }">Abrir</a>
             </div>
           </li>
         }

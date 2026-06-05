@@ -17,6 +17,7 @@ import {
 } from '../../core/finance/financial-health';
 import { CurrencyBrlPipe } from '../../shared/pipes/currency-brl.pipe';
 import { CompetencePipe } from '../../shared/pipes/competence.pipe';
+import { PortalSkeletonComponent } from '../../shared/components/portal-skeleton/portal-skeleton.component';
 import { currentCompetence } from '../../core/dates/competence';
 
 @Component({
@@ -32,6 +33,7 @@ import { currentCompetence } from '../../core/dates/competence';
     MatChipsModule,
     CurrencyBrlPipe,
     CompetencePipe,
+    PortalSkeletonComponent,
     DecimalPipe,
   ],
   templateUrl: './financial-health.page.html',

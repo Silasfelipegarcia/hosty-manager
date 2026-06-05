@@ -1,0 +1,169 @@
+.cmdk-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(11, 18, 32, 0.55);
+  backdrop-filter: blur(6px);
+  display: grid;
+  place-items: start center;
+  padding: 12vh 16px 16px;
+}
+
+.cmdk-panel {
+  width: min(560px, 100%);
+  background: var(--portal-surface);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius-lg);
+  box-shadow: var(--portal-shadow);
+  overflow: hidden;
+  animation: cmdk-in var(--portal-transition);
+}
+
+@keyframes cmdk-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cmdk-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--portal-border);
+
+  mat-icon {
+    color: var(--portal-text-muted);
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 0.9375rem;
+    font-family: inherit;
+    color: var(--portal-text);
+    background: transparent;
+
+    &::placeholder {
+      color: var(--portal-text-muted);
+    }
+  }
+}
+
+.cmdk-kbd,
+.cmdk-footer kbd {
+  font-family: var(--portal-font-mono);
+  font-size: 0.625rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--portal-border);
+  background: var(--portal-bg);
+  color: var(--portal-text-muted);
+  text-transform: uppercase;
+}
+
+.cmdk-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.cmdk-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: var(--portal-radius-sm);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition: background var(--portal-transition);
+
+  mat-icon {
+    color: var(--portal-text-muted);
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover,
+  &.active {
+    background: var(--portal-brand-muted);
+
+    mat-icon {
+      color: var(--portal-brand);
+    }
+  }
+}
+
+.cmdk-copy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+
+  strong {
+    font-size: 0.875rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  small {
+    font-size: 0.75rem;
+    color: var(--portal-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.cmdk-group {
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--portal-text-muted);
+  flex-shrink: 0;
+}
+
+.cmdk-empty {
+  margin: 0;
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--portal-text-muted);
+  font-size: 0.875rem;
+}
+
+.cmdk-footer {
+  display: flex;
+  gap: 14px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--portal-border);
+  background: var(--portal-bg);
+  font-size: 0.6875rem;
+  color: var(--portal-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cmdk-panel {
+    animation: none;
+  }
+}

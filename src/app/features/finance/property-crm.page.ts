@@ -28,6 +28,7 @@ import {
   PropertyCrmRow,
 } from '../../core/finance/property-crm-insights';
 import { CurrencyBrlPipe } from '../../shared/pipes/currency-brl.pipe';
+import { PortalSkeletonComponent } from '../../shared/components/portal-skeleton/portal-skeleton.component';
 
 @Component({
   selector: 'app-property-crm-page',
@@ -43,6 +44,7 @@ import { CurrencyBrlPipe } from '../../shared/pipes/currency-brl.pipe';
     MatChipsModule,
     BaseChartDirective,
     CurrencyBrlPipe,
+    PortalSkeletonComponent,
     DecimalPipe,
     DatePipe,
   ],
