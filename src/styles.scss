@@ -39,7 +39,7 @@ h1, h2, h3 {
   letter-spacing: -0.02em;
 }
 
-a:not(.mdc-button):not(.mat-mdc-button):not(.mat-mdc-list-item):not(.nav-item) {
+a:not(.mdc-button):not(.mat-mdc-button):not(.mat-mdc-list-item):not(.nav-item):not(.btn) {
   color: var(--portal-brand);
   font-weight: 500;
   text-decoration: none;
