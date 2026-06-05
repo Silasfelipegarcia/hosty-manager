@@ -88,10 +88,37 @@
     </mat-card>
 
     <mat-card class="insight-card">
-      <h3>Faturamento por mês</h3>
+      <h3>Bruto e lucro por mês</h3>
       <canvas baseChart type="bar" [data]="monthChart()"></canvas>
     </mat-card>
   </div>
+
+  @if (insights().bestMarginProperties.length > 0) {
+    <mat-card class="insight-card">
+      <h3>Melhor margem no período</h3>
+      <ol class="rank-list">
+        @for (r of insights().bestMarginProperties; track r.propertyId; let i = $index) {
+          <li>
+            <span class="rank">{{ i + 1 }}º</span>
+            <span>{{ r.propertyName }}</span>
+            <strong>{{ (r.margin * 100) | number:'1.0-1' }}%</strong>
+            <small>Lucro {{ r.profit | currencyBrl }}</small>
+          </li>
+        }
+      </ol>
+    </mat-card>
+  }
+
+  @if (expensesByCategory().length > 0) {
+    <mat-card class="insight-card">
+      <h3>Despesas por categoria</h3>
+      <ul class="cat-summary">
+        @for (cat of expensesByCategory(); track cat.key) {
+          <li><span>{{ cat.key }}</span><strong>{{ cat.amount | currencyBrl }}</strong></li>
+        }
+      </ul>
+    </mat-card>
+  }
 
   @if (!focusMode() && insights().deficitProperties.length > 0) {
     <mat-card class="alert-card">
@@ -99,7 +126,7 @@
       <ul>
         @for (r of insights().deficitProperties; track r.propertyId) {
           <li>
-            <a [routerLink]="['/finance/crm']" [queryParams]="{ propertyId: r.propertyId }">{{ r.propertyName }}</a>
+            <a [routerLink]="['/finance']" [queryParams]="{ tab: 'performance', propertyId: r.propertyId }">{{ r.propertyName }}</a>
             — {{ r.profit | currencyBrl }}
           </li>
         }

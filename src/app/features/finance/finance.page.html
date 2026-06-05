@@ -4,37 +4,85 @@
     <p>Raio-X financeiro — {{ competence() | competence }}</p>
   </div>
   <div class="actions">
-    <mat-form-field appearance="outline" subscriptSizing="dynamic">
-      <mat-label>Mês de referência</mat-label>
-      <input matInput type="month" [value]="competence()" (change)="setCompetence($any($event.target).value)" />
-    </mat-form-field>
     <button mat-stroked-button (click)="exportCsv()">Exportar CSV</button>
   </div>
 </div>
 
 @if (bundle(); as b) {
-  <div class="kpi-grid">
-    <mat-card><span>Bruto</span><strong>{{ b.dashboard.totalGross | currencyBrl }}</strong></mat-card>
-    <mat-card><span>Taxas plataforma</span><strong>{{ b.dashboard.totalPlatformFees | currencyBrl }}</strong></mat-card>
-    <mat-card><span>Custos fixos</span><strong>{{ b.dashboard.totalFixedCosts | currencyBrl }}</strong></mat-card>
-    <mat-card><span>Custos variáveis</span><strong>{{ b.dashboard.totalVariableCosts | currencyBrl }}</strong></mat-card>
-    <mat-card><span>Lucro</span><strong>{{ b.dashboard.totalProfit | currencyBrl }}</strong></mat-card>
-    <mat-card><span>Margem</span><strong>{{ (b.dashboard.margin * 100) | number:'1.0-1' }}%</strong></mat-card>
+  <div class="kpi-grid rich">
+    <app-portal-kpi
+      label="Bruto"
+      [value]="formatBrl(b.dashboard.totalGross)"
+      [delta]="grossDeltaPercent()"
+      deltaLabel="vs mês anterior"
+      [sparkline]="sparklineGross()"
+    />
+    <app-portal-kpi
+      label="Lucro"
+      [value]="formatBrl(b.dashboard.totalProfit)"
+      [delta]="profitDeltaPercent()"
+      deltaLabel="vs mês anterior"
+      [sparkline]="sparklineProfit()"
+    />
+    <app-portal-kpi
+      label="Margem"
+      [value]="((b.dashboard.margin * 100) | number:'1.0-1') + '%'"
+      [delta]="marginDeltaPercent()"
+      deltaLabel="vs mês anterior"
+    />
+    <app-portal-kpi
+      label="Noites reservadas"
+      [value]="b.dashboard.bookedNights ?? 0"
+      [hint]="'Ocupação ' + (((b.dashboard.occupancyRate ?? 0) * 100) | number:'1.0-1') + '%'"
+    />
+    <app-portal-kpi
+      label="ADR (diária média)"
+      [value]="formatBrl(b.dashboard.adr)"
+    />
+    <app-portal-kpi
+      label="Despesas lançadas"
+      [value]="formatBrl(b.dashboard.totalPropertyExpenses)"
+      hint="Separadas dos custos variáveis de reserva"
+    />
+    <app-portal-kpi
+      label="Taxas plataforma"
+      [value]="formatBrl(b.dashboard.totalPlatformFees)"
+    />
+    <app-portal-kpi
+      label="Custos fixos"
+      [value]="formatBrl(b.dashboard.totalFixedCosts)"
+    />
   </div>
 
   <div class="grid-2">
     <mat-card>
       <div class="section-head">
         <h3>Lucro por imóvel</h3>
-        <a routerLink="/finance/health">Ver caixa e reservas →</a>
+        <a [routerLink]="caixaLink()" [queryParams]="caixaQuery()">Ver caixa →</a>
       </div>
       <table>
-        <tr><th>Imóvel</th><th>Bruto</th><th>Lucro</th></tr>
-        @for (row of topPropertyRows(); track row.propertyId) {
+        <tr>
+          <th>Imóvel</th>
+          <th>Bruto</th>
+          <th>Custos</th>
+          <th>Lucro</th>
+          <th>Margem</th>
+          <th>Noites</th>
+          <th>Ocup.</th>
+        </tr>
+        @for (row of propertyRows(); track row.propertyId) {
           <tr>
-            <td>{{ row.propertyName }}</td>
+            <td>
+              <a [routerLink]="performanceLink(row.propertyId)" [queryParams]="performanceQuery(row.propertyId)">
+                {{ row.propertyName }}
+              </a>
+            </td>
             <td>{{ row.gross | currencyBrl }}</td>
+            <td>{{ row.costs | currencyBrl }}</td>
             <td>{{ row.profit | currencyBrl }}</td>
+            <td>{{ (row.margin * 100) | number:'1.0-1' }}%</td>
+            <td>{{ row.nights }}</td>
+            <td>{{ row.occupancy | number:'1.0-1' }}%</td>
           </tr>
         }
       </table>
@@ -42,17 +90,48 @@
     <mat-card>
       <h3>Por plataforma</h3>
       <table>
-        <tr><th>Plataforma</th><th>Bruto</th><th>Lucro</th></tr>
+        <tr><th>Plataforma</th><th>Bruto</th><th>Taxas</th><th>Lucro</th></tr>
         @for (p of b.byPlatform; track p.platform) {
           <tr>
             <td>{{ p.platform }}</td>
             <td>{{ p.grossAmount | currencyBrl }}</td>
+            <td>{{ p.platformFees | currencyBrl }}</td>
             <td>{{ p.profit | currencyBrl }}</td>
           </tr>
         }
       </table>
+      @if (b.byPlatform.length) {
+        <div class="donut-wrap">
+          <canvas baseChart type="doughnut" [data]="platformDonut()"></canvas>
+        </div>
+      }
     </mat-card>
   </div>
+
+  @if (expenseCategories().length) {
+    <mat-card class="expense-cats">
+      <h3>Despesas por categoria</h3>
+      <ul class="cat-bars">
+        @for (cat of expenseCategories(); track cat.key) {
+          <li>
+            <span class="cat-label">{{ cat.label }}</span>
+            <div class="cat-bar-track">
+              <div
+                class="cat-bar-fill"
+                [style.width.%]="(cat.value / (b.dashboard.totalPropertyExpenses || 1)) * 100"
+              ></div>
+            </div>
+            <strong>{{ cat.value | currencyBrl }}</strong>
+          </li>
+        }
+      </ul>
+    </mat-card>
+  }
+
+  <mat-card class="waterfall-section">
+    <h3>Composição do mês</h3>
+    <canvas baseChart type="bar" [data]="waterfallChart" [options]="{ plugins: { legend: { display: false } } }"></canvas>
+  </mat-card>
 }
 
 <mat-card class="ytd-section">
@@ -84,11 +163,11 @@
     @for (row of breakEvenRows(); track row.propertyId) {
       <tr>
         <td>{{ row.propertyName }}</td>
-        <td>{{ row.monthlyFixed | currencyBrl }}</td>
+        <td>{{ row.fixedCostsMonth | currencyBrl }}</td>
         <td>{{ row.nightlyRate | currencyBrl }}</td>
         <td>{{ row.breakEvenNights }}</td>
-        <td>{{ row.revenueTarget30 | currencyBrl }}</td>
-        <td>{{ row.actualGross | currencyBrl }}</td>
+        <td>{{ row.targetRevenue30Nights | currencyBrl }}</td>
+        <td>{{ row.realizedGross | currencyBrl }}</td>
         <td [class.gap-negative]="row.gap < 0">{{ row.gap | currencyBrl }}</td>
       </tr>
     }

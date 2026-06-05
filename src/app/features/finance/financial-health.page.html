@@ -4,12 +4,6 @@
     <h1>Caixa</h1>
     <p class="portal-subtitle">Quanto manter em caixa neste mês — {{ competence() | competence }}</p>
   </div>
-  <div class="portal-actions">
-    <mat-form-field appearance="outline" subscriptSizing="dynamic">
-      <mat-label>Mês de referência</mat-label>
-      <input matInput type="month" [value]="competence()" (change)="setCompetence($any($event.target).value)" />
-    </mat-form-field>
-  </div>
 </div>
 
 @if (loading()) {
@@ -39,7 +33,7 @@
   </div>
 
   <p class="muted ytd-link">
-    Acumulado do ano disponível em <a routerLink="/finance">Mês atual</a> (seção YTD).
+    Acumulado do ano disponível em <a routerLink="/finance">Visão do mês</a> (seção YTD).
   </p>
 
   @if (filteredHealth().length === 0) {
@@ -60,6 +54,12 @@
           <dl class="metrics">
             <div><dt>Bruto</dt><dd>{{ h.gross | currencyBrl }}</dd></div>
             <div><dt>Custos</dt><dd>{{ h.totalCosts | currencyBrl }}</dd></div>
+            @if (h.bookingVariableCosts) {
+              <div><dt>Custos variáveis (reserva)</dt><dd>{{ h.bookingVariableCosts | currencyBrl }}</dd></div>
+            }
+            @if (h.propertyExpenses) {
+              <div><dt>Despesas lançadas</dt><dd>{{ h.propertyExpenses | currencyBrl }}</dd></div>
+            }
             <div><dt>Lucro</dt><dd>{{ h.profit | currencyBrl }}</dd></div>
             <div><dt>Margem</dt><dd>{{ (h.margin * 100) | number:'1.0-1' }}%</dd></div>
             <div><dt>Custos fixos/mês</dt><dd>{{ h.monthlyFixedCosts | currencyBrl }}</dd></div>
@@ -69,11 +69,18 @@
             <div class="highlight"><dt>Retirada segura</dt><dd>{{ h.safeToWithdraw | currencyBrl }}</dd></div>
           </dl>
 
+          @if (sparklines()[h.propertyId] && sparklines()[h.propertyId].length > 1) {
+            <div class="spark-wrap">
+              <span class="spark-label">Lucro — últimos 6 meses</span>
+              <canvas baseChart type="line" [data]="sparklineFor(h.propertyId)" [options]="{ plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }"></canvas>
+            </div>
+          }
+
           <mat-divider />
 
           <div class="card-links">
             <a [routerLink]="['/properties', h.propertyId]">Ver imóvel</a>
-            <a [routerLink]="['/finance/crm']" [queryParams]="{ propertyId: h.propertyId }">Análise de período</a>
+            <a [routerLink]="['/finance']" [queryParams]="{ tab: 'performance', propertyId: h.propertyId, competence: competence() }">Análise de período</a>
           </div>
         </mat-card>
       }

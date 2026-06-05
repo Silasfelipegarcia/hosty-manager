@@ -1,0 +1,85 @@
+<div class="portal-page">
+  <div class="portal-page-header">
+    <div>
+      <h1>Mensagens</h1>
+      <p class="portal-subtitle">Conversas com hóspedes por estadia — um lugar para todo o chat.</p>
+    </div>
+    <a mat-stroked-button routerLink="/reservations">Ver reservas</a>
+  </div>
+
+  @if (loading()) {
+    <app-portal-skeleton variant="list" [rows]="6" />
+  } @else {
+    <div class="messages-layout">
+      <mat-card class="inbox-pane portal-surface">
+        <div class="pane-header">
+          <h3>Conversas</h3>
+          <span class="pane-count">{{ items().length }}</span>
+        </div>
+        @if (items().length === 0 && !selectedBookingId()) {
+          <div class="inbox-empty">
+            <mat-icon>forum</mat-icon>
+            <p>Nenhuma conversa ainda.</p>
+            <a mat-stroked-button routerLink="/reservations">Ir para reservas</a>
+          </div>
+        } @else if (items().length === 0) {
+          <div class="inbox-empty inbox-empty--hint">
+            <mat-icon>forum</mat-icon>
+            <p>Primeira conversa desta estadia — use o painel ao lado.</p>
+          </div>
+        } @else {
+          <ul class="inbox-list">
+            @for (m of items(); track m.bookingId) {
+              <li>
+                <button
+                  type="button"
+                  class="inbox-item"
+                  [class.active]="selectedBookingId() === m.bookingId"
+                  (click)="selectConversation(m.bookingId)"
+                >
+                  <div class="inbox-copy">
+                    <strong>{{ m.tenantName?.trim() || 'Inquilino' }}</strong>
+                    <span class="property">{{ m.propertyName?.trim() || 'Imóvel' }}</span>
+                    <span class="preview">{{ m.lastMessage || 'Sem mensagens' }}</span>
+                  </div>
+                  @if (m.lastMessageAt) {
+                    <time>{{ formatInboxTime(m.lastMessageAt) }}</time>
+                  }
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </mat-card>
+
+      <mat-card class="chat-pane portal-surface">
+        @if (!selectedBookingId()) {
+          <div class="chat-empty">
+            <mat-icon>chat_bubble_outline</mat-icon>
+            <h3>Selecione uma conversa</h3>
+            <p>Escolha um hóspede na lista ou abra a partir de uma reserva.</p>
+          </div>
+        } @else {
+          <div class="chat-pane-head">
+            <div>
+              <h3>{{ selectedGuestName() }}</h3>
+              <p class="chat-property">{{ selectedPropertyName() }}</p>
+            </div>
+            <a
+              mat-stroked-button
+              [routerLink]="['/reservations']"
+              [queryParams]="{ id: selectedBookingId() }"
+            >
+              Ver reserva
+            </a>
+          </div>
+          <app-stay-chat-panel
+            [bookingId]="selectedBookingId()!"
+            [guestName]="selectedGuestName()"
+            [guestPhoto]="selectedGuestPhoto()"
+          />
+        }
+      </mat-card>
+    </div>
+  }
+</div>

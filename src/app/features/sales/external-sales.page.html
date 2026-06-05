@@ -92,21 +92,25 @@
     @if (recentSales().length === 0) {
       <p class="muted">Nenhuma venda ainda.</p>
     } @else {
-      <ul>
+      <ul class="sales-list">
         @for (s of recentSales(); track s.id) {
-          <li>
-            <div>
-              <strong>{{ s.tenantName || s.tenantEmail || 'Hóspede' }}</strong>
-              <span>{{ s.propertyName }}</span>
-              <mat-chip>{{ channelLabel(s.reservationSource) }}</mat-chip>
-              @if (s.backfill) {
-                <mat-chip class="hist-chip">Histórico</mat-chip>
-              }
+          <li class="sale-row">
+            <div class="sale-main">
+              <div class="sale-identity">
+                <span class="sale-guest">{{ guestDisplayName(s) }}</span>
+                <span class="sale-property">{{ s.propertyName || 'Imóvel' }}</span>
+              </div>
+              <div class="sale-tags">
+                <span class="sale-chip">{{ channelLabel(s.reservationSource) }}</span>
+                @if (s.backfill) {
+                  <span class="sale-chip hist">Histórico</span>
+                }
+              </div>
             </div>
-            <div class="meta">
-              <span>{{ s.checkinDate }} → {{ s.checkoutDate }}</span>
-              <strong>{{ s.grossAmount | currencyBrl }}</strong>
-              <a [routerLink]="['/reservations']" [queryParams]="{ id: s.id }">Abrir</a>
+            <div class="sale-aside">
+              <span class="sale-dates">{{ formatStayDates(s) }}</span>
+              <span class="sale-amount">{{ s.grossAmount | currencyBrl }}</span>
+              <a class="sale-link" [routerLink]="['/reservations']" [queryParams]="{ id: s.id }">Abrir</a>
             </div>
           </li>
         }

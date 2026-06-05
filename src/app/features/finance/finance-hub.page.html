@@ -6,6 +6,8 @@
   </div>
 </div>
 
+<app-finance-filter-bar [activeTab]="activeTab()" />
+
 <mat-tab-group
   [selectedIndex]="tabIndex()"
   (selectedIndexChange)="onTabChange($event)"

@@ -9,14 +9,30 @@ const reservationIdRedirect: RedirectFunction = (snapshot) => {
   return router.createUrlTree(['/reservations'], { queryParams: id ? { id } : {} });
 };
 
-const financeHealthRedirect: RedirectFunction = () => {
+const financeHealthRedirect: RedirectFunction = (snapshot) => {
   const router = inject(Router);
-  return router.createUrlTree(['/finance'], { queryParams: { tab: 'caixa' } });
+  const propertyId = snapshot.queryParamMap.get('propertyId');
+  const competence = snapshot.queryParamMap.get('competence');
+  return router.createUrlTree(['/finance'], {
+    queryParams: {
+      tab: 'caixa',
+      ...(propertyId ? { propertyId } : {}),
+      ...(competence ? { competence } : {}),
+    },
+  });
 };
 
-const financeCrmRedirect: RedirectFunction = () => {
+const financeCrmRedirect: RedirectFunction = (snapshot) => {
   const router = inject(Router);
-  return router.createUrlTree(['/finance'], { queryParams: { tab: 'performance' } });
+  const propertyId = snapshot.queryParamMap.get('propertyId');
+  const competence = snapshot.queryParamMap.get('competence');
+  return router.createUrlTree(['/finance'], {
+    queryParams: {
+      tab: 'performance',
+      ...(propertyId ? { propertyId } : {}),
+      ...(competence ? { competence } : {}),
+    },
+  });
 };
 
 export const routes: Routes = [

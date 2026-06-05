@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, ElementRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,7 +11,6 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { OwnerProfileStore } from '../../core/profile/owner-profile.store';
-import { ProfileAvatarComponent } from '../../shared/components/profile-avatar/profile-avatar.component';
 import { firstValueFrom } from 'rxjs';
 import { OperationsService } from '../../core/api/operations.service';
 import { PropertiesService } from '../../core/api/properties.service';
@@ -20,7 +19,6 @@ import {
   upcomingStaysCount,
   AccessRequest,
   BookingDto,
-  ChatMessage,
   KitOrder,
   PropertyAvailabilityItem,
 } from '../../core/models/operations.models';
@@ -76,7 +74,6 @@ const LIST_UI_PAGE_SIZE = RESERVATIONS_LIST_UI_PAGE_SIZE;
     MatDividerModule,
     MatButtonToggleModule,
     MatIconModule,
-    ProfileAvatarComponent,
     CurrencyBrlPipe,
     PortalSkeletonComponent,
     DatePipe,
@@ -90,19 +87,15 @@ export class ReservationsPage implements OnInit {
   readonly profileStore = inject(OwnerProfileStore);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  readonly chatLog = viewChild<ElementRef<HTMLDivElement>>('chatLog');
   readonly labels = OWNER_LABELS;
   readonly filterOptions = RESERVATION_FILTER_OPTIONS;
   readonly weekdayLabels = WEEKDAY_LABELS;
   readonly bookings = signal<BookingDto[]>([]);
   readonly selected = signal<BookingDto | null>(null);
-  readonly messages = signal<ChatMessage[]>([]);
   readonly kitOrders = signal<KitOrder[]>([]);
   readonly properties = signal<PropertyDto[]>([]);
   readonly accessRequests = signal<AccessRequest[]>([]);
   readonly occupancy = signal<PropertyAvailabilityItem[]>([]);
-  readonly chatDraft = signal('');
-  readonly chatSending = signal(false);
   readonly activeFilter = signal<ReservationFilter>('all');
   readonly propertyFilter = signal('');
   readonly calendarDayFilter = signal('');
@@ -156,18 +149,31 @@ export class ReservationsPage implements OnInit {
     return this.hasMore() && !this.loadingMore();
   });
 
+  readonly scopedAccessRequests = computed(() => {
+    const propId = this.propertyFilter();
+    const all = this.accessRequests();
+    return propId ? all.filter((r) => r.propertyId === propId) : all;
+  });
+
   readonly filterCounts = computed(() => {
     const all = this.bookings();
     const propId = this.propertyFilter();
     const scoped = propId ? all.filter((b) => b.propertyId === propId) : all;
+    const pendingBookings = scoped.filter((b) => bookingNeedsOwnerAction(b)).length;
     const counts: Record<ReservationFilter, number> = {
-      approval: scoped.filter((b) => matchesReservationFilter(b, 'approval')).length + this.accessRequests().length,
+      approval: pendingBookings + this.scopedAccessRequests().length,
       all: scoped.length,
       waiting: scoped.filter((b) => matchesReservationFilter(b, 'waiting')).length,
       in_progress: scoped.filter((b) => matchesReservationFilter(b, 'in_progress')).length,
       completed: scoped.filter((b) => matchesReservationFilter(b, 'completed')).length,
     };
     return counts;
+  });
+
+  readonly listShowsEmpty = computed(() => {
+    if (this.filteredBookings().length > 0) return false;
+    if (this.activeFilter() === 'approval' && this.scopedAccessRequests().length > 0) return false;
+    return true;
   });
 
   readonly displayGuestName = displayGuestName;
@@ -191,7 +197,6 @@ export class ReservationsPage implements OnInit {
       const id = params.get('id');
       if (!id || id === 'new') {
         this.selected.set(null);
-        this.messages.set([]);
         this.kitOrders.set([]);
         return;
       }
@@ -217,9 +222,11 @@ export class ReservationsPage implements OnInit {
       ]);
 
       if (reset) {
-        this.bookings.set(bookingsRes.content);
+        this.bookings.set(this.sortBookingsActionFirst(bookingsRes.content));
       } else {
-        this.bookings.update((cur) => [...cur, ...bookingsRes.content]);
+        this.bookings.update((cur) =>
+          this.sortBookingsActionFirst([...cur, ...bookingsRes.content]),
+        );
       }
       this.hasMore.set(bookingsRes.hasNext);
       this.properties.set(properties.content);
@@ -257,7 +264,6 @@ export class ReservationsPage implements OnInit {
   openBooking(booking: BookingDto): void {
     if (this.route.snapshot.queryParamMap.get('id') === booking.id) return;
     this.selected.set(booking);
-    this.messages.set([]);
     this.kitOrders.set([]);
     void this.router.navigate(['/reservations'], {
       queryParams: { id: booking.id },
@@ -268,16 +274,13 @@ export class ReservationsPage implements OnInit {
   async loadBookingDetail(id: string): Promise<void> {
     this.detailLoading.set(true);
     try {
-      const [booking, msgs, kits] = await Promise.all([
+      const [booking, kits] = await Promise.all([
         firstValueFrom(this.ops.getBooking(id)),
-        firstValueFrom(this.ops.listBookingMessages(id)),
         firstValueFrom(this.ops.listBookingKitOrders(id)),
       ]);
       if (this.selected()?.id !== id && this.route.snapshot.queryParamMap.get('id') !== id) return;
       this.selected.set(booking);
-      this.messages.set(msgs);
       this.kitOrders.set(kits);
-      queueMicrotask(() => this.scrollChatToBottom());
     } finally {
       this.detailLoading.set(false);
     }
@@ -395,7 +398,6 @@ export class ReservationsPage implements OnInit {
     if (!b || !confirm('Cancelar esta reserva?')) return;
     await firstValueFrom(this.ops.cancelBookingByOwner(b.id));
     this.selected.set(null);
-    this.messages.set([]);
     this.kitOrders.set([]);
     await this.router.navigate(['/reservations'], { queryParams: { id: null }, queryParamsHandling: 'merge' });
     await this.refreshListQuietly();
@@ -435,70 +437,6 @@ export class ReservationsPage implements OnInit {
     await this.refreshListQuietly();
   }
 
-  chatSenderLabel(role: string | undefined): string {
-    if (role === 'OWNER') return 'Você';
-    if (role === 'TENANT') return 'Hóspede';
-    return role ?? 'Mensagem';
-  }
-
-  isOwnerMessage(role: string | undefined): boolean {
-    return role === 'OWNER';
-  }
-
-  formatChatTime(value: string | undefined): string {
-    if (!value) return '';
-    return new Date(value).toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  }
-
-  onChatKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      void this.sendMessage();
-    }
-  }
-
-  async sendMessage(): Promise<void> {
-    const b = this.selected();
-    const text = this.chatDraft().trim();
-    if (!b || !text || this.chatSending()) return;
-
-    const pendingId = `pending-${Date.now()}`;
-    const optimistic: ChatMessage = {
-      id: pendingId,
-      senderRole: 'OWNER',
-      senderDisplayName: this.profileStore.displayName(),
-      text,
-      sentAt: new Date().toISOString(),
-    };
-    this.messages.update((list) => [...list, optimistic]);
-    this.chatDraft.set('');
-    this.chatSending.set(true);
-    queueMicrotask(() => this.scrollChatToBottom());
-
-    try {
-      const saved = await firstValueFrom(this.ops.sendBookingMessage(b.id, text));
-      this.messages.update((list) =>
-        list.map((m) => (m.id === pendingId ? saved : m)),
-      );
-    } catch {
-      this.messages.update((list) => list.filter((m) => m.id !== pendingId));
-      this.chatDraft.set(text);
-    } finally {
-      this.chatSending.set(false);
-      queueMicrotask(() => this.scrollChatToBottom());
-    }
-  }
-
-  private scrollChatToBottom(): void {
-    const el = this.chatLog()?.nativeElement;
-    if (el) el.scrollTop = el.scrollHeight;
-  }
-
   financeLink(): string[] {
     return ['/finance'];
   }
@@ -528,7 +466,7 @@ export class ReservationsPage implements OnInit {
         firstValueFrom(this.ops.getStaysSummary()),
         firstValueFrom(this.props.listPendingAccessRequests(0, 20)),
       ]);
-      this.bookings.set(bookingsRes.content);
+      this.bookings.set(this.sortBookingsActionFirst(bookingsRes.content));
       this.bookingsPage.set(0);
       this.hasMore.set(bookingsRes.hasNext);
       this.accessRequests.set(access.content);
@@ -546,6 +484,16 @@ export class ReservationsPage implements OnInit {
     if (this.listUiPage() > max) {
       this.listUiPage.set(max);
     }
+  }
+
+  /** Pendências no topo para aparecerem na primeira página da lista. */
+  private sortBookingsActionFirst(list: BookingDto[]): BookingDto[] {
+    return [...list].sort((a, b) => {
+      const aPending = bookingNeedsOwnerAction(a) ? 0 : 1;
+      const bPending = bookingNeedsOwnerAction(b) ? 0 : 1;
+      if (aPending !== bPending) return aPending - bPending;
+      return (b.checkinDate ?? '').localeCompare(a.checkinDate ?? '');
+    });
   }
 
 }

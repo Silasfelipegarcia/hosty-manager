@@ -86,7 +86,8 @@ export function isAwaitingOwnerCheckinAck(booking: BookingDto): boolean {
   if (!booking.checkedInAt || booking.checkedOutAt) return false;
   if (booking.ownerCheckinAcknowledgedAt) return false;
   const st = reservationStatusKey(booking);
-  return st === 'CONFIRMED' || st === 'IN_PROGRESS';
+  if (st === 'CANCELLED' || st === 'TENANT_CANCELLATION_PENDING') return false;
+  return st === 'CONFIRMED' || st === 'PENDING_TENANT_ACCEPTANCE';
 }
 
 export function bookingNeedsOwnerAction(booking: BookingDto): boolean {
@@ -100,25 +101,16 @@ export function bookingNeedsOwnerAction(booking: BookingDto): boolean {
   return false;
 }
 
+/** Mesma regra do KPI `ownerActionRequired` na API e do badge "Ação" na lista. */
 export function bookingMatchesApprovalFilter(booking: BookingDto): boolean {
-  if (flowStageKey(booking) === 'WAITING_OWNER_CONFIRMATION') return false;
-  if (reservationStatusKey(booking) === 'PENDING_OWNER_CONFIRMATION') return false;
-  if (isAwaitingOwnerCheckinAck(booking)) return false;
-  const stage = flowStageKey(booking);
-  if (['IN_PROGRESS', 'CHECKIN_ENABLED', 'WAITING_DATE', 'CHECKOUT_ENABLED'].includes(stage)) {
-    return isWaitingCheckoutApproval(booking) || reservationStatusKey(booking) === 'TENANT_CANCELLATION_PENDING';
-  }
-  if (stage === 'DISPUTED') return true;
-  if (isWaitingCheckoutApproval(booking)) return true;
-  if (reservationStatusKey(booking) === 'TENANT_CANCELLATION_PENDING') return true;
-  return false;
+  return bookingNeedsOwnerAction(booking);
 }
 
 export function matchesReservationFilter(booking: BookingDto, filter: ReservationFilter): boolean {
   const stage = flowStageKey(booking);
   switch (filter) {
     case 'approval':
-      return bookingMatchesApprovalFilter(booking);
+      return bookingNeedsOwnerAction(booking);
     case 'waiting':
       return ['WAITING_TENANT_ACCEPTANCE', 'WAITING_OWNER_CONFIRMATION', 'WAITING_DATE'].includes(stage);
     case 'in_progress':

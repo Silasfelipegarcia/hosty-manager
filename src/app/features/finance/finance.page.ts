@@ -13,20 +13,19 @@ import { ChartConfiguration } from 'chart.js';
 import { firstValueFrom } from 'rxjs';
 import { FinanceService } from '../../core/api/finance.service';
 import { PropertiesService } from '../../core/api/properties.service';
-import { FinanceDashboardBundle, FixedCostRow } from '../../core/models/finance.models';
+import {
+  EXPENSE_CATEGORY_LABELS,
+  FinanceBreakEvenRow,
+  FinanceDashboardBundle,
+  FixedCostRow,
+} from '../../core/models/finance.models';
 import { PropertyDto } from '../../core/models/property.models';
 import { GLOBAL_PROPERTY_ID, propertyLabel, propertySelectLabel } from '../../core/utils/property-label.util';
-import {
-  breakEvenNights,
-  buildYtdSeries,
-  revenueTarget,
-  yearStatus,
-  ytdTotals,
-  BreakEvenRow,
-} from '../../core/finance/portfolio-analytics';
-import { fixedCostsForProperty } from '../../core/finance/financial-health';
+import { buildYtdSeries, yearStatus, ytdTotals } from '../../core/finance/portfolio-analytics';
+import { sparklineRange, ytdRangeForYear } from '../../core/finance/finance-query.util';
 import { CurrencyBrlPipe } from '../../shared/pipes/currency-brl.pipe';
 import { CompetencePipe } from '../../shared/pipes/competence.pipe';
+import { PortalKpiComponent } from '../../shared/components/portal-kpi/portal-kpi.component';
 import { currentCompetence } from '../../core/dates/competence';
 
 const FIXED_TEMPLATES = [
@@ -53,6 +52,7 @@ const FIXED_TEMPLATES = [
     CurrencyBrlPipe,
     CompetencePipe,
     DecimalPipe,
+    PortalKpiComponent,
   ],
   templateUrl: './finance.page.html',
   styleUrl: './finance.page.scss',
@@ -62,42 +62,83 @@ export class FinancePage implements OnInit {
   private readonly props = inject(PropertiesService);
   private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(FormBuilder);
+  private readonly currencyBrl = new CurrencyBrlPipe();
+
   readonly bundle = signal<FinanceDashboardBundle | null>(null);
   readonly fixedCosts = signal<FixedCostRow[]>([]);
   readonly properties = signal<PropertyDto[]>([]);
   readonly competence = signal(currentCompetence());
+  readonly propertyFilter = signal('');
   readonly ytdSeries = signal<ReturnType<typeof buildYtdSeries>>([]);
-  readonly breakEvenRows = signal<BreakEvenRow[]>([]);
+  readonly breakEvenRows = signal<FinanceBreakEvenRow[]>([]);
+  readonly sparklineGross = signal<number[]>([]);
+  readonly sparklineProfit = signal<number[]>([]);
   readonly editingFixed = signal<FixedCostRow | null>(null);
   readonly propertySelectLabel = propertySelectLabel;
   readonly propertyLabel = propertyLabel;
   readonly globalPropertyId = GLOBAL_PROPERTY_ID;
   readonly fixedTemplates = FIXED_TEMPLATES;
+  readonly expenseCategoryLabels = EXPENSE_CATEGORY_LABELS;
 
   readonly ytdStatus = computed(() => yearStatus(ytdTotals(this.ytdSeries()).profit));
   readonly ytdSummary = computed(() => ytdTotals(this.ytdSeries()));
 
-  readonly topPropertyRows = computed(() => {
+  readonly expenseCategories = computed(() => {
+    const cats = this.bundle()?.dashboard.expensesByCategory ?? {};
+    return Object.entries(cats)
+      .filter(([, v]) => v > 0)
+      .sort((a, b) => b[1] - a[1])
+      .map(([key, value]) => ({
+        key,
+        label: this.expenseCategoryLabels[key] ?? key,
+        value,
+      }));
+  });
+
+  readonly propertyRows = computed(() => {
     const b = this.bundle();
     const props = this.properties();
     if (!b) return [];
     return b.byProperty
       .slice()
       .sort((a, b2) => b2.profit - a.profit)
-      .slice(0, 5)
       .map((r) => ({
         propertyId: r.propertyId,
         propertyName: propertyLabel(r.propertyId, props, r.propertyName),
         gross: r.grossAmount,
+        costs: r.totalCosts,
         profit: r.profit,
+        margin: r.margin ?? (r.grossAmount > 0 ? r.profit / r.grossAmount : 0),
+        nights: r.bookedNights ?? 0,
+        occupancy: (r.occupancyRate ?? 0) * 100,
       }));
   });
+
+  readonly platformDonut = computed((): ChartConfiguration<'doughnut'>['data'] => {
+    const platforms = this.bundle()?.byPlatform ?? [];
+    return {
+      labels: platforms.map((p) => p.platform),
+      datasets: [
+        {
+          data: platforms.map((p) => p.grossAmount),
+          backgroundColor: ['#0F766E', '#0369A1', '#7C3AED', '#B45309', '#64748B'],
+        },
+      ],
+    };
+  });
+
   ytdChart: ChartConfiguration<'line'>['data'] = {
     labels: [],
     datasets: [
       { label: 'Bruto', data: [], borderColor: '#0F766E', tension: 0.2 },
       { label: 'Lucro', data: [], borderColor: '#0369A1', tension: 0.2 },
+      { label: 'Custos', data: [], borderColor: '#B45309', tension: 0.2 },
     ],
+  };
+
+  waterfallChart: ChartConfiguration<'bar'>['data'] = {
+    labels: ['Bruto', 'Taxas', 'Fixos', 'Variáveis', 'Despesas', 'Lucro'],
+    datasets: [{ label: 'R$', data: [], backgroundColor: ['#0F766E', '#F59E0B', '#64748B', '#94A3B8', '#CBD5E1', '#0369A1'] }],
   };
 
   readonly newFixed = this.fb.nonNullable.group({
@@ -116,73 +157,123 @@ export class FinancePage implements OnInit {
   });
 
   ngOnInit(): void {
-    const competence = this.route.snapshot.queryParamMap.get('competence');
-    if (competence) {
-      this.competence.set(competence);
-    }
+    this.syncFromRoute();
+    this.route.queryParamMap.subscribe(() => {
+      this.syncFromRoute();
+      void this.load();
+    });
     void this.load();
+  }
+
+  private syncFromRoute(): void {
+    const competence = this.route.snapshot.queryParamMap.get('competence');
+    if (competence) this.competence.set(competence);
+    this.propertyFilter.set(this.route.snapshot.queryParamMap.get('propertyId') ?? '');
   }
 
   async load(): Promise<void> {
     const c = this.competence();
-    const [bundle, costs, properties, ytdBundles] = await Promise.all([
-      firstValueFrom(this.finance.getDashboardBundle(c)),
+    const propertyId = this.propertyFilter() || undefined;
+    const year = Number(c.slice(0, 4));
+    const ytdRange = ytdRangeForYear(year);
+    const spark = sparklineRange(c, 6);
+
+    const [bundle, costs, properties, ytdRangeRes, sparkRangeRes, breakEven] = await Promise.all([
+      firstValueFrom(this.finance.getDashboardBundle(c, propertyId)),
       firstValueFrom(this.finance.listFixedCosts()),
       firstValueFrom(this.props.listOwner()),
-      this.loadYtdBundles(),
+      firstValueFrom(this.finance.getDashboardRange(ytdRange.from, ytdRange.to, propertyId)),
+      firstValueFrom(this.finance.getDashboardRange(spark.from, spark.to, propertyId)),
+      firstValueFrom(this.finance.getBreakEven(c, propertyId)),
     ]);
+
     this.properties.set(properties.content);
     this.bundle.set(bundle);
     this.fixedCosts.set(costs.content);
-    this.ytdSeries.set(buildYtdSeries(ytdBundles));
-    this.breakEvenRows.set(this.buildBreakEven(properties.content, bundle, costs.content));
+    this.breakEvenRows.set(breakEven);
 
-    const series = buildYtdSeries(ytdBundles);
+    const ytdBundles = ytdRangeRes.months.map((m) => ({
+      competence: m.competence ?? '',
+      bundle: m,
+    }));
+    this.ytdSeries.set(buildYtdSeries(ytdBundles));
+    this.sparklineGross.set(sparkRangeRes.months.map((m) => m.dashboard.totalGross));
+    this.sparklineProfit.set(sparkRangeRes.months.map((m) => m.dashboard.totalProfit));
+
+    const series = this.ytdSeries();
     this.ytdChart = {
       labels: series.map((p) => p.label),
       datasets: [
         { label: 'Bruto', data: series.map((p) => p.gross), borderColor: '#0F766E', tension: 0.2 },
         { label: 'Lucro', data: series.map((p) => p.profit), borderColor: '#0369A1', tension: 0.2 },
+        { label: 'Custos', data: series.map((p) => p.costs), borderColor: '#B45309', tension: 0.2 },
+      ],
+    };
+
+    const d = bundle.dashboard;
+    this.waterfallChart = {
+      labels: ['Bruto', 'Taxas', 'Fixos', 'Variáveis', 'Despesas', 'Lucro'],
+      datasets: [
+        {
+          label: 'R$',
+          data: [
+            d.totalGross,
+            -d.totalPlatformFees,
+            -d.totalFixedCosts,
+            -(d.totalBookingVariableCosts ?? d.totalVariableCosts),
+            -(d.totalPropertyExpenses ?? 0),
+            d.totalProfit,
+          ],
+          backgroundColor: ['#0F766E', '#F59E0B', '#64748B', '#94A3B8', '#CBD5E1', '#0369A1'],
+        },
       ],
     };
   }
 
-  private async loadYtdBundles() {
-    const year = new Date().getFullYear();
-    const months = Array.from({ length: 12 }, (_, i) => `${year}-${String(i + 1).padStart(2, '0')}`);
-    const bundles = await Promise.all(
-      months.map(async (competence) => ({
-        competence,
-        bundle: await firstValueFrom(this.finance.getDashboardBundle(competence)),
-      })),
-    );
-    return bundles;
+  formatBrl(value: number | null | undefined): string {
+    return this.currencyBrl.transform(value);
   }
 
-  private buildBreakEven(
-    properties: PropertyDto[],
-    bundle: FinanceDashboardBundle,
-    fixedCosts: FixedCostRow[],
-  ): BreakEvenRow[] {
-    const byId = new Map(bundle.byProperty.map((p) => [p.propertyId, p]));
-    const count = Math.max(properties.length, 1);
-    return properties.map((p) => {
-      const perf = byId.get(p.id);
-      const monthlyFixed = fixedCostsForProperty(fixedCosts, p.id, count);
-      const nightly = p.nightlyRate ?? 0;
-      const target = revenueTarget(nightly);
-      const actual = perf?.grossAmount ?? 0;
-      return {
-        propertyId: p.id,
-        propertyName: p.name,
-        monthlyFixed,
-        nightlyRate: nightly,
-        breakEvenNights: breakEvenNights(monthlyFixed, nightly),
-        revenueTarget30: target,
-        actualGross: actual,
-        gap: actual - target,
-      };
-    });
+  grossDeltaPercent(): number | null {
+    const cmp = this.bundle()?.dashboard.comparison;
+    const gross = this.bundle()?.dashboard.totalGross;
+    if (!cmp || gross === undefined) return null;
+    const prev = gross - cmp.grossDelta;
+    if (prev === 0) return null;
+    return (cmp.grossDelta / Math.abs(prev)) * 100;
+  }
+
+  marginDeltaPercent(): number | null {
+    const cmp = this.bundle()?.dashboard.comparison;
+    if (!cmp) return null;
+    const prev = (this.bundle()!.dashboard.margin - cmp.marginDelta);
+    if (prev === 0) return null;
+    return (cmp.marginDelta / Math.abs(prev)) * 100;
+  }
+
+  profitDeltaPercent(): number | null {
+    const cmp = this.bundle()?.dashboard.comparison;
+    const profit = this.bundle()?.dashboard.totalProfit;
+    if (!cmp || profit === undefined) return null;
+    const prev = profit - cmp.profitDelta;
+    if (prev === 0) return null;
+    return (cmp.profitDelta / Math.abs(prev)) * 100;
+  }
+
+  performanceLink(propertyId: string): string[] {
+    return ['/finance'];
+  }
+
+  performanceQuery(propertyId: string): Record<string, string> {
+    return { tab: 'performance', propertyId, competence: this.competence() };
+  }
+
+  caixaLink(): string[] {
+    return ['/finance'];
+  }
+
+  caixaQuery(): Record<string, string> {
+    return { tab: 'caixa', competence: this.competence(), ...(this.propertyFilter() ? { propertyId: this.propertyFilter() } : {}) };
   }
 
   applyTemplate(t: { name: string; amount: number }): void {
@@ -250,13 +341,7 @@ export class FinancePage implements OnInit {
     URL.revokeObjectURL(url);
   }
 
-  setCompetence(value: string): void {
-    this.competence.set(value);
-    void this.load();
-  }
-
   competenceLabel(value: string): string {
     return value === '9999-12' ? 'Recorrente' : value;
   }
-
 }

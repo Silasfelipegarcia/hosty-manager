@@ -1,0 +1,30 @@
+<div class="finance-filter-bar portal-filters">
+  @if (activeTab() === 'mes' || activeTab() === 'caixa') {
+    <div class="filter-row">
+      <button type="button" mat-icon-button (click)="shiftMonth(-1)" aria-label="Mês anterior">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Mês de referência</mat-label>
+        <input
+          matInput
+          type="month"
+          [value]="competence()"
+          (change)="setCompetence($any($event.target).value)"
+        />
+      </mat-form-field>
+      <button type="button" mat-icon-button (click)="shiftMonth(1)" aria-label="Próximo mês">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+  }
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="property-filter">
+    <mat-label>Imóvel</mat-label>
+    <mat-select [value]="propertyId()" (selectionChange)="setPropertyId($event.value)">
+      <mat-option value="">Todos os imóveis</mat-option>
+      @for (p of properties(); track p.id) {
+        <mat-option [value]="p.id">{{ p.name }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+</div>

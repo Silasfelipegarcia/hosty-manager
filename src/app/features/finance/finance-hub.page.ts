@@ -1,10 +1,11 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatTabsModule } from '@angular/material/tabs';
 import { FinancePage } from './finance.page';
 import { FinancialHealthPage } from './financial-health.page';
 import { PropertyCrmPage } from './property-crm.page';
 import { OWNER_LABELS } from '../../core/i18n/owner-labels';
+import { FinanceFilterBarComponent } from '../../shared/components/finance-filter-bar/finance-filter-bar.component';
 
 export type FinanceTab = 'mes' | 'caixa' | 'performance';
 
@@ -14,7 +15,7 @@ const INDEX_TAB: FinanceTab[] = ['mes', 'caixa', 'performance'];
 @Component({
   selector: 'app-finance-hub-page',
   standalone: true,
-  imports: [MatTabsModule, FinancePage, FinancialHealthPage, PropertyCrmPage],
+  imports: [MatTabsModule, FinanceFilterBarComponent, FinancePage, FinancialHealthPage, PropertyCrmPage],
   templateUrl: './finance-hub.page.html',
   styleUrl: './finance-hub.page.scss',
 })
@@ -24,6 +25,7 @@ export class FinanceHubPage implements OnInit {
 
   readonly labels = OWNER_LABELS;
   readonly tabIndex = signal(0);
+  readonly activeTab = computed<FinanceTab>(() => INDEX_TAB[this.tabIndex()] ?? 'mes');
 
   ngOnInit(): void {
     this.syncTab();

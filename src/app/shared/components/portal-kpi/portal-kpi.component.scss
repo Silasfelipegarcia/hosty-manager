@@ -67,6 +67,12 @@ strong {
   &.down { color: var(--portal-danger); }
 }
 
+.portal-kpi-hint {
+  font-size: 0.6875rem;
+  color: var(--portal-text-muted);
+  line-height: 1.3;
+}
+
 .portal-kpi-spark {
   width: 100%;
   max-width: 72px;

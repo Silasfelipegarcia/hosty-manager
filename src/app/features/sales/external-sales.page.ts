@@ -8,7 +8,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { firstValueFrom } from 'rxjs';
 import { OperationsService } from '../../core/api/operations.service';
@@ -40,7 +39,6 @@ const CHANNELS = [
     MatButtonModule,
     MatSnackBarModule,
     MatDividerModule,
-    MatChipsModule,
     MatCheckboxModule,
     CurrencyBrlPipe,
   ],
@@ -122,6 +120,7 @@ export class ExternalSalesPage implements OnInit {
     const raw = this.form.getRawValue();
     const channel = CHANNELS.find((c) => c.source === raw.channel)!;
     const tenantIdentifier = raw.guestEmail.trim() || undefined;
+    const notes = this.buildNotes(raw.guestName.trim(), raw.notes.trim());
 
     this.saving.set(true);
     try {
@@ -137,7 +136,7 @@ export class ExternalSalesPage implements OnInit {
         checkoutDate: raw.checkoutDate,
         tenantIdentifier,
         reservationSource: channel.source,
-        notes: raw.notes.trim() || undefined,
+        notes: notes || undefined,
       };
       const res = await firstValueFrom(
         raw.historical ? this.ops.createBackfillBooking(payload) : this.ops.createBooking(payload),
@@ -171,6 +170,43 @@ export class ExternalSalesPage implements OnInit {
 
   channelLabel(source?: string): string {
     return CHANNELS.find((c) => c.source === source?.toUpperCase())?.label ?? source ?? '—';
+  }
+
+  guestDisplayName(s: BookingDto): string {
+    const profile = s.tenantFullName?.trim() || s.tenantName?.trim();
+    if (profile) return profile;
+    const email = s.tenantEmail?.trim() || s.tenantIdentifier?.trim();
+    if (email?.includes('@')) return email;
+    const fromNotes = this.guestNameFromNotes(s.backfillNotes);
+    if (fromNotes) return fromNotes;
+    return 'Sem hóspede';
+  }
+
+  formatStayDates(s: BookingDto): string {
+    const in_ = this.formatShortDate(s.checkinDate);
+    const out = this.formatShortDate(s.checkoutDate);
+    if (!in_ && !out) return '—';
+    return `${in_} → ${out}`;
+  }
+
+  private buildNotes(guestName: string, notes: string): string {
+    const parts: string[] = [];
+    if (guestName) parts.push(`Hóspede: ${guestName}`);
+    if (notes) parts.push(notes);
+    return parts.join(' · ');
+  }
+
+  private guestNameFromNotes(notes?: string): string | null {
+    if (!notes?.trim()) return null;
+    const match = notes.match(/Hóspede:\s*([^·\n]+)/i);
+    return match?.[1]?.trim() || null;
+  }
+
+  private formatShortDate(iso?: string): string {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-');
+    if (!y || !m || !d) return iso;
+    return `${d}/${m}/${y}`;
   }
 
 }

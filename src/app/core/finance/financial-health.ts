@@ -23,6 +23,8 @@ export interface PropertyFinancialHealth {
   safeToWithdraw: number;
   status: HealthStatus;
   statusLabel: string;
+  propertyExpenses?: number;
+  bookingVariableCosts?: number;
 }
 
 const MONTHS_BUFFER = 2;

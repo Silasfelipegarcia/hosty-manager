@@ -117,14 +117,14 @@
           <p class="pane-sub">{{ listPageLabel() }}</p>
         </div>
         @if (ownerActions() > 0) {
-          <span class="pane-alert">{{ ownerActions() }} ação{{ ownerActions() > 1 ? 'ões' : '' }}</span>
+          <span class="pane-alert">{{ ownerActions() }} {{ ownerActions() === 1 ? 'ação' : 'ações' }}</span>
         }
       </div>
 
-      @if (activeFilter() === 'approval' && accessRequests().length > 0) {
+      @if (activeFilter() === 'approval' && scopedAccessRequests().length > 0) {
         <section class="approval-queue">
           <h4>Pedidos de estadia</h4>
-          @for (req of accessRequests(); track req.id) {
+          @for (req of scopedAccessRequests(); track req.id) {
             <article class="approval-item">
               <div class="approval-copy">
                 <strong>{{ req.tenantFullName || req.tenantName || req.tenantEmail || 'Inquilino' }}</strong>
@@ -138,13 +138,13 @@
       }
 
       <div class="list-pane-body">
-      @if (filteredBookings().length === 0) {
+      @if (listShowsEmpty()) {
         <div class="list-empty">
           <mat-icon>event_busy</mat-icon>
           <p>Nenhuma reserva neste filtro.</p>
           <button mat-stroked-button (click)="setFilter('all')">Ver todas</button>
         </div>
-      } @else {
+      } @else if (filteredBookings().length > 0) {
         <ul class="booking-list">
           @for (b of paginatedBookings(); track b.id) {
             <li>
@@ -208,7 +208,7 @@
         <div class="detail-empty">
           <mat-icon>touch_app</mat-icon>
           <h3>Selecione uma reserva</h3>
-          <p>Escolha uma estadia na lista para ver detalhes, aprovar ações e conversar com o hóspede.</p>
+          <p>Escolha uma estadia na lista para ver detalhes e aprovar ações.</p>
         </div>
       } @else if (selected(); as b) {
         <div class="detail-head">
@@ -301,78 +301,23 @@
 
         <mat-divider />
 
-        <h4>Chat com o hóspede</h4>
-        <section class="stay-chat">
-          <div class="stay-chat-thread" #chatLog>
-            @if (messages().length === 0) {
-              <p class="stay-chat-empty">Nenhuma mensagem ainda. Escreva abaixo para falar com o hóspede.</p>
-            }
-            @for (m of messages(); track m.id ?? m.sentAt) {
-              <div
-                class="stay-chat-row"
-                [class.outgoing]="isOwnerMessage(m.senderRole)"
-                [class.incoming]="!isOwnerMessage(m.senderRole)"
-              >
-                @if (!isOwnerMessage(m.senderRole)) {
-                  @if (b.tenantPhotoUrl) {
-                    <img class="stay-chat-avatar" [src]="b.tenantPhotoUrl" alt="" />
-                  } @else {
-                    <span class="stay-chat-avatar guest">{{ displayGuestName(b).slice(0, 1) }}</span>
-                  }
-                }
-
-                <div class="stay-chat-stack">
-                  <span class="stay-chat-sender">
-                    {{ m.senderDisplayName || chatSenderLabel(m.senderRole) }}
-                  </span>
-                  <div class="stay-chat-bubble" [class.out]="isOwnerMessage(m.senderRole)" [class.in]="!isOwnerMessage(m.senderRole)">
-                    <p>{{ m.text }}</p>
-                  </div>
-                  @if (m.sentAt) {
-                    <time class="stay-chat-time">{{ formatChatTime(m.sentAt) }}</time>
-                  }
-                </div>
-
-                @if (isOwnerMessage(m.senderRole)) {
-                  <app-profile-avatar
-                    size="sm"
-                    [photoSrc]="profileStore.photoSrc()"
-                    [initials]="profileStore.initials()"
-                    [name]="profileStore.displayName()"
-                  />
-                }
-              </div>
-            }
-
-          </div>
-
-          <div class="stay-chat-composer">
-            <app-profile-avatar
-              size="sm"
-              [photoSrc]="profileStore.photoSrc()"
-              [initials]="profileStore.initials()"
-              [name]="profileStore.displayName()"
-            />
-            <div class="stay-chat-field">
-              <textarea
-                rows="1"
-                placeholder="Mensagem para o hóspede…"
-                [value]="chatDraft()"
-                (input)="chatDraft.set($any($event.target).value)"
-                (keydown)="onChatKeydown($event)"
-                autocomplete="off"
-              ></textarea>
+        <section class="messages-teaser">
+          <div class="messages-teaser-copy">
+            <mat-icon>forum</mat-icon>
+            <div>
+              <h4>Mensagens com o hóspede</h4>
+              <p>O chat fica em <strong>Mensagens</strong> — aqui você opera a estadia; lá você conversa.</p>
             </div>
-            <button
-              type="button"
-              class="stay-chat-send"
-              [disabled]="chatSending() || !chatDraft().trim()"
-              aria-label="Enviar mensagem"
-              (click)="sendMessage()"
-            >
-              <mat-icon>send</mat-icon>
-            </button>
           </div>
+          <a
+            mat-flat-button
+            color="primary"
+            [routerLink]="['/messages']"
+            [queryParams]="{ bookingId: b.id }"
+          >
+            <mat-icon>chat</mat-icon>
+            Abrir conversa
+          </a>
         </section>
       }
     </mat-card>

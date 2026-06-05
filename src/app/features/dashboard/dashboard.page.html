@@ -105,7 +105,7 @@
             @for (msg of inboxPreview(); track msg.bookingId) {
               <li>
                 <div class="action-copy">
-                  <strong>{{ msg.tenantName || 'Hóspede' }}</strong>
+                  <strong>{{ msg.tenantName?.trim() || 'Inquilino' }}</strong>
                   <span>{{ msg.lastMessage }}</span>
                 </div>
                 <a class="portal-link" [routerLink]="['/reservations']" [queryParams]="{ id: msg.bookingId }">Abrir →</a>

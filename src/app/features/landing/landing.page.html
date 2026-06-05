@@ -39,7 +39,7 @@
         </h1>
         <p class="lead">
           {{ tagline }}. O {{ brandName }} une portal do proprietário, app do hóspede
-          e assistente Clara — do calendário ao check-out, com lucro visível por imóvel.
+          e Clara, copiloto de CRM — finanças, estadias, check-in e check-out no mesmo chat.
         </p>
         <div class="hero-actions">
           <a class="btn primary xl" routerLink="/login">
@@ -93,7 +93,7 @@
               </div>
               <div class="mock-clara">
                 <mat-icon>smart_toy</mat-icon>
-                <span><strong>Clara:</strong> 2 reservas aguardam aprovação — ver fila?</span>
+                <span><strong>Clara:</strong> Check-in Bosque com 4 fotos — aprovar agora?</span>
               </div>
             </main>
           </div>
@@ -143,7 +143,7 @@
     </div>
     <div class="bento">
       @for (card of bento; track card.title) {
-        <article class="bento-card" [class]="'size-' + card.size" [class.accent]="card.accent">
+        <article class="bento-card" [class.accent]="card.accent">
           <mat-icon>{{ card.icon }}</mat-icon>
           <h3>{{ card.title }}</h3>
           <p>{{ card.text }}</p>
@@ -174,13 +174,13 @@
         <span class="eyebrow">Para proprietários</span>
         <h2>O cockpit do seu patrimônio</h2>
         <p>
-          Reservas, finanças por imóvel, registro de estadias, importação em massa
-          e a Clara — assistente flutuante com contexto do seu negócio.
+          Reservas, finanças por imóvel, check-in com evidência e a Clara —
+          copiloto de CRM que lê seus números e executa no portal.
         </p>
         <ul class="check-list">
-          <li><mat-icon>check_circle</mat-icon> Hub de finanças: mês, caixa e performance</li>
-          <li><mat-icon>check_circle</mat-icon> Fila de aprovação e calendário unificado</li>
-          <li><mat-icon>check_circle</mat-icon> Kits, serviços de campo e mensagens</li>
+          <li><mat-icon>check_circle</mat-icon> Hub de finanças: lucro, custos e break-even</li>
+          <li><mat-icon>check_circle</mat-icon> Check-in e check-out com fotos e aprovação na fila</li>
+          <li><mat-icon>check_circle</mat-icon> Clara: cadastra estadias e prioriza pendências</li>
         </ul>
         <a class="btn primary lg" routerLink="/login">Acessar portal</a>
       </div>
@@ -263,16 +263,28 @@
   <section class="section clara-section">
     <div class="clara-panel">
       <div class="clara-text">
-        <span class="eyebrow light">Assistente com contexto</span>
-        <h2>Conheça a Clara</h2>
+        <span class="eyebrow light">Copiloto de CRM</span>
+        <h2>A Clara não só responde — ela opera</h2>
         <p>
-          Ela lê lucro, ocupação e pendências do seu portal.
-          Pergunte o que fazer hoje — e receba link para a tela certa.
+          Finanças, fila de reservas, check-in com fotos e cadastro de estadias:
+          tudo no chat flutuante, com os dados reais da sua carteira.
         </p>
+        <div class="clara-capabilities">
+          @for (c of claraCapabilities; track c.title) {
+            <article class="clara-cap">
+              <mat-icon>{{ c.icon }}</mat-icon>
+              <div>
+                <h4>{{ c.title }}</h4>
+                <p>{{ c.text }}</p>
+              </div>
+            </article>
+          }
+        </div>
         <div class="clara-tags">
-          <span>Insights financeiros</span>
-          <span>Tutoria do portal</span>
-          <span>Chat flutuante</span>
+          <span>Break-even por imóvel</span>
+          <span>Cadastro de estadias</span>
+          <span>Aprova check-in/out</span>
+          <span>Chat no portal</span>
         </div>
       </div>
       <div class="clara-chat">
@@ -284,12 +296,14 @@
           <div class="chat-body">
             <div class="msg bot">
               <small>Clara</small>
-              Seu lucro em junho subiu 12%. Há 2 reservas aguardando aprovação.
+              Bosque de Itu: check-in concluído com <strong>4 fotos</strong> no checklist.
+              Checkout de outra estadia aguarda sua aprovação.
             </div>
-            <div class="msg user">O que faço primeiro?</div>
+            <div class="msg user">Cadastra 12–18/jun, R$ 4.200, venda direta</div>
             <div class="msg bot">
               <small>Clara</small>
-              Abra <strong>Reservas</strong> → fila de aprovação. Depois veja <strong>Performance</strong> por imóvel.
+              Período livre. Estadia criada — id #a8f2. Confira fotos em
+              <strong>Reservas → Check-in</strong> e aprove o checkout pendente.
             </div>
           </div>
         </div>

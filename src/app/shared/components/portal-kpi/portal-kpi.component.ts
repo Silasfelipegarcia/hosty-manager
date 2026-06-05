@@ -1,10 +1,11 @@
+import { DecimalPipe } from '@angular/common';
 import { Component, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-portal-kpi',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, DecimalPipe],
   templateUrl: './portal-kpi.component.html',
   styleUrl: './portal-kpi.component.scss',
 })

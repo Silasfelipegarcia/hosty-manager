@@ -19,13 +19,18 @@ interface BentoCard {
   icon: string;
   title: string;
   text: string;
-  size: 'wide' | 'tall' | 'normal';
   accent?: boolean;
 }
 
 interface FaqItem {
   q: string;
   a: string;
+}
+
+interface ClaraCapability {
+  icon: string;
+  title: string;
+  text: string;
 }
 
 @Component({
@@ -46,7 +51,7 @@ export class LandingPage {
   readonly metrics = [
     { value: '360°', label: 'Operação completa', sub: 'Reserva → check-out' },
     { value: '1', label: 'Plataforma unificada', sub: 'App + portal + API' },
-    { value: 'IA', label: 'Clara assistente', sub: 'Insights com contexto' },
+    { value: 'IA', label: 'Clara copiloto', sub: 'CRM que age no portal' },
     { value: '24/7', label: 'Guia na estadia', sub: 'Hóspede autônomo' },
   ];
 
@@ -55,32 +60,50 @@ export class LandingPage {
       icon: 'hub',
       title: 'Tudo sincronizado',
       text: 'App do hóspede, portal do dono e API única. Sem dados duplicados.',
-      size: 'wide',
       accent: true,
     },
     {
       icon: 'sync',
       title: 'Calendário + iCal',
       text: 'Airbnb, Booking e vendas diretas no mesmo quadro.',
-      size: 'normal',
     },
     {
       icon: 'payments',
       title: 'Lucro por imóvel',
       text: 'Bruto, taxas, custos fixos e margem real.',
-      size: 'normal',
     },
     {
       icon: 'verified_user',
       title: 'Operação com prova',
       text: 'Checklist, fotos e check-out aprovado.',
-      size: 'tall',
     },
     {
       icon: 'smart_toy',
       title: 'Clara, copiloto IA',
-      text: 'Lê seus números e diz o que fazer hoje.',
-      size: 'wide',
+      text: 'Finanças, estadias, check-in e check-out — direto no chat.',
+    },
+  ];
+
+  readonly claraCapabilities: ClaraCapability[] = [
+    {
+      icon: 'payments',
+      title: 'Finanças na conversa',
+      text: 'Lucro, custos fixos, break-even e quanto faturar por imóvel — com os números reais do portal.',
+    },
+    {
+      icon: 'event_available',
+      title: 'Cadastra estadias',
+      text: 'Venda direta, Airbnb manual ou histórico: ela verifica disponibilidade e registra no calendário.',
+    },
+    {
+      icon: 'photo_camera',
+      title: 'Check-in e check-out',
+      text: 'Vê a fila, fotos do checklist e aprova chegada ou saída — sem perder evidência na operação.',
+    },
+    {
+      icon: 'playlist_add_check',
+      title: 'Fila do proprietário',
+      text: 'Reservas pendentes, check-ins próximos e ocupação — prioriza o que precisa da sua ação hoje.',
     },
   ];
 
@@ -90,7 +113,7 @@ export class LandingPage {
     { icon: 'fact_check', title: 'Check-in com evidência', text: 'QR, checklist e aprovação antes de liberar a estadia.' },
     { icon: 'chat', title: 'Chat com o hóspede', text: 'Conversa por imóvel, sem perder contexto no WhatsApp.' },
     { icon: 'inventory_2', title: 'Kits e extras', text: 'Churrasco, café da manhã — venda na jornada da estadia.' },
-    { icon: 'smart_toy', title: 'Clara, sua copiloto', text: 'Insights, tutoria e próximos passos no portal.' },
+    { icon: 'smart_toy', title: 'Clara, sua copiloto', text: 'Pergunte, cadastre estadias e aprove check-in — no chat flutuante.' },
   ];
 
   readonly tenantFeatures: FeatureCard[] = [
@@ -135,8 +158,8 @@ export class LandingPage {
       a: 'Proprietários usam o portal web (Manager). Hóspedes usam o app Hosty. Tudo na mesma base de dados.',
     },
     {
-      q: 'A Clara é obrigatória?',
-      a: 'Não. É uma assistente opcional no portal que lê seus números e sugere próximos passos.',
+      q: 'O que a Clara consegue fazer?',
+      a: 'Ela lê finanças e a fila operacional, cadastra estadias, checa disponibilidade e orienta aprovações de check-in e check-out — sempre com link para a tela certa no Manager.',
     },
     {
       q: 'Posso importar aluguéis antigos?',

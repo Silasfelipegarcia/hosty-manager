@@ -104,16 +104,42 @@ export class PropertyCrmPage implements OnInit {
       .sort((a, b) => a.competence.localeCompare(b.competence));
     return {
       labels: monthly.map((m) => m.label),
-      datasets: [{ label: 'Bruto', data: monthly.map((m) => m.gross), backgroundColor: '#0F766E' }],
+      datasets: [
+        { label: 'Bruto', data: monthly.map((m) => m.gross), backgroundColor: '#0F766E' },
+        { label: 'Lucro', data: monthly.map((m) => m.profit), backgroundColor: '#0369A1' },
+      ],
     };
   });
 
-  ngOnInit(): void {
-    const propertyId = this.route.snapshot.queryParamMap.get('propertyId');
-    if (propertyId) {
-      this.propertyFilter.set(propertyId);
+  readonly expensesByCategory = computed(() => {
+    const totals = new Map<string, number>();
+    for (const e of this.filteredExpenses()) {
+      const key = e.category || 'OTHER';
+      totals.set(key, (totals.get(key) ?? 0) + e.amount);
     }
+    return [...totals.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([key, amount]) => ({ key, amount }));
+  });
+
+  ngOnInit(): void {
+    this.syncFromRoute();
+    this.route.queryParamMap.subscribe(() => {
+      this.syncFromRoute();
+      void this.load();
+    });
     void this.load();
+  }
+
+  private syncFromRoute(): void {
+    const propertyId = this.route.snapshot.queryParamMap.get('propertyId');
+    if (propertyId) this.propertyFilter.set(propertyId);
+    const competence = this.route.snapshot.queryParamMap.get('competence');
+    if (competence) {
+      this.to.set(competence);
+      this.from.set(competence);
+      this.activePreset.set('');
+    }
   }
 
   async load(): Promise<void> {
@@ -127,16 +153,19 @@ export class PropertyCrmPage implements OnInit {
     try {
       const from = this.from();
       const to = this.to();
-      const months = buildPeriodMonths(from, to);
+      const propertyId = this.propertyFilter() || undefined;
 
-      const [properties, fixedCosts, expenseList, ...bundles] = await Promise.all([
+      const [properties, fixedCosts, expenseList, rangeRes] = await Promise.all([
         firstValueFrom(this.props.listOwner()),
         firstValueFrom(this.finance.listFixedCosts(0, 100)),
         firstValueFrom(this.expensesApi.listOwner(from, to)),
-        ...months.map((competence) =>
-          firstValueFrom(this.finance.getDashboardBundle(competence)).then((bundle) => ({ competence, bundle })),
-        ),
+        firstValueFrom(this.finance.getDashboardRange(from, to, propertyId)),
       ]);
+
+      const bundles: PeriodMonthBundle[] = rangeRes.months.map((bundle) => ({
+        competence: bundle.competence ?? '',
+        bundle,
+      }));
 
       this.properties.set(properties.content);
       this.monthBundles.set(bundles);

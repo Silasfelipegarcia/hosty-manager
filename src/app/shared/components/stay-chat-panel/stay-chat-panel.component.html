@@ -1,0 +1,73 @@
+<section class="stay-chat">
+  <div class="stay-chat-thread" #chatLog>
+    @if (loading()) {
+      <p class="stay-chat-empty">Carregando mensagens…</p>
+    } @else if (messages().length === 0) {
+      <p class="stay-chat-empty">Nenhuma mensagem ainda. Escreva abaixo para falar com o hóspede.</p>
+    }
+    @for (m of messages(); track m.id ?? m.sentAt) {
+      <div
+        class="stay-chat-row"
+        [class.outgoing]="isOwnerMessage(m.senderRole)"
+        [class.incoming]="!isOwnerMessage(m.senderRole)"
+      >
+        @if (!isOwnerMessage(m.senderRole)) {
+          @if (guestPhoto()) {
+            <img class="stay-chat-avatar" [src]="guestPhoto()" alt="" />
+          } @else {
+            <span class="stay-chat-avatar guest">{{ guestName().slice(0, 1) }}</span>
+          }
+        }
+
+        <div class="stay-chat-stack">
+          <span class="stay-chat-sender">
+            {{ m.senderDisplayName || chatSenderLabel(m.senderRole) }}
+          </span>
+          <div class="stay-chat-bubble" [class.out]="isOwnerMessage(m.senderRole)" [class.in]="!isOwnerMessage(m.senderRole)">
+            <p>{{ m.text }}</p>
+          </div>
+          @if (m.sentAt) {
+            <time class="stay-chat-time">{{ formatChatTime(m.sentAt) }}</time>
+          }
+        </div>
+
+        @if (isOwnerMessage(m.senderRole)) {
+          <app-profile-avatar
+            size="sm"
+            [photoSrc]="profileStore.photoSrc()"
+            [initials]="profileStore.initials()"
+            [name]="profileStore.displayName()"
+          />
+        }
+      </div>
+    }
+  </div>
+
+  <div class="stay-chat-composer">
+    <app-profile-avatar
+      size="sm"
+      [photoSrc]="profileStore.photoSrc()"
+      [initials]="profileStore.initials()"
+      [name]="profileStore.displayName()"
+    />
+    <div class="stay-chat-field">
+      <textarea
+        rows="1"
+        placeholder="Mensagem para o hóspede…"
+        [value]="chatDraft()"
+        (input)="chatDraft.set($any($event.target).value)"
+        (keydown)="onChatKeydown($event)"
+        autocomplete="off"
+      ></textarea>
+    </div>
+    <button
+      type="button"
+      class="stay-chat-send"
+      [disabled]="chatSending() || !chatDraft().trim()"
+      aria-label="Enviar mensagem"
+      (click)="sendMessage()"
+    >
+      <mat-icon>send</mat-icon>
+    </button>
+  </div>
+</section>

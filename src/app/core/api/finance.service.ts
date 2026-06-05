@@ -4,7 +4,9 @@ import { environment } from '../../../environments/environment';
 import { PageResponse } from '../models/page-response';
 import {
   AddFixedCostRequest,
+  FinanceBreakEvenRow,
   FinanceDashboardBundle,
+  FinanceDashboardRangeResult,
   FixedCostRow,
   VariableCostRequest,
 } from '../models/finance.models';
@@ -14,8 +16,25 @@ export class FinanceService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiBaseUrl}/api/v1/finance`;
 
-  getDashboardBundle(competence: string) {
-    return this.http.get<FinanceDashboardBundle>(`${this.base}/dashboard/bundle?competence=${competence}`);
+  getDashboardBundle(competence: string, propertyId?: string) {
+    const pid = propertyId ? `&propertyId=${encodeURIComponent(propertyId)}` : '';
+    return this.http.get<FinanceDashboardBundle>(
+      `${this.base}/dashboard/bundle?competence=${competence}${pid}`,
+    );
+  }
+
+  getDashboardRange(from: string, to: string, propertyId?: string) {
+    const pid = propertyId ? `&propertyId=${encodeURIComponent(propertyId)}` : '';
+    return this.http.get<FinanceDashboardRangeResult>(
+      `${this.base}/dashboard/range?from=${from}&to=${to}${pid}`,
+    );
+  }
+
+  getBreakEven(competence: string, propertyId?: string) {
+    const pid = propertyId ? `&propertyId=${encodeURIComponent(propertyId)}` : '';
+    return this.http.get<FinanceBreakEvenRow[]>(
+      `${this.base}/break-even?competence=${competence}${pid}`,
+    );
   }
 
   listFixedCosts(page = 0, size = 50) {

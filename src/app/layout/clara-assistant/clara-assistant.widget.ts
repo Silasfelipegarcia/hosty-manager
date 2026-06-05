@@ -37,9 +37,9 @@ const CLARA_AVATAR = '/clara-avatar.png';
 
 const SUGGESTIONS = [
   'Como está meu lucro este mês?',
-  'Qual imóvel precisa de atenção?',
-  'O que fazer com reservas pendentes?',
-  'Como importar aluguéis antigos?',
+  'Quanto preciso faturar no Bosque de Itu?',
+  'Cadastra estadia 10–15/jun no Bosque, R$ 3.200',
+  'O que está pendente na minha fila?',
 ];
 
 const FALLBACK_HINTS: Record<string, string> = {
