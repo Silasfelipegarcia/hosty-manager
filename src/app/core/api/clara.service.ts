@@ -13,6 +13,7 @@ export interface ClaraChatResponse {
   agentName: string;
   reply: string;
   fallback: boolean;
+  fallbackReason?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })

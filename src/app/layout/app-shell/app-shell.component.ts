@@ -10,6 +10,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { BadgeService } from '../../core/api/badge.service';
 import { environment } from '../../../environments/environment';
 import { ClaraAssistantWidget } from '../clara-assistant/clara-assistant.widget';
+import { OWNER_LABELS } from '../../core/i18n/owner-labels';
 
 interface NavItem {
   label: string;
@@ -42,22 +43,34 @@ export class AppShellComponent implements OnInit {
   readonly badges = inject(BadgeService);
 
   readonly appName = environment.appName;
+  readonly labels = OWNER_LABELS;
 
   readonly nav: NavItem[] = [
-    { label: 'Início', path: '/dashboard', icon: 'dashboard' },
+    { label: OWNER_LABELS.dashboard, path: '/dashboard', icon: 'dashboard' },
     { label: 'Imóveis', path: '/properties', icon: 'home_work' },
     {
-      label: 'Reservas',
+      label: OWNER_LABELS.reservations,
       path: '/reservations',
       icon: 'event',
       badge: () => this.badges.ownerActionRequired(),
     },
-    { label: 'Finanças', path: '/finance', icon: 'payments', exact: true },
-    { label: 'Performance', path: '/finance/crm', icon: 'analytics' },
-    { label: 'Caixa', path: '/finance/health', icon: 'savings' },
-    { label: 'Vendas', path: '/sales', icon: 'point_of_sale' },
-    { label: 'Mensagens', path: '/messages', icon: 'chat' },
-    { label: 'Conta', path: '/account', icon: 'person' },
+    { label: OWNER_LABELS.finances, path: '/finance', icon: 'payments' },
+    { label: OWNER_LABELS.registerStay, path: '/sales', icon: 'point_of_sale' },
+    {
+      label: OWNER_LABELS.kitOrders,
+      path: '/kits/pending',
+      icon: 'inventory_2',
+      badge: () => this.badges.pendingKitOrders(),
+    },
+    {
+      label: OWNER_LABELS.fieldServices,
+      path: '/field-services/pending',
+      icon: 'handyman',
+      badge: () => this.badges.pendingFieldServices(),
+    },
+    { label: OWNER_LABELS.messages, path: '/messages', icon: 'chat' },
+    { label: OWNER_LABELS.help, path: '/help', icon: 'help_outline' },
+    { label: OWNER_LABELS.account, path: '/account', icon: 'person' },
   ];
 
   get email(): string | null {

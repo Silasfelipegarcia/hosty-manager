@@ -33,11 +33,11 @@
       @if (showScope()) {
         <div class="scope-bar" [formGroup]="scope">
           <mat-form-field appearance="outline" subscriptSizing="dynamic">
-            <mat-label>Competência</mat-label>
+            <mat-label>{{ labels.referenceMonth }}</mat-label>
             <input matInput type="month" formControlName="competence" />
           </mat-form-field>
           <mat-form-field appearance="outline" subscriptSizing="dynamic">
-            <mat-label>Imóvel</mat-label>
+            <mat-label>{{ labels.property }}</mat-label>
             <mat-select formControlName="propertyId">
               <mat-option value="">Carteira inteira</mat-option>
               @for (p of properties(); track p.id) {
@@ -50,13 +50,25 @@
 
       <div class="chat-log" #chatLog>
         @for (line of lines(); track $index) {
-          <div class="bubble" [class.user]="line.role === 'user'" [class.assistant]="line.role === 'assistant'">
+          <div
+            class="bubble"
+            [class.user]="line.role === 'user'"
+            [class.assistant]="line.role === 'assistant'"
+            [class.error]="line.role === 'error'"
+          >
             @if (line.role === 'assistant') {
               <span class="bubble-label">Clara</span>
             }
-            <p>{{ line.text }}</p>
             @if (line.fallback) {
-              <small class="fallback">Resumo automático (IA offline)</small>
+              <div class="fallback-banner">{{ fallbackHint(line.fallbackReason) }}</div>
+            }
+            <p>{{ line.text }}</p>
+            @if (line.actionLinks?.length) {
+              <div class="action-links">
+                @for (link of line.actionLinks; track link.path) {
+                  <a [routerLink]="link.path" (click)="close()">{{ link.label }}</a>
+                }
+              </div>
             }
           </div>
         }

@@ -20,6 +20,7 @@ import { FixedCostRow } from '../../../core/models/finance.models';
 import { PropertyExpense, EXPENSE_CATEGORIES } from '../../../core/models/property-expense.models';
 import { buildPropertyHealth } from '../../../core/finance/financial-health';
 import { CurrencyBrlPipe } from '../../../shared/pipes/currency-brl.pipe';
+import { currentCompetence } from '../../../core/dates/competence';
 
 @Component({
   selector: 'app-property-detail-page',
@@ -55,7 +56,7 @@ export class PropertyDetailPage implements OnInit {
   readonly coOwners = signal<CoOwner[]>([]);
   readonly checklist = signal<ChecklistItem[]>([]);
   readonly localGuide = signal<LocalGuideConfig | null>(null);
-  readonly financeCompetence = signal(this.nowCompetence());
+  readonly financeCompetence = signal(currentCompetence());
   readonly propertyFixedCosts = signal<FixedCostRow[]>([]);
   readonly propertyExpenses = signal<PropertyExpense[]>([]);
   readonly safeToWithdraw = signal(0);
@@ -100,7 +101,7 @@ export class PropertyDetailPage implements OnInit {
   });
 
   readonly newExpense = this.fb.nonNullable.group({
-    competence: [this.nowCompetence()],
+    competence: [currentCompetence()],
     category: ['OTHER'],
     name: [''],
     amount: [0],
@@ -225,11 +226,6 @@ export class PropertyDetailPage implements OnInit {
     if (!confirm('Excluir este imóvel?')) return;
     await firstValueFrom(this.api.delete(this.propertyId));
     window.history.back();
-  }
-
-  private nowCompetence(): string {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   }
 
   private todayIso(): string {

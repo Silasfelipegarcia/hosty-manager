@@ -1,0 +1,33 @@
+.help-card {
+  padding: 20px;
+  margin-bottom: 16px;
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 17px;
+    margin-bottom: 12px;
+
+    mat-icon { color: #0f766e; }
+  }
+
+  ul {
+    margin: 0 0 12px;
+    padding-left: 20px;
+    line-height: 1.55;
+    color: #475569;
+  }
+
+  a {
+    color: #0b5ed7;
+    margin-left: 6px;
+  }
+
+  code {
+    font-size: 12px;
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+}

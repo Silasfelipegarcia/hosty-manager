@@ -16,6 +16,7 @@ import { PropertiesService } from '../../core/api/properties.service';
 import { PropertyDto } from '../../core/models/property.models';
 import { BookingDto } from '../../core/models/operations.models';
 import { CurrencyBrlPipe } from '../../shared/pipes/currency-brl.pipe';
+import { currentCompetence } from '../../core/dates/competence';
 
 const CHANNELS = [
   { source: 'AIRBNB', platform: 'AIRBNB', label: 'Airbnb', fee: 15 },
@@ -63,7 +64,7 @@ export class ExternalSalesPage implements OnInit {
     propertyId: ['', Validators.required],
     channel: ['WHATSAPP', Validators.required],
     historical: [false],
-    competence: [this.currentCompetence()],
+    competence: [currentCompetence()],
     guestName: [''],
     guestEmail: [''],
     grossAmount: [0, [Validators.required, Validators.min(0.01)]],
@@ -111,7 +112,7 @@ export class ExternalSalesPage implements OnInit {
 
   competenceFromCheckin(): string {
     const d = this.form.controls.checkinDate.value;
-    if (!d) return this.currentCompetence();
+    if (!d) return currentCompetence();
     const [y, m] = d.split('-');
     return `${y}-${m}`;
   }
@@ -170,8 +171,4 @@ export class ExternalSalesPage implements OnInit {
     return CHANNELS.find((c) => c.source === source?.toUpperCase())?.label ?? source ?? '—';
   }
 
-  private currentCompetence(): string {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-  }
 }

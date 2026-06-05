@@ -6,15 +6,21 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ClaraService } from '../../core/api/clara.service';
 import { PropertiesService } from '../../core/api/properties.service';
 import { PropertyDto } from '../../core/models/property.models';
+import { currentCompetence } from '../../core/dates/competence';
+import { OWNER_LABELS } from '../../core/i18n/owner-labels';
+import { parseClaraActionLinks } from '../../core/clara/clara-action-links';
 
 interface ChatLine {
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'error';
   text: string;
   fallback?: boolean;
+  fallbackReason?: string | null;
+  actionLinks?: { label: string; path: string }[];
 }
 
 const SUGGESTIONS = [
@@ -24,10 +30,20 @@ const SUGGESTIONS = [
   'Como importar aluguéis antigos?',
 ];
 
+const FALLBACK_HINTS: Record<string, string> = {
+  no_base_url: 'Configure hosty.agent-runtime.base-url na API.',
+  connection_refused: 'Suba o runtime: python -m uvicorn server:app --host 127.0.0.1 --port 8000',
+  timeout: 'O runtime demorou para responder. Tente de novo.',
+  runtime_5xx: 'Erro no motor de IA (verifique ANTHROPIC_API_KEY ou GROQ_API_KEY).',
+  runtime_unavailable: 'Runtime indisponível no momento.',
+  empty_reply: 'A IA respondeu vazio. Reinicie a conversa.',
+};
+
 @Component({
   selector: 'app-clara-assistant',
   standalone: true,
   imports: [
+    RouterLink,
     ReactiveFormsModule,
     MatButtonModule,
     MatFormFieldModule,
@@ -44,8 +60,8 @@ export class ClaraAssistantWidget implements OnInit {
   private readonly props = inject(PropertiesService);
   private readonly fb = inject(FormBuilder);
 
+  readonly labels = OWNER_LABELS;
   readonly chatLog = viewChild<ElementRef<HTMLDivElement>>('chatLog');
-
   readonly suggestions = SUGGESTIONS;
   readonly open = signal(false);
   readonly showScope = signal(false);
@@ -55,7 +71,7 @@ export class ClaraAssistantWidget implements OnInit {
 
   readonly scope = this.fb.nonNullable.group({
     propertyId: [''],
-    competence: [this.nowCompetence()],
+    competence: [currentCompetence()],
   });
 
   readonly messageForm = this.fb.nonNullable.group({
@@ -83,6 +99,11 @@ export class ClaraAssistantWidget implements OnInit {
     this.open.set(false);
   }
 
+  fallbackHint(reason: string | null | undefined): string {
+    if (!reason) return 'Motor de IA offline — exibindo resumo automático dos seus dados.';
+    return FALLBACK_HINTS[reason] ?? 'Motor de IA offline — exibindo resumo automático.';
+  }
+
   async loadProperties(): Promise<void> {
     const res = await firstValueFrom(this.props.listOwner());
     this.properties.set(res.content);
@@ -106,7 +127,21 @@ export class ClaraAssistantWidget implements OnInit {
       );
       this.lines.update((l) => [
         ...l,
-        { role: 'assistant', text: res.reply, fallback: res.fallback },
+        {
+          role: 'assistant',
+          text: res.reply,
+          fallback: res.fallback,
+          fallbackReason: res.fallbackReason,
+          actionLinks: res.fallback ? undefined : parseClaraActionLinks(res.reply),
+        },
+      ]);
+    } catch {
+      this.lines.update((l) => [
+        ...l,
+        {
+          role: 'error',
+          text: 'Não foi possível falar com a Clara. Verifique se a API está no ar.',
+        },
       ]);
     } finally {
       this.loading.set(false);
@@ -114,7 +149,11 @@ export class ClaraAssistantWidget implements OnInit {
   }
 
   async clearChat(): Promise<void> {
-    await firstValueFrom(this.clara.clearSession());
+    try {
+      await firstValueFrom(this.clara.clearSession());
+    } catch {
+      // noop
+    }
     this.resetGreeting();
   }
 
@@ -134,10 +173,5 @@ export class ClaraAssistantWidget implements OnInit {
   private scrollToBottom(): void {
     const el = this.chatLog()?.nativeElement;
     if (el) el.scrollTop = el.scrollHeight;
-  }
-
-  private nowCompetence(): string {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   }
 }

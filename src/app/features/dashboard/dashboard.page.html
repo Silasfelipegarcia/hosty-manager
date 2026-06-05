@@ -1,15 +1,13 @@
 <div class="page-header">
   <div>
     <h1>Início</h1>
-    <p>Visão geral da operação — {{ competence() | competence }}</p>
+    <p>Caixa de entrada da operação — {{ competence() | competence }}</p>
   </div>
   <div class="actions">
     <button mat-stroked-button (click)="load()"><mat-icon>refresh</mat-icon> Atualizar</button>
-    <button mat-flat-button color="primary" routerLink="/reservations/new">Nova reserva</button>
-    <button mat-flat-button routerLink="/properties/new">Novo imóvel</button>
-    <button mat-stroked-button routerLink="/sales"><mat-icon>point_of_sale</mat-icon> Vendas externas</button>
-    <button mat-stroked-button routerLink="/finance"><mat-icon>payments</mat-icon> Finanças</button>
-    <button mat-stroked-button (click)="exportCsv()">Exportar CSV</button>
+    <button mat-flat-button color="primary" routerLink="/sales">{{ labels.registerStay }}</button>
+    <button mat-stroked-button routerLink="/sales/import">{{ labels.importSpreadsheet }}</button>
+    <button mat-stroked-button routerLink="/properties/new">Novo imóvel</button>
   </div>
 </div>
 
@@ -18,82 +16,60 @@
 } @else if (error()) {
   <p class="error">{{ error() }}</p>
 } @else {
+  <mat-card class="onboarding-card">
+    <h3>Primeiros passos</h3>
+    <ol>
+      <li><a routerLink="/properties/new">Cadastre um imóvel</a></li>
+      <li><a routerLink="/sales">{{ labels.registerStay }}</a> ou <a routerLink="/sales/import">importe planilha</a></li>
+      <li><a routerLink="/finance">Veja suas finanças</a></li>
+    </ol>
+    <a routerLink="/help">Guia completo</a>
+  </mat-card>
+
   <div class="kpi-grid">
-    <mat-card>
+    <mat-card class="action-kpi" routerLink="/reservations">
       <span class="kpi-label">Ações pendentes</span>
       <strong>{{ badges.ownerActionRequired() }}</strong>
     </mat-card>
-    <mat-card>
+    <mat-card class="action-kpi" routerLink="/reservations">
       <span class="kpi-label">Pedidos de acesso</span>
       <strong>{{ badges.pendingAccessRequests() }}</strong>
     </mat-card>
-    <mat-card>
+    <mat-card class="action-kpi" routerLink="/kits/pending">
       <span class="kpi-label">Kits pendentes</span>
       <strong>{{ badges.pendingKitOrders() }}</strong>
     </mat-card>
-    <mat-card>
-      <span class="kpi-label">Field services</span>
+    <mat-card class="action-kpi" routerLink="/field-services/pending">
+      <span class="kpi-label">Serviços de campo</span>
       <strong>{{ badges.pendingFieldServices() }}</strong>
     </mat-card>
-    <mat-card>
+    <mat-card class="action-kpi" routerLink="/reservations">
       <span class="kpi-label">Estadias ativas</span>
       <strong>{{ stays()?.active ?? 0 }}</strong>
     </mat-card>
-    <mat-card>
+    <mat-card class="action-kpi finance-summary" routerLink="/finance">
       <span class="kpi-label">Lucro do mês</span>
       <strong>{{ bundle()?.dashboard?.totalProfit | currencyBrl }}</strong>
+      <small>Ver em Finanças →</small>
     </mat-card>
   </div>
 
   <div class="grid-2">
     <mat-card>
-      <h3>Fila de ação</h3>
-      @if (accessRequests().length === 0) {
-        <p class="muted">Nenhum pedido de acesso pendente.</p>
+      <h3>O que fazer agora</h3>
+      @if (actionItems().length === 0) {
+        <p class="muted">Nenhuma pendência urgente. Bom trabalho!</p>
       } @else {
-        <ul class="action-list">
-          @for (req of accessRequests(); track req.id) {
+        <ul class="action-list priority">
+          @for (item of actionItems(); track item.label) {
             <li>
-              <strong>{{ req.tenantName || req.tenantEmail }}</strong>
-              <span>{{ req.propertyName }}</span>
-              <a routerLink="/reservations">Ver reservas</a>
+              <strong>{{ item.label }}</strong>
+              <span>{{ item.detail }}</span>
+              <a [routerLink]="item.path">{{ item.cta }}</a>
             </li>
           }
         </ul>
       }
-      <div class="quick-links">
-        <a routerLink="/kits/pending">Kits pendentes</a>
-        <a routerLink="/field-services/pending">Field services</a>
-      </div>
-    </mat-card>
-
-    <mat-card>
-      <h3>Receita por plataforma</h3>
-      @if (platformChart.labels?.length) {
-        <canvas baseChart type="doughnut" [data]="platformChart" [options]="platformChartOptions"></canvas>
-      } @else {
-        <p class="muted">Sem dados no período.</p>
-      }
-    </mat-card>
-  </div>
-
-  <div class="grid-2">
-    <mat-card>
-      <h3>Performance por imóvel</h3>
-      <table>
-        <thead>
-          <tr><th>Imóvel</th><th>Bruto</th><th>Lucro</th></tr>
-        </thead>
-        <tbody>
-          @for (row of bundle()?.byProperty ?? []; track row.propertyId) {
-            <tr>
-              <td>{{ propertyLabel(row.propertyId, ownerProperties(), row.propertyName) }}</td>
-              <td>{{ row.grossAmount | currencyBrl }}</td>
-              <td>{{ row.profit | currencyBrl }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
     </mat-card>
 
     <mat-card>

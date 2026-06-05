@@ -1,0 +1,27 @@
+.finance-hub-header {
+  margin-bottom: 8px;
+
+  h1 {
+    margin-bottom: 4px;
+  }
+
+  p {
+    margin: 0;
+    color: #64748b;
+    font-size: 14px;
+  }
+}
+
+.finance-tabs {
+  ::ng-deep .mat-mdc-tab-body-content {
+    overflow: visible;
+  }
+}
+
+.tab-body {
+  padding-top: 16px;
+}
+
+.tab-body ::ng-deep .page-header h1 {
+  font-size: 20px;
+}

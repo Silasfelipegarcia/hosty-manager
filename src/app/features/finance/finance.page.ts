@@ -27,6 +27,7 @@ import {
 import { fixedCostsForProperty } from '../../core/finance/financial-health';
 import { CurrencyBrlPipe } from '../../shared/pipes/currency-brl.pipe';
 import { CompetencePipe } from '../../shared/pipes/competence.pipe';
+import { currentCompetence } from '../../core/dates/competence';
 
 const FIXED_TEMPLATES = [
   { name: 'Condomínio', amount: 0 },
@@ -64,7 +65,7 @@ export class FinancePage implements OnInit {
   readonly bundle = signal<FinanceDashboardBundle | null>(null);
   readonly fixedCosts = signal<FixedCostRow[]>([]);
   readonly properties = signal<PropertyDto[]>([]);
-  readonly competence = signal(this.nowCompetence());
+  readonly competence = signal(currentCompetence());
   readonly ytdSeries = signal<ReturnType<typeof buildYtdSeries>>([]);
   readonly breakEvenRows = signal<BreakEvenRow[]>([]);
   readonly editingFixed = signal<FixedCostRow | null>(null);
@@ -104,14 +105,14 @@ export class FinancePage implements OnInit {
     name: [''],
     amount: [0],
     recurring: [false],
-    competence: [this.nowCompetence()],
+    competence: [currentCompetence()],
   });
 
   readonly editFixed = this.fb.nonNullable.group({
     name: [''],
     amount: [0],
     recurring: [false],
-    competence: [this.nowCompetence()],
+    competence: [currentCompetence()],
   });
 
   ngOnInit(): void {
@@ -209,7 +210,7 @@ export class FinancePage implements OnInit {
       name: row.name,
       amount: row.amount,
       recurring: !!row.recurring,
-      competence: row.recurring ? this.nowCompetence() : row.competence,
+      competence: row.recurring ? currentCompetence() : row.competence,
     });
   }
 
@@ -258,8 +259,4 @@ export class FinancePage implements OnInit {
     return value === '9999-12' ? 'Recorrente' : value;
   }
 
-  private nowCompetence(): string {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-  }
 }

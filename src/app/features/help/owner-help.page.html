@@ -1,0 +1,43 @@
+<div class="page-header">
+  <div>
+    <h1>{{ labels.help }}</h1>
+    <p>Guia rápido para usar o portal do proprietário</p>
+  </div>
+</div>
+
+<mat-card class="help-card">
+  <h2><mat-icon>event</mat-icon> Quando usar cada fluxo de estadia</h2>
+  <ul>
+    <li>
+      <strong>{{ labels.registerStay }}</strong> — uma reserva nova (Airbnb, WhatsApp, direto) ou estadia já concluída.
+      <a routerLink="/sales">Ir para registrar</a>
+    </li>
+    <li>
+      <strong>{{ labels.importSpreadsheet }}</strong> — muitos aluguéis históricos de uma vez (CSV).
+      <a routerLink="/sales/import">Ir para importação</a>
+    </li>
+    <li>
+      <strong>{{ labels.reservations }}</strong> — aprovar, operar check-in/out e ver calendário (não cadastrar em massa).
+      <a routerLink="/reservations">Ir para reservas</a>
+    </li>
+  </ul>
+</mat-card>
+
+<mat-card class="help-card">
+  <h2><mat-icon>payments</mat-icon> Finanças: onde ver cada coisa</h2>
+  <ul>
+    <li><strong>Visão do mês</strong> — lucro, margem, custos fixos e YTD.</li>
+    <li><strong>Caixa</strong> — quanto manter em caixa e reserva recomendada.</li>
+    <li><strong>Performance</strong> — análise por período, metas e gastos por imóvel.</li>
+    <li>Custos <strong>fixos</strong> do mês: aba Visão do mês. Gastos <strong>variáveis</strong>: aba do imóvel.</li>
+  </ul>
+  <a routerLink="/finance">Abrir Finanças</a>
+</mat-card>
+
+<mat-card class="help-card">
+  <h2><mat-icon>smart_toy</mat-icon> Clara</h2>
+  <p>
+    Use o botão flutuante no canto da tela. Se aparecer "IA offline", suba o runtime dos agentes
+    (<code>uvicorn server:app --port 8000</code>) e confira a URL na API.
+  </p>
+</mat-card>

@@ -1,15 +1,13 @@
 <div class="page-header">
   <div>
-    <h1>Mês atual</h1>
-    <p>Raio-X financeiro do mês — {{ competence() | competence }}</p>
+    <h1>Visão do mês</h1>
+    <p>Raio-X financeiro — {{ competence() | competence }}</p>
   </div>
   <div class="actions">
     <mat-form-field appearance="outline" subscriptSizing="dynamic">
-      <mat-label>Competência</mat-label>
+      <mat-label>Mês de referência</mat-label>
       <input matInput type="month" [value]="competence()" (change)="setCompetence($any($event.target).value)" />
     </mat-form-field>
-    <button mat-stroked-button routerLink="/finance/crm">Performance por período</button>
-    <button mat-stroked-button routerLink="/finance/health">Caixa e reservas</button>
     <button mat-stroked-button (click)="exportCsv()">Exportar CSV</button>
   </div>
 </div>

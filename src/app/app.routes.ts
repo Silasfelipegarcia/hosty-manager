@@ -56,7 +56,7 @@ export const routes: Routes = [
       },
       {
         path: 'reservations/new',
-        loadComponent: () => import('./features/reservations/reservations.page').then((m) => m.ReservationsPage),
+        redirectTo: 'sales',
       },
       {
         path: 'reservations/:id',
@@ -64,16 +64,17 @@ export const routes: Routes = [
       },
       {
         path: 'finance',
-        loadComponent: () => import('./features/finance/finance.page').then((m) => m.FinancePage),
+        loadComponent: () => import('./features/finance/finance-hub.page').then((m) => m.FinanceHubPage),
       },
       {
         path: 'finance/health',
-        loadComponent: () =>
-          import('./features/finance/financial-health.page').then((m) => m.FinancialHealthPage),
+        loadComponent: () => import('./features/finance/finance-hub.page').then((m) => m.FinanceHubPage),
+        data: { tab: 'caixa' },
       },
       {
         path: 'finance/crm',
-        loadComponent: () => import('./features/finance/property-crm.page').then((m) => m.PropertyCrmPage),
+        loadComponent: () => import('./features/finance/finance-hub.page').then((m) => m.FinanceHubPage),
+        data: { tab: 'performance' },
       },
       {
         path: 'sales/import',
@@ -95,6 +96,10 @@ export const routes: Routes = [
       {
         path: 'messages',
         loadComponent: () => import('./features/messages/messages.page').then((m) => m.MessagesPage),
+      },
+      {
+        path: 'help',
+        loadComponent: () => import('./features/help/owner-help.page').then((m) => m.OwnerHelpPage),
       },
       {
         path: 'account',

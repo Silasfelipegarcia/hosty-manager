@@ -1,4 +1,5 @@
 import { FinanceDashboardBundle } from '../models/finance.models';
+import { financeStatusLabel } from './finance-status-labels';
 import { FixedCostRow } from '../models/finance.models';
 import { PropertyDto } from '../models/property.models';
 
@@ -63,14 +64,12 @@ export function buildPropertyHealth(
     const safeToWithdraw = Math.max(0, profit - recommendedReserve);
 
     let status: HealthStatus = 'healthy';
-    let statusLabel = 'Saudável';
     if (margin < 0.15 || profit < monthlyFixed) {
       status = 'critical';
-      statusLabel = 'Atenção urgente';
     } else if (margin < 0.3 || safeToWithdraw <= 0) {
       status = 'attention';
-      statusLabel = 'Ajustar reservas';
     }
+    const statusLabel = financeStatusLabel(status, 'cash');
 
     return {
       propertyId: prop.id,

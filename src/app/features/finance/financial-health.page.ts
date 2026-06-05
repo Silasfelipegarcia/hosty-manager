@@ -17,6 +17,7 @@ import {
 } from '../../core/finance/financial-health';
 import { CurrencyBrlPipe } from '../../shared/pipes/currency-brl.pipe';
 import { CompetencePipe } from '../../shared/pipes/competence.pipe';
+import { currentCompetence } from '../../core/dates/competence';
 
 @Component({
   selector: 'app-financial-health-page',
@@ -41,7 +42,7 @@ export class FinancialHealthPage implements OnInit {
   private readonly props = inject(PropertiesService);
   private readonly route = inject(ActivatedRoute);
 
-  readonly competence = signal(this.nowCompetence());
+  readonly competence = signal(currentCompetence());
   readonly propertyFilter = signal('');
   readonly health = signal<PropertyFinancialHealth[]>([]);
   readonly loading = signal(true);
@@ -86,8 +87,4 @@ export class FinancialHealthPage implements OnInit {
     return `status-${status}`;
   }
 
-  private nowCompetence(): string {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-  }
 }

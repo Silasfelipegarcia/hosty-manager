@@ -89,7 +89,7 @@
             <mat-label>Competência</mat-label>
             <input matInput type="month" [value]="financeCompetence()" (change)="setFinanceCompetence($any($event.target).value)" />
           </mat-form-field>
-          <a mat-stroked-button [routerLink]="['/finance/crm']" [queryParams]="{ propertyId: propertyId }">Análise de período</a>
+          <a mat-stroked-button [routerLink]="['/finance']" [queryParams]="{ tab: 'performance', propertyId: propertyId }">Ver análise completa</a>
           <a mat-stroked-button [routerLink]="['/finance/health']" [queryParams]="{ propertyId: propertyId }">Caixa deste mês</a>
           <a mat-stroked-button [routerLink]="['/sales']" [queryParams]="{ propertyId: propertyId }">Vendas</a>
         </div>

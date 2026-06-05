@@ -1,19 +1,19 @@
 <div class="page-header">
   <div>
-    <h1>Vendas externas</h1>
-    <p>Registre reservas feitas fora do app — Airbnb, WhatsApp, Instagram, PIX direto.</p>
+    <h1>Registrar estadia</h1>
+    <p>Reservas feitas fora do app — Airbnb, WhatsApp, Instagram, PIX direto ou histórico.</p>
   </div>
   <a mat-stroked-button routerLink="/sales/import">Importar planilha</a>
 </div>
 
 <div class="grid">
   <mat-card class="form-card">
-    <h2>Nova venda</h2>
+    <h2>Nova estadia</h2>
     <p class="hint">A reserva entra na agenda, no financeiro e nos relatórios por canal.</p>
 
     <form [formGroup]="form" (ngSubmit)="submit()">
       <mat-form-field appearance="outline" class="full">
-        <mat-label>Chalé / imóvel</mat-label>
+        <mat-label>Imóvel</mat-label>
         <mat-select formControlName="propertyId">
           @for (p of properties(); track p.id) {
             <mat-option [value]="p.id">{{ p.name }} — {{ p.city }}</mat-option>
@@ -114,6 +114,6 @@
     }
     <mat-divider />
     <a routerLink="/reservations">Ver todas as reservas</a>
-    <a routerLink="/finance/health">Saúde financeira por chalé</a>
+    <a routerLink="/finance" [queryParams]="{ tab: 'caixa' }">Ver caixa por imóvel</a>
   </mat-card>
 </div>

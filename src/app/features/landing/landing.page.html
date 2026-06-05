@@ -1,48 +1,362 @@
 <div class="landing">
-  <header class="top">
-    <div class="brand">
-      <mat-icon>domain</mat-icon>
-      <span>{{ appName }}</span>
+  <div class="bg-orbs" aria-hidden="true">
+    <span class="orb o1"></span>
+    <span class="orb o2"></span>
+    <span class="orb o3"></span>
+  </div>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a class="brand" routerLink="/">
+      <span class="brand-mark">
+        <mat-icon>domain</mat-icon>
+      </span>
+      <span>{{ brandName }}</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#plataforma">Plataforma</a>
+      <a href="#proprietarios">Proprietários</a>
+      <a href="#hospedes">Hóspedes</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn ghost" [href]="tenantAppUrl">App hóspede</a>
+      <a class="btn primary" routerLink="/login">Entrar</a>
     </div>
-    <a mat-stroked-button routerLink="/login">Entrar</a>
   </header>
 
+  <!-- HERO -->
   <section class="hero">
-    <h1>Gestão de imóveis de temporada com clareza financeira</h1>
-    <p>
-      Centralize reservas, finanças por imóvel, vendas externas e insights com a Clara —
-      sua assistente no portal do proprietário.
-    </p>
-    <div class="hero-actions">
-      <a mat-flat-button color="primary" routerLink="/login">Acessar o portal</a>
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <div class="hero-pill">
+          <span class="dot"></span>
+          Plataforma de temporada · Brasil
+        </div>
+        <h1>
+          Operação, finanças e experiência<br />
+          <span class="gradient-text">em um só ecossistema</span>
+        </h1>
+        <p class="lead">
+          {{ tagline }}. O {{ brandName }} une portal do proprietário, app do hóspede
+          e assistente Clara — do calendário ao check-out, com lucro visível por imóvel.
+        </p>
+        <div class="hero-actions">
+          <a class="btn primary xl" routerLink="/login">
+            Começar como proprietário
+            <mat-icon>arrow_forward</mat-icon>
+          </a>
+          <a class="btn glass xl" [href]="tenantAppUrl">
+            Explorar como hóspede
+          </a>
+        </div>
+        <p class="hero-note">Sem cartão · Acesso ao portal em segundos</p>
+      </div>
+
+      <div class="hero-showcase" aria-hidden="true">
+        <div class="showcase-glow"></div>
+        <div class="browser">
+          <div class="browser-chrome">
+            <span></span><span></span><span></span>
+            <div class="url-bar">manager.hosty.app</div>
+          </div>
+          <div class="browser-body">
+            <aside class="mock-nav">
+              <div class="mock-logo">H</div>
+              @for (n of ['Início', 'Reservas', 'Finanças', 'Clara']; track n) {
+                <div class="mock-nav-item" [class.active]="n === 'Finanças'">{{ n }}</div>
+              }
+            </aside>
+            <main class="mock-main">
+              <div class="mock-kpis">
+                <div class="mock-kpi">
+                  <small>Lucro jun</small>
+                  <b>R$ 12.480</b>
+                  <span class="up">+12%</span>
+                </div>
+                <div class="mock-kpi">
+                  <small>Ocupação</small>
+                  <b>78%</b>
+                </div>
+                <div class="mock-kpi warn">
+                  <small>Pendências</small>
+                  <b>2</b>
+                </div>
+              </div>
+              <div class="mock-chart">
+                <div class="bar" style="--h: 45%"></div>
+                <div class="bar" style="--h: 62%"></div>
+                <div class="bar" style="--h: 55%"></div>
+                <div class="bar" style="--h: 80%"></div>
+                <div class="bar active" style="--h: 92%"></div>
+                <div class="bar" style="--h: 70%"></div>
+              </div>
+              <div class="mock-clara">
+                <mat-icon>smart_toy</mat-icon>
+                <span><strong>Clara:</strong> 2 reservas aguardam aprovação — ver fila?</span>
+              </div>
+            </main>
+          </div>
+        </div>
+        <div class="phone-float">
+          <div class="phone-screen">
+            <div class="phone-top">Explorar</div>
+            <div class="phone-card">
+              <div class="phone-img"></div>
+              <div>
+                <b>Refúgio Bosque</b>
+                <small>Check-in QR · Guia local</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="trust-strip">
+      <span class="trust-label">Integra com</span>
+      @for (c of trustChannels; track c) {
+        <span class="trust-chip">{{ c }}</span>
+      }
     </div>
   </section>
 
-  <section class="features">
-    <div class="feature">
-      <mat-icon>payments</mat-icon>
-      <h3>Finanças por imóvel</h3>
-      <p>Mês atual, caixa, performance por período e registro de gastos.</p>
+  <!-- METRICS -->
+  <section class="metrics-band">
+    <div class="metrics-inner">
+      @for (m of metrics; track m.label) {
+        <article class="metric">
+          <strong>{{ m.value }}</strong>
+          <span class="metric-title">{{ m.label }}</span>
+          <span class="metric-sub">{{ m.sub }}</span>
+        </article>
+      }
     </div>
-    <div class="feature">
-      <mat-icon>event</mat-icon>
-      <h3>Reservas e operação</h3>
-      <p>Aprovações, calendário, check-in e check-out em um só lugar.</p>
+  </section>
+
+  <!-- BENTO PLATFORM -->
+  <section id="plataforma" class="section">
+    <div class="section-head center">
+      <span class="eyebrow">Plataforma</span>
+      <h2>Tudo que uma temporada profissional precisa</h2>
+      <p>OTAs resolvem a reserva. O {{ brandName }} resolve operação, finanças e experiência do hóspede.</p>
     </div>
-    <div class="feature">
-      <mat-icon>smart_toy</mat-icon>
-      <h3>Clara, sua assistente</h3>
-      <p>Insights e tutoria sobre lucro, ocupação e próximos passos.</p>
+    <div class="bento">
+      @for (card of bento; track card.title) {
+        <article class="bento-card" [class]="'size-' + card.size" [class.accent]="card.accent">
+          <mat-icon>{{ card.icon }}</mat-icon>
+          <h3>{{ card.title }}</h3>
+          <p>{{ card.text }}</p>
+        </article>
+      }
     </div>
-    <div class="feature">
-      <mat-icon>upload_file</mat-icon>
-      <h3>Importação em massa</h3>
-      <p>Planilha CSV para aluguéis históricos de Airbnb, Booking e vendas diretas.</p>
+  </section>
+
+  <!-- COMPARE -->
+  <section class="compare-band">
+    <div class="compare-inner">
+      <h2>Pare de operar no improviso</h2>
+      <div class="compare-grid">
+        @for (row of compare; track row.bad) {
+          <div class="compare-row">
+            <span class="bad"><mat-icon>close</mat-icon>{{ row.bad }}</span>
+            <span class="good"><mat-icon>check</mat-icon>{{ row.good }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- OWNERS -->
+  <section id="proprietarios" class="section owner-section">
+    <div class="owner-layout">
+      <div class="owner-intro">
+        <span class="eyebrow">Para proprietários</span>
+        <h2>O cockpit do seu patrimônio</h2>
+        <p>
+          Reservas, finanças por imóvel, registro de estadias, importação em massa
+          e a Clara — assistente flutuante com contexto do seu negócio.
+        </p>
+        <ul class="check-list">
+          <li><mat-icon>check_circle</mat-icon> Hub de finanças: mês, caixa e performance</li>
+          <li><mat-icon>check_circle</mat-icon> Fila de aprovação e calendário unificado</li>
+          <li><mat-icon>check_circle</mat-icon> Kits, serviços de campo e mensagens</li>
+        </ul>
+        <a class="btn primary lg" routerLink="/login">Acessar portal</a>
+      </div>
+      <div class="feature-grid owner">
+        @for (f of ownerFeatures; track f.title) {
+          <article class="feature-card">
+            <div class="feature-icon"><mat-icon>{{ f.icon }}</mat-icon></div>
+            <h3>{{ f.title }}</h3>
+            <p>{{ f.text }}</p>
+          </article>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- TENANTS -->
+  <section id="hospedes" class="section guest-section">
+    <div class="guest-card">
+      <div class="guest-copy">
+        <span class="eyebrow">Para hóspedes</span>
+        <h2>A estadia começa antes da porta abrir</h2>
+        <p>
+          No app {{ brandName }} você explora imóveis, solicita datas, faz check-in com QR
+          e acessa o guia da casa — experiência de hotel, com calor de casa.
+        </p>
+        <a class="btn outline-dark lg" [href]="tenantAppUrl">
+          <mat-icon>smartphone</mat-icon>
+          Abrir app do hóspede
+        </a>
+      </div>
+      <div class="guest-features">
+        @for (f of tenantFeatures; track f.title) {
+          <article class="guest-feat">
+            <mat-icon>{{ f.icon }}</mat-icon>
+            <div>
+              <h3>{{ f.title }}</h3>
+              <p>{{ f.text }}</p>
+            </div>
+          </article>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- STEPS -->
+  <section class="section steps-wrap">
+    <div class="section-head center">
+      <span class="eyebrow">Como funciona</span>
+      <h2>Dois públicos. Uma plataforma.</h2>
+    </div>
+    <div class="steps-dual">
+      <article class="steps-panel owner">
+        <header><mat-icon>domain</mat-icon> Proprietário</header>
+        @for (s of ownerSteps; track s.n) {
+          <div class="step-item">
+            <span class="step-num">{{ s.n }}</span>
+            <div>
+              <h4>{{ s.title }}</h4>
+              <p>{{ s.text }}</p>
+            </div>
+          </div>
+        }
+      </article>
+      <article class="steps-panel guest">
+        <header><mat-icon>smartphone</mat-icon> Hóspede</header>
+        @for (s of tenantSteps; track s.n) {
+          <div class="step-item">
+            <span class="step-num">{{ s.n }}</span>
+            <div>
+              <h4>{{ s.title }}</h4>
+              <p>{{ s.text }}</p>
+            </div>
+          </div>
+        }
+      </article>
+    </div>
+  </section>
+
+  <!-- CLARA -->
+  <section class="section clara-section">
+    <div class="clara-panel">
+      <div class="clara-text">
+        <span class="eyebrow light">Assistente com contexto</span>
+        <h2>Conheça a Clara</h2>
+        <p>
+          Ela lê lucro, ocupação e pendências do seu portal.
+          Pergunte o que fazer hoje — e receba link para a tela certa.
+        </p>
+        <div class="clara-tags">
+          <span>Insights financeiros</span>
+          <span>Tutoria do portal</span>
+          <span>Chat flutuante</span>
+        </div>
+      </div>
+      <div class="clara-chat">
+        <div class="chat-window">
+          <div class="chat-head">
+            <mat-icon>smart_toy</mat-icon>
+            Clara · online
+          </div>
+          <div class="chat-body">
+            <div class="msg bot">
+              <small>Clara</small>
+              Seu lucro em junho subiu 12%. Há 2 reservas aguardando aprovação.
+            </div>
+            <div class="msg user">O que faço primeiro?</div>
+            <div class="msg bot">
+              <small>Clara</small>
+              Abra <strong>Reservas</strong> → fila de aprovação. Depois veja <strong>Performance</strong> por imóvel.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="section quotes-section">
+    <div class="quotes-grid">
+      @for (t of testimonials; track t.quote) {
+        <blockquote class="quote-card">
+          <p>“{{ t.quote }}”</p>
+          <footer>{{ t.role }}</footer>
+        </blockquote>
+      }
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="section faq-section">
+    <div class="section-head center">
+      <span class="eyebrow">FAQ</span>
+      <h2>Perguntas frequentes</h2>
+    </div>
+    <div class="faq-list">
+      @for (item of faqs; track item.q) {
+        <details class="faq-item">
+          <summary>{{ item.q }}</summary>
+          <p>{{ item.a }}</p>
+        </details>
+      }
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="cta-inner">
+      <h2>Pronto para profissionalizar sua temporada?</h2>
+      <p>Junte clareza financeira e hóspedes bem cuidados — no mesmo ecossistema.</p>
+      <div class="cta-actions">
+        <a class="btn white xl" routerLink="/login">Criar acesso de proprietário</a>
+        <a class="btn ghost-light xl" [href]="tenantAppUrl">Sou hóspede</a>
+      </div>
     </div>
   </section>
 
   <footer class="footer">
-    <p>© {{ appName }} — feito para proprietários que querem ver lucro de verdade.</p>
-    <a routerLink="/login">Login do proprietário</a>
+    <div class="footer-top">
+      <a class="brand light" routerLink="/">
+        <span class="brand-mark"><mat-icon>domain</mat-icon></span>
+        <span>{{ brandName }}</span>
+      </a>
+      <div class="footer-links">
+        <div>
+          <h4>Produto</h4>
+          <a href="#plataforma">Plataforma</a>
+          <a href="#proprietarios">Portal do dono</a>
+          <a href="#hospedes">App hóspede</a>
+        </div>
+        <div>
+          <h4>Acesso</h4>
+          <a routerLink="/login">Login proprietário</a>
+          <a [href]="tenantAppUrl">App hóspede</a>
+        </div>
+      </div>
+    </div>
+    <p class="footer-copy">© {{ year }} {{ brandName }} — {{ tagline }}</p>
   </footer>
 </div>

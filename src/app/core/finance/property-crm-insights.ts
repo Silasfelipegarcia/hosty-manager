@@ -2,6 +2,7 @@ import { FinanceDashboardBundle, FixedCostRow } from '../models/finance.models';
 import { PropertyExpense } from '../models/property-expense.models';
 import { PropertyDto } from '../models/property.models';
 import { fixedCostsForProperty, HealthStatus } from './financial-health';
+import { financeStatusLabel } from './finance-status-labels';
 import { breakEvenNights, revenueTarget } from './portfolio-analytics';
 
 export interface PeriodMonthBundle {
@@ -161,14 +162,12 @@ export function buildPropertyCrmRows(
     const profitOnlyThreshold = monthlyBreakEven * 1.1;
 
     let status: HealthStatus = 'healthy';
-    let statusLabel = 'Gerando lucro';
     if (profit < 0 || margin < 0) {
       status = 'critical';
-      statusLabel = 'Prejuízo no período';
     } else if (avgMonthlyGross < tranquilityTarget || margin < 0.2) {
       status = 'attention';
-      statusLabel = 'Abaixo da meta tranquila';
     }
+    const statusLabel = financeStatusLabel(status, 'performance');
 
     return {
       propertyId: prop.id,

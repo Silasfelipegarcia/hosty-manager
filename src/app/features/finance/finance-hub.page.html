@@ -1,0 +1,28 @@
+<div class="finance-hub-header">
+  <div>
+    <h1>{{ labels.finances }}</h1>
+    <p>Visão do mês, caixa e performance — tudo em um lugar</p>
+  </div>
+</div>
+
+<mat-tab-group
+  [selectedIndex]="tabIndex()"
+  (selectedIndexChange)="onTabChange($event)"
+  class="finance-tabs"
+>
+  <mat-tab [label]="labels.financeMonth">
+    <div class="tab-body">
+      <app-finance-page />
+    </div>
+  </mat-tab>
+  <mat-tab [label]="labels.financeCash">
+    <div class="tab-body">
+      <app-financial-health-page />
+    </div>
+  </mat-tab>
+  <mat-tab [label]="labels.financePerformance">
+    <div class="tab-body">
+      <app-property-crm-page />
+    </div>
+  </mat-tab>
+</mat-tab-group>
