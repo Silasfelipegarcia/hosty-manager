@@ -1,16 +1,17 @@
-<div class="page-header">
+<div class="portal-page">
+<div class="portal-page-header">
   <div>
     <h1>Reservas</h1>
-    <p>Operação de estadias — aprovações, check-in e check-out</p>
+    <p class="portal-subtitle">Operação de estadias — aprovações, check-in e check-out</p>
   </div>
   <a mat-flat-button color="primary" routerLink="/sales">Registrar estadia</a>
 </div>
 
-<div class="kpi-strip">
-  <mat-card><span>Ações pendentes</span><strong>{{ ownerActions() }}</strong></mat-card>
-  <mat-card><span>Em estadia</span><strong>{{ staysActive() }}</strong></mat-card>
-  <mat-card><span>Próximas</span><strong>{{ staysUpcoming() }}</strong></mat-card>
-  <mat-card><span>Pedidos de acesso</span><strong>{{ accessRequests().length }}</strong></mat-card>
+<div class="portal-kpi-grid kpi-strip">
+  <mat-card><span class="portal-kpi-label">Ações pendentes</span><strong>{{ ownerActions() }}</strong></mat-card>
+  <mat-card><span class="portal-kpi-label">Em estadia</span><strong>{{ staysActive() }}</strong></mat-card>
+  <mat-card><span class="portal-kpi-label">Próximas</span><strong>{{ staysUpcoming() }}</strong></mat-card>
+  <mat-card><span class="portal-kpi-label">Pedidos de acesso</span><strong>{{ accessRequests().length }}</strong></mat-card>
 </div>
 
 <div class="filters-bar">
@@ -194,7 +195,7 @@
         </div>
 
         @if (b.competence) {
-          <a class="finance-link" [routerLink]="financeLink()" [queryParams]="financeQueryParams(b)">Ver no financeiro →</a>
+          <a class="portal-link finance-link" [routerLink]="financeLink()" [queryParams]="financeQueryParams(b)">Ver no financeiro →</a>
         }
 
         <mat-divider />
@@ -229,20 +230,81 @@
 
         <mat-divider />
 
-        <h4>Chat</h4>
-        <div class="chat">
-          @for (m of messages(); track m.id ?? m.createdAt) {
-            <div class="msg"><small>{{ m.senderRole }}</small><p>{{ m.body }}</p></div>
-          }
-        </div>
-        <form class="chat-input" (ngSubmit)="sendMessage()">
-          <mat-form-field appearance="outline" class="full">
-            <mat-label>Mensagem</mat-label>
-            <input matInput [value]="newMessage()" (input)="newMessage.set($any($event.target).value)" />
-          </mat-form-field>
-          <button mat-stroked-button type="submit">Enviar</button>
-        </form>
+        <h4>Chat com o hóspede</h4>
+        <section class="stay-chat">
+          <div class="stay-chat-thread" #chatLog>
+            @if (messages().length === 0) {
+              <p class="stay-chat-empty">Nenhuma mensagem ainda. Escreva abaixo para falar com o hóspede.</p>
+            }
+            @for (m of messages(); track m.id ?? m.sentAt) {
+              <div
+                class="stay-chat-row"
+                [class.outgoing]="isOwnerMessage(m.senderRole)"
+                [class.incoming]="!isOwnerMessage(m.senderRole)"
+              >
+                @if (!isOwnerMessage(m.senderRole)) {
+                  @if (b.tenantPhotoUrl) {
+                    <img class="stay-chat-avatar" [src]="b.tenantPhotoUrl" alt="" />
+                  } @else {
+                    <span class="stay-chat-avatar guest">{{ displayGuestName(b).slice(0, 1) }}</span>
+                  }
+                }
+
+                <div class="stay-chat-stack">
+                  <span class="stay-chat-sender">
+                    {{ m.senderDisplayName || chatSenderLabel(m.senderRole) }}
+                  </span>
+                  <div class="stay-chat-bubble" [class.out]="isOwnerMessage(m.senderRole)" [class.in]="!isOwnerMessage(m.senderRole)">
+                    <p>{{ m.text }}</p>
+                  </div>
+                  @if (m.sentAt) {
+                    <time class="stay-chat-time">{{ formatChatTime(m.sentAt) }}</time>
+                  }
+                </div>
+
+                @if (isOwnerMessage(m.senderRole)) {
+                  <app-profile-avatar
+                    size="sm"
+                    [photoSrc]="profileStore.photoSrc()"
+                    [initials]="profileStore.initials()"
+                    [name]="profileStore.displayName()"
+                  />
+                }
+              </div>
+            }
+
+          </div>
+
+          <div class="stay-chat-composer">
+            <app-profile-avatar
+              size="sm"
+              [photoSrc]="profileStore.photoSrc()"
+              [initials]="profileStore.initials()"
+              [name]="profileStore.displayName()"
+            />
+            <div class="stay-chat-field">
+              <textarea
+                rows="1"
+                placeholder="Mensagem para o hóspede…"
+                [value]="chatDraft()"
+                (input)="chatDraft.set($any($event.target).value)"
+                (keydown)="onChatKeydown($event)"
+                autocomplete="off"
+              ></textarea>
+            </div>
+            <button
+              type="button"
+              class="stay-chat-send"
+              [disabled]="chatSending() || !chatDraft().trim()"
+              aria-label="Enviar mensagem"
+              (click)="sendMessage()"
+            >
+              <mat-icon>send</mat-icon>
+            </button>
+          </div>
+        </section>
       }
     </mat-card>
   </div>
 }
+</div>

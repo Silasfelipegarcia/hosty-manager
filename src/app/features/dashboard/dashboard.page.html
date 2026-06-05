@@ -1,93 +1,112 @@
-<div class="page-header">
-  <div>
-    <h1>Início</h1>
-    <p>Caixa de entrada da operação — {{ competence() | competence }}</p>
+<div class="portal-page">
+  <div class="portal-page-header">
+    <div>
+      <h1>Início</h1>
+      <p class="portal-subtitle">Caixa de entrada da operação — {{ competence() | competence }}</p>
+    </div>
+    <div class="portal-actions">
+      <button mat-stroked-button (click)="load()"><mat-icon>refresh</mat-icon> Atualizar</button>
+      <button mat-flat-button color="primary" routerLink="/sales">{{ labels.registerStay }}</button>
+    </div>
   </div>
-  <div class="actions">
-    <button mat-stroked-button (click)="load()"><mat-icon>refresh</mat-icon> Atualizar</button>
-    <button mat-flat-button color="primary" routerLink="/sales">{{ labels.registerStay }}</button>
-    <button mat-stroked-button routerLink="/sales/import">{{ labels.importSpreadsheet }}</button>
-    <button mat-stroked-button routerLink="/properties/new">Novo imóvel</button>
-  </div>
+
+  @if (loading()) {
+    <mat-spinner diameter="40" />
+  } @else if (error()) {
+    <mat-card class="portal-error-card">{{ error() }}</mat-card>
+  } @else {
+    <mat-card class="onboarding-card portal-surface">
+      <div class="onboarding-head">
+        <mat-icon>rocket_launch</mat-icon>
+        <div>
+          <h3>Primeiros passos</h3>
+          <p class="muted">Configure sua operação em poucos cliques</p>
+        </div>
+      </div>
+      <div class="onboarding-steps">
+        <a class="onboarding-step" routerLink="/properties/new">
+          <span class="step-num">1</span>
+          <span>Cadastrar imóvel</span>
+        </a>
+        <a class="onboarding-step" routerLink="/sales">
+          <span class="step-num">2</span>
+          <span>{{ labels.registerStay }}</span>
+        </a>
+        <a class="onboarding-step" routerLink="/finance">
+          <span class="step-num">3</span>
+          <span>Ver finanças</span>
+        </a>
+      </div>
+      <a class="portal-link" routerLink="/help">Guia completo →</a>
+    </mat-card>
+
+    <div class="portal-kpi-grid">
+      <mat-card class="portal-kpi-clickable" routerLink="/reservations">
+        <span class="portal-kpi-label">Ações pendentes</span>
+        <strong>{{ badges.ownerActionRequired() }}</strong>
+      </mat-card>
+      <mat-card class="portal-kpi-clickable" routerLink="/reservations">
+        <span class="portal-kpi-label">Pedidos de acesso</span>
+        <strong>{{ badges.pendingAccessRequests() }}</strong>
+      </mat-card>
+      <mat-card class="portal-kpi-clickable" routerLink="/kits/pending">
+        <span class="portal-kpi-label">Kits pendentes</span>
+        <strong>{{ badges.pendingKitOrders() }}</strong>
+      </mat-card>
+      <mat-card class="portal-kpi-clickable" routerLink="/field-services/pending">
+        <span class="portal-kpi-label">Serviços de campo</span>
+        <strong>{{ badges.pendingFieldServices() }}</strong>
+      </mat-card>
+      <mat-card class="portal-kpi-clickable" routerLink="/reservations">
+        <span class="portal-kpi-label">Estadias ativas</span>
+        <strong>{{ stays()?.active ?? 0 }}</strong>
+      </mat-card>
+      <mat-card class="portal-kpi-clickable finance-kpi" routerLink="/finance">
+        <span class="portal-kpi-label">Lucro do mês</span>
+        <strong>{{ bundle()?.dashboard?.totalProfit | currencyBrl }}</strong>
+        <small class="kpi-hint">Abrir finanças →</small>
+      </mat-card>
+    </div>
+
+    <div class="portal-grid-2">
+      <mat-card class="portal-surface">
+        <h3>O que fazer agora</h3>
+        @if (actionItems().length === 0) {
+          <p class="muted">Nenhuma pendência urgente. Bom trabalho!</p>
+        } @else {
+          <ul class="action-list priority">
+            @for (item of actionItems(); track item.label) {
+              <li>
+                <div class="action-copy">
+                  <strong>{{ item.label }}</strong>
+                  <span>{{ item.detail }}</span>
+                </div>
+                <a class="portal-link" [routerLink]="item.path">{{ item.cta }} →</a>
+              </li>
+            }
+          </ul>
+        }
+      </mat-card>
+
+      <mat-card class="portal-surface">
+        <h3>Mensagens recentes</h3>
+        @if (inboxPreview().length === 0) {
+          <p class="muted">Inbox vazio.</p>
+        } @else {
+          <ul class="action-list">
+            @for (msg of inboxPreview(); track msg.bookingId) {
+              <li>
+                <div class="action-copy">
+                  <strong>{{ msg.tenantName || 'Hóspede' }}</strong>
+                  <span>{{ msg.lastMessage }}</span>
+                </div>
+                <a class="portal-link" [routerLink]="['/reservations', msg.bookingId]">Abrir →</a>
+              </li>
+            }
+          </ul>
+        }
+        <a class="portal-link-subtle" routerLink="/messages">Ver todas as mensagens</a>
+      </mat-card>
+    </div>
+  }
 </div>
-
-@if (loading()) {
-  <mat-spinner diameter="40" />
-} @else if (error()) {
-  <p class="error">{{ error() }}</p>
-} @else {
-  <mat-card class="onboarding-card">
-    <h3>Primeiros passos</h3>
-    <ol>
-      <li><a routerLink="/properties/new">Cadastre um imóvel</a></li>
-      <li><a routerLink="/sales">{{ labels.registerStay }}</a> ou <a routerLink="/sales/import">importe planilha</a></li>
-      <li><a routerLink="/finance">Veja suas finanças</a></li>
-    </ol>
-    <a routerLink="/help">Guia completo</a>
-  </mat-card>
-
-  <div class="kpi-grid">
-    <mat-card class="action-kpi" routerLink="/reservations">
-      <span class="kpi-label">Ações pendentes</span>
-      <strong>{{ badges.ownerActionRequired() }}</strong>
-    </mat-card>
-    <mat-card class="action-kpi" routerLink="/reservations">
-      <span class="kpi-label">Pedidos de acesso</span>
-      <strong>{{ badges.pendingAccessRequests() }}</strong>
-    </mat-card>
-    <mat-card class="action-kpi" routerLink="/kits/pending">
-      <span class="kpi-label">Kits pendentes</span>
-      <strong>{{ badges.pendingKitOrders() }}</strong>
-    </mat-card>
-    <mat-card class="action-kpi" routerLink="/field-services/pending">
-      <span class="kpi-label">Serviços de campo</span>
-      <strong>{{ badges.pendingFieldServices() }}</strong>
-    </mat-card>
-    <mat-card class="action-kpi" routerLink="/reservations">
-      <span class="kpi-label">Estadias ativas</span>
-      <strong>{{ stays()?.active ?? 0 }}</strong>
-    </mat-card>
-    <mat-card class="action-kpi finance-summary" routerLink="/finance">
-      <span class="kpi-label">Lucro do mês</span>
-      <strong>{{ bundle()?.dashboard?.totalProfit | currencyBrl }}</strong>
-      <small>Ver em Finanças →</small>
-    </mat-card>
-  </div>
-
-  <div class="grid-2">
-    <mat-card>
-      <h3>O que fazer agora</h3>
-      @if (actionItems().length === 0) {
-        <p class="muted">Nenhuma pendência urgente. Bom trabalho!</p>
-      } @else {
-        <ul class="action-list priority">
-          @for (item of actionItems(); track item.label) {
-            <li>
-              <strong>{{ item.label }}</strong>
-              <span>{{ item.detail }}</span>
-              <a [routerLink]="item.path">{{ item.cta }}</a>
-            </li>
-          }
-        </ul>
-      }
-    </mat-card>
-
-    <mat-card>
-      <h3>Mensagens recentes</h3>
-      @if (inboxPreview().length === 0) {
-        <p class="muted">Inbox vazio.</p>
-      } @else {
-        <ul class="action-list">
-          @for (msg of inboxPreview(); track msg.bookingId) {
-            <li>
-              <strong>{{ msg.tenantName || 'Hóspede' }}</strong>
-              <span>{{ msg.lastMessage }}</span>
-              <a [routerLink]="['/reservations', msg.bookingId]">Abrir</a>
-            </li>
-          }
-        </ul>
-      }
-      <a routerLink="/messages">Ver todas</a>
-    </mat-card>
-  </div>
-}

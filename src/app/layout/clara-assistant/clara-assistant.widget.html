@@ -5,7 +5,7 @@
       <header class="messenger-header">
         <div class="header-peer">
           <div class="avatar-wrap clara">
-            <span class="avatar-circle">C</span>
+            <img class="avatar-photo" [src]="claraAvatar" alt="Clara" width="40" height="40" />
             <span class="online-dot" [class.typing]="sending()"></span>
           </div>
           <div class="peer-meta">
@@ -56,7 +56,7 @@
           <div class="msg-row" [class.outgoing]="line.role === 'user'" [class.incoming]="line.role !== 'user'">
             @if (line.role !== 'user') {
               <div class="avatar-wrap clara sm">
-                <span class="avatar-circle">C</span>
+                <img class="avatar-photo" [src]="claraAvatar" alt="" width="28" height="28" />
               </div>
             }
 
@@ -90,7 +90,12 @@
 
             @if (line.role === 'user') {
               <div class="avatar-wrap user sm" [attr.title]="userName()">
-                <span class="avatar-circle user-bg">{{ userInitials() }}</span>
+                <app-profile-avatar
+                  size="sm"
+                  [photoSrc]="userPhoto()"
+                  [initials]="userInitials()"
+                  [name]="userName()"
+                />
               </div>
             }
           </div>
@@ -99,7 +104,7 @@
         @if (sending()) {
           <div class="msg-row incoming">
             <div class="avatar-wrap clara sm">
-              <span class="avatar-circle">C</span>
+              <img class="avatar-photo" [src]="claraAvatar" alt="" width="28" height="28" />
             </div>
             <div class="msg-stack">
               <span class="msg-sender">Clara</span>
@@ -122,7 +127,12 @@
       <!-- Composer -->
       <div class="messenger-composer">
         <div class="composer-avatar" [attr.title]="userName()">
-          <span class="avatar-circle user-bg sm-text">{{ userInitials() }}</span>
+          <app-profile-avatar
+            size="sm"
+            [photoSrc]="userPhoto()"
+            [initials]="userInitials()"
+            [name]="userName()"
+          />
         </div>
         <div class="composer-field">
           <textarea
@@ -159,7 +169,7 @@
     @if (open()) {
       <mat-icon>expand_more</mat-icon>
     } @else {
-      <mat-icon>forum</mat-icon>
+      <img class="fab-avatar" [src]="claraAvatar" alt="Clara" width="52" height="52" />
     }
   </button>
 </div>

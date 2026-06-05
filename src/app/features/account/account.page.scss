@@ -1,0 +1,117 @@
+.account-page {
+  max-width: 640px;
+}
+
+.profile-card,
+.security-card {
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.photo-section {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--portal-border);
+}
+
+.photo-actions {
+  flex: 1;
+  min-width: 0;
+
+  h3 {
+    margin: 0 0 4px;
+    font-size: 0.9375rem;
+  }
+
+  p {
+    margin: 0 0 12px;
+    font-size: 0.8125rem;
+  }
+}
+
+.photo-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--portal-radius-sm);
+  border: 1px solid var(--portal-border-strong);
+  background: var(--portal-bg);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: var(--portal-brand);
+  }
+
+  &:hover {
+    border-color: var(--portal-brand);
+  }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 12px;
+  margin-bottom: 16px;
+
+  .full {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .photo-section {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .photo-buttons {
+    justify-content: center;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.status-msg {
+  font-size: 0.8125rem;
+  color: var(--portal-danger);
+  margin: 0 0 12px;
+
+  &.ok {
+    color: var(--portal-brand);
+  }
+}
+
+.security-card {
+  h3 {
+    margin: 0 0 8px;
+    font-size: 0.9375rem;
+  }
+
+  p {
+    margin: 0 0 12px;
+    font-size: 0.8125rem;
+  }
+
+  button mat-icon {
+    margin-right: 4px;
+  }
+}

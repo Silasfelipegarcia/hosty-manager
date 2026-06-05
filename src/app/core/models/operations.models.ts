@@ -57,8 +57,9 @@ export interface MessageInboxItem {
 export interface ChatMessage {
   id?: string;
   senderRole?: string;
-  body: string;
-  createdAt?: string;
+  senderDisplayName?: string;
+  text: string;
+  sentAt?: string;
 }
 
 export interface AccessRequest {

@@ -1,40 +1,71 @@
 <mat-sidenav-container class="shell">
   <mat-sidenav mode="side" opened class="shell-sidenav">
     <div class="brand">
-      <mat-icon>domain</mat-icon>
-      <span>{{ appName }}</span>
+      <div class="brand-mark">H</div>
+      <div class="brand-text">
+        <strong>{{ appName }}</strong>
+        <span>Proprietário</span>
+      </div>
     </div>
-    <mat-nav-list>
-      @for (item of nav; track item.path) {
-        <a
-          mat-list-item
-          [routerLink]="item.path"
-          routerLinkActive="active"
-          [routerLinkActiveOptions]="item.exact ? { exact: true } : { exact: false }"
-          [matBadge]="item.badge?.() || null"
-          [matBadgeHidden]="!item.badge?.()"
-          matBadgeColor="warn"
-          matBadgeSize="small"
-        >
-          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-          <span matListItemTitle>{{ item.label }}</span>
-        </a>
+
+    <nav class="shell-nav">
+      @for (group of navGroups; track group.title) {
+        <div class="nav-group">
+          <span class="nav-group-title">{{ group.title }}</span>
+          @for (item of group.items; track item.path) {
+            <a
+              class="nav-item"
+              mat-list-item
+              [routerLink]="item.path"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="item.exact ? { exact: true } : { exact: false }"
+              [matBadge]="item.badge?.() || null"
+              [matBadgeHidden]="!item.badge?.()"
+              matBadgeColor="warn"
+              matBadgeSize="small"
+            >
+              <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+              <span matListItemTitle>{{ item.label }}</span>
+            </a>
+          }
+        </div>
       }
-    </mat-nav-list>
+    </nav>
+
     <div class="sidenav-footer">
-      <small>{{ email }}</small>
-      <button mat-button color="warn" (click)="logout()">Sair</button>
+      <a class="user-block" routerLink="/account">
+        <app-profile-avatar
+          size="md"
+          [photoSrc]="profileStore.photoSrc()"
+          [initials]="profileStore.initials()"
+          [name]="profileStore.displayName()"
+        />
+        <div class="user-meta">
+          <strong>{{ profileStore.displayName() }}</strong>
+          <small class="user-email">{{ email }}</small>
+        </div>
+      </a>
+      <button mat-stroked-button class="logout-btn" (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        Sair
+      </button>
     </div>
   </mat-sidenav>
 
-  <mat-sidenav-content>
-    <mat-toolbar class="topbar">
-      <span>Portal do proprietário</span>
+  <mat-sidenav-content class="shell-main">
+    <header class="topbar">
+      <div class="topbar-titles">
+        <h1>{{ pageTitle() }}</h1>
+        <span class="topbar-sub">Portal do proprietário</span>
+      </div>
       <span class="spacer"></span>
       @if (badges.totalBadges > 0) {
-        <span class="pending-chip">{{ badges.totalBadges }} pendência(s)</span>
+        <a class="pending-pill" routerLink="/reservations">
+          <mat-icon>notifications_active</mat-icon>
+          {{ badges.totalBadges }} pendência{{ badges.totalBadges > 1 ? 's' : '' }}
+        </a>
       }
-    </mat-toolbar>
+    </header>
     <main class="content">
       <router-outlet />
     </main>

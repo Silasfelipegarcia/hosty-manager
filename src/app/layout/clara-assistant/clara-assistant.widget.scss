@@ -28,6 +28,14 @@
 
   mat-icon { font-size: 26px; width: 26px; height: 26px; }
 
+  .fab-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #fff;
+  }
+
   &:hover { transform: scale(1.06); }
 
   .open & {
@@ -115,11 +123,20 @@
   position: relative;
   flex-shrink: 0;
 
-  &.sm .avatar-circle {
+  &.sm .avatar-photo {
     width: 28px;
     height: 28px;
-    font-size: 11px;
   }
+}
+
+.avatar-photo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  background: #e4e6eb;
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .avatar-circle {

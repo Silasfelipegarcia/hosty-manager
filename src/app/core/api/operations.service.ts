@@ -115,10 +115,10 @@ export class OperationsService {
     );
   }
 
-  sendBookingMessage(bookingId: string, body: string) {
+  sendBookingMessage(bookingId: string, text: string) {
     return this.http.post<ChatMessage>(
       `${environment.apiBaseUrl}/api/v1/tenant/bookings/${bookingId}/messages`,
-      { body },
+      { senderRole: 'OWNER', text },
     );
   }
 

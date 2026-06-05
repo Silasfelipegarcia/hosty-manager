@@ -1,17 +1,18 @@
-<div class="page-header">
+<div class="portal-page">
+<div class="portal-page-header">
   <div>
     <h1>Performance</h1>
-    <p>Análise por período — custo, receita e metas por imóvel</p>
+    <p class="portal-subtitle">Análise por período — custo, receita e metas por imóvel</p>
   </div>
 </div>
 
-<div class="filters-panel">
-  <div class="preset-chips">
-    <span class="preset-label">Período:</span>
-    <button mat-stroked-button [class.active-preset]="activePreset() === '3m'" (click)="applyPreset('3m')">3 meses</button>
-    <button mat-stroked-button [class.active-preset]="activePreset() === '6m'" (click)="applyPreset('6m')">6 meses</button>
-    <button mat-stroked-button [class.active-preset]="activePreset() === '12m'" (click)="applyPreset('12m')">12 meses</button>
-    <button mat-stroked-button [class.active-preset]="activePreset() === 'ytd'" (click)="applyPreset('ytd')">Ano</button>
+<div class="portal-filters">
+  <div class="portal-chip-row">
+    <span class="portal-chip-label">Período</span>
+    <button type="button" class="portal-chip" [class.active]="activePreset() === '3m'" (click)="applyPreset('3m')">3 meses</button>
+    <button type="button" class="portal-chip" [class.active]="activePreset() === '6m'" (click)="applyPreset('6m')">6 meses</button>
+    <button type="button" class="portal-chip" [class.active]="activePreset() === '12m'" (click)="applyPreset('12m')">12 meses</button>
+    <button type="button" class="portal-chip" [class.active]="activePreset() === 'ytd'" (click)="applyPreset('ytd')">Ano</button>
   </div>
   <div class="filter-row">
     <mat-form-field appearance="outline" subscriptSizing="dynamic">
@@ -31,7 +32,7 @@
         }
       </mat-select>
     </mat-form-field>
-    <span class="period-badge">{{ periodLabel() }}</span>
+    <span class="portal-badge">{{ periodLabel() }}</span>
   </div>
 </div>
 
@@ -41,6 +42,11 @@
   </mat-card>
 } @else if (loading()) {
   <p class="muted">Carregando…</p>
+} @else if (loadError()) {
+  <mat-card class="error-card">
+    <p>Não foi possível carregar a performance: {{ loadError() }}</p>
+    <button mat-stroked-button (click)="load()">Tentar de novo</button>
+  </mat-card>
 } @else {
   @if (focusMode() && focusProperty(); as prop) {
     <mat-card class="focus-banner">
@@ -52,7 +58,7 @@
     </mat-card>
   }
 
-  <div class="kpi-grid">
+  <div class="portal-kpi-grid">
     <mat-card><span>Bruto no período</span><strong>{{ insights().totalGross | currencyBrl }}</strong></mat-card>
     <mat-card><span>Lucro no período</span><strong>{{ insights().totalProfit | currencyBrl }}</strong></mat-card>
     <mat-card><span>Despesas lançadas</span><strong>{{ insights().totalExpenses | currencyBrl }}</strong></mat-card>
@@ -62,7 +68,7 @@
     }
   </div>
 
-  <div class="grid-2">
+  <div class="portal-grid-2">
     <mat-card class="insight-card">
       <h3>Meses que mais faturaram</h3>
       @if (insights().topMonths.length === 0) {
@@ -167,3 +173,4 @@
     }
   </mat-card>
 }
+</div>

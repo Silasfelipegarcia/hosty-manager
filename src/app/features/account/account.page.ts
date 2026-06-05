@@ -4,49 +4,124 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { firstValueFrom } from 'rxjs';
 import { AccountService } from '../../core/api/account.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { OwnerProfileStore } from '../../core/profile/owner-profile.store';
+import { imageFileToDataUrl } from '../../core/profile/profile-photo.util';
+import { ProfileAvatarComponent } from '../../shared/components/profile-avatar/profile-avatar.component';
 
 @Component({
   selector: 'app-account-page',
   standalone: true,
-  imports: [ReactiveFormsModule, MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule],
-  template: `
-    <h1>Conta</h1>
-    <mat-card class="card">
-      <form [formGroup]="form" (ngSubmit)="save()">
-        <mat-form-field appearance="outline" class="full"><mat-label>Nome</mat-label><input matInput formControlName="fullName" /></mat-form-field>
-        <mat-form-field appearance="outline" class="full"><mat-label>E-mail</mat-label><input matInput formControlName="email" readonly /></mat-form-field>
-        <mat-form-field appearance="outline" class="full"><mat-label>Telefone</mat-label><input matInput formControlName="phone" /></mat-form-field>
-        <button mat-flat-button color="primary" type="submit">Salvar perfil</button>
-      </form>
-    </mat-card>
-    <mat-card class="card">
-      <h3>Segurança</h3>
-      <p>Para alterar a senha, use a opção no app ou solicite recuperação por e-mail.</p>
-      <button mat-stroked-button color="warn" (click)="logout()">Sair</button>
-    </mat-card>
-  `,
-  styles: `.card { padding: 16px; margin-bottom: 16px; max-width: 480px; } .full { width: 100%; }`,
+  imports: [
+    ReactiveFormsModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    ProfileAvatarComponent,
+  ],
+  templateUrl: './account.page.html',
+  styleUrl: './account.page.scss',
 })
 export class AccountPage implements OnInit {
   private readonly account = inject(AccountService);
   private readonly auth = inject(AuthService);
+  private readonly profileStore = inject(OwnerProfileStore);
   private readonly fb = inject(FormBuilder);
-  readonly form = this.fb.nonNullable.group({ fullName: [''], email: [''], phone: [''] });
 
-  ngOnInit(): void { void this.load(); }
+  readonly saving = signal(false);
+  readonly photoDraft = signal<string | null>(null);
+  readonly status = signal<string | null>(null);
+
+  readonly form = this.fb.nonNullable.group({
+    fullName: [''],
+    email: [''],
+    phone: [''],
+    cpf: [''],
+    birthDate: [''],
+    documentNumber: [''],
+  });
+
+  get displayPhoto() {
+    return this.photoDraft() ?? this.profileStore.photoSrc();
+  }
+
+  get displayInitials() {
+    return this.profileStore.initials();
+  }
+
+  get displayName() {
+    return this.form.controls.fullName.value.trim() || this.profileStore.displayName();
+  }
+
+  ngOnInit(): void {
+    void this.load();
+  }
 
   async load(): Promise<void> {
-    const p = await firstValueFrom(this.account.getProfile());
-    this.form.patchValue({ ...p, email: p.email ?? this.auth.email ?? '' });
+    await this.profileStore.refresh();
+    const p = this.profileStore.profile();
+    if (!p) return;
+    this.photoDraft.set(null);
+    this.form.patchValue({
+      fullName: p.fullName ?? '',
+      email: this.auth.email ?? '',
+      phone: p.phone ?? '',
+      cpf: p.cpf ?? '',
+      birthDate: p.birthDate ?? '',
+      documentNumber: p.documentNumber ?? '',
+    });
+  }
+
+  async onPhotoSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file || !file.type.startsWith('image/')) return;
+    try {
+      const dataUrl = await imageFileToDataUrl(file);
+      this.photoDraft.set(dataUrl);
+      this.status.set(null);
+    } catch {
+      this.status.set('Não foi possível processar a imagem.');
+    }
+  }
+
+  removePhoto(): void {
+    this.photoDraft.set('');
+    this.status.set(null);
   }
 
   async save(): Promise<void> {
-    const { fullName, phone } = this.form.getRawValue();
-    await firstValueFrom(this.account.updateProfile({ fullName, phone }));
+    this.saving.set(true);
+    this.status.set(null);
+    try {
+      const raw = this.form.getRawValue();
+      const photoUrl = this.photoDraft();
+      const body = {
+        fullName: raw.fullName.trim(),
+        phone: raw.phone.trim(),
+        cpf: raw.cpf.replace(/\D/g, ''),
+        birthDate: raw.birthDate.trim(),
+        documentNumber: raw.documentNumber.replace(/\D/g, ''),
+        ...(photoUrl !== null ? { photoUrl: photoUrl.trim() } : {}),
+      };
+      const saved = await firstValueFrom(this.account.updateProfile(body));
+      this.profileStore.applyLocal(saved);
+      this.photoDraft.set(null);
+      this.status.set('Perfil salvo — mesmos dados do app mobile.');
+    } catch {
+      this.status.set('Erro ao salvar. Tente novamente.');
+    } finally {
+      this.saving.set(false);
+    }
   }
 
-  logout(): void { this.auth.logout(); }
+  logout(): void {
+    this.auth.logout();
+  }
 }

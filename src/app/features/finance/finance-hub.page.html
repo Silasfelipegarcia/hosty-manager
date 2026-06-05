@@ -1,14 +1,15 @@
-<div class="finance-hub-header">
+<div class="portal-page">
+<div class="portal-page-header finance-hub-header">
   <div>
     <h1>{{ labels.finances }}</h1>
-    <p>Visão do mês, caixa e performance — tudo em um lugar</p>
+    <p class="portal-subtitle">Visão do mês, caixa e performance — tudo em um lugar</p>
   </div>
 </div>
 
 <mat-tab-group
   [selectedIndex]="tabIndex()"
   (selectedIndexChange)="onTabChange($event)"
-  class="finance-tabs"
+  class="finance-tabs portal-tabs"
 >
   <mat-tab [label]="labels.financeMonth">
     <div class="tab-body">
@@ -26,3 +27,4 @@
     </div>
   </mat-tab>
 </mat-tab-group>
+</div>

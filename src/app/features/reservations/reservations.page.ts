@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,6 +10,9 @@ import { MatListModule } from '@angular/material/list';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatIconModule } from '@angular/material/icon';
+import { OwnerProfileStore } from '../../core/profile/owner-profile.store';
+import { ProfileAvatarComponent } from '../../shared/components/profile-avatar/profile-avatar.component';
 import { firstValueFrom } from 'rxjs';
 import { OperationsService } from '../../core/api/operations.service';
 import { PropertiesService } from '../../core/api/properties.service';
@@ -66,6 +69,8 @@ const PAGE_SIZE = RESERVATIONS_PAGE_SIZE;
     MatChipsModule,
     MatDividerModule,
     MatButtonToggleModule,
+    MatIconModule,
+    ProfileAvatarComponent,
     CurrencyBrlPipe,
     DatePipe,
   ],
@@ -75,8 +80,10 @@ const PAGE_SIZE = RESERVATIONS_PAGE_SIZE;
 export class ReservationsPage implements OnInit {
   private readonly ops = inject(OperationsService);
   private readonly props = inject(PropertiesService);
+  readonly profileStore = inject(OwnerProfileStore);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  readonly chatLog = viewChild<ElementRef<HTMLDivElement>>('chatLog');
   readonly labels = OWNER_LABELS;
   readonly filterOptions = RESERVATION_FILTER_OPTIONS;
   readonly weekdayLabels = WEEKDAY_LABELS;
@@ -87,7 +94,8 @@ export class ReservationsPage implements OnInit {
   readonly properties = signal<PropertyDto[]>([]);
   readonly accessRequests = signal<AccessRequest[]>([]);
   readonly occupancy = signal<PropertyAvailabilityItem[]>([]);
-  readonly newMessage = signal('');
+  readonly chatDraft = signal('');
+  readonly chatSending = signal(false);
   readonly activeFilter = signal<ReservationFilter>('all');
   readonly propertyFilter = signal('');
   readonly calendarDayFilter = signal('');
@@ -144,6 +152,7 @@ export class ReservationsPage implements OnInit {
   readonly tenantCancellationPending = tenantCancellationPending;
 
   ngOnInit(): void {
+    void this.profileStore.ensureLoaded();
     void this.load(true);
     this.route.paramMap.subscribe((p) => {
       const id = p.get('id');
@@ -215,6 +224,7 @@ export class ReservationsPage implements OnInit {
     this.selected.set(booking);
     this.messages.set(msgs);
     this.kitOrders.set(kits);
+    queueMicrotask(() => this.scrollChatToBottom());
   }
 
   setFilter(filter: ReservationFilter): void {
@@ -336,13 +346,68 @@ export class ReservationsPage implements OnInit {
     await this.load(true);
   }
 
+  chatSenderLabel(role: string | undefined): string {
+    if (role === 'OWNER') return 'Você';
+    if (role === 'TENANT') return 'Hóspede';
+    return role ?? 'Mensagem';
+  }
+
+  isOwnerMessage(role: string | undefined): boolean {
+    return role === 'OWNER';
+  }
+
+  formatChatTime(value: string | undefined): string {
+    if (!value) return '';
+    return new Date(value).toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  onChatKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      void this.sendMessage();
+    }
+  }
+
   async sendMessage(): Promise<void> {
     const b = this.selected();
-    const body = this.newMessage().trim();
-    if (!b || !body) return;
-    await firstValueFrom(this.ops.sendBookingMessage(b.id, body));
-    this.newMessage.set('');
-    await this.select(b.id);
+    const text = this.chatDraft().trim();
+    if (!b || !text || this.chatSending()) return;
+
+    const pendingId = `pending-${Date.now()}`;
+    const optimistic: ChatMessage = {
+      id: pendingId,
+      senderRole: 'OWNER',
+      senderDisplayName: this.profileStore.displayName(),
+      text,
+      sentAt: new Date().toISOString(),
+    };
+    this.messages.update((list) => [...list, optimistic]);
+    this.chatDraft.set('');
+    this.chatSending.set(true);
+    queueMicrotask(() => this.scrollChatToBottom());
+
+    try {
+      const saved = await firstValueFrom(this.ops.sendBookingMessage(b.id, text));
+      this.messages.update((list) =>
+        list.map((m) => (m.id === pendingId ? saved : m)),
+      );
+    } catch {
+      this.messages.update((list) => list.filter((m) => m.id !== pendingId));
+      this.chatDraft.set(text);
+    } finally {
+      this.chatSending.set(false);
+      queueMicrotask(() => this.scrollChatToBottom());
+    }
+  }
+
+  private scrollChatToBottom(): void {
+    const el = this.chatLog()?.nativeElement;
+    if (el) el.scrollTop = el.scrollHeight;
   }
 
   financeLink(): string[] {

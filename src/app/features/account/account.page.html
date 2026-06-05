@@ -1,0 +1,79 @@
+<div class="portal-page account-page">
+  <div class="portal-page-header">
+    <div>
+      <h1>Conta</h1>
+      <p class="portal-subtitle">Mesmos dados do app — nome, foto e documentos</p>
+    </div>
+  </div>
+
+  <mat-card class="portal-surface profile-card">
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <section class="photo-section">
+        <app-profile-avatar
+          size="lg"
+          [photoSrc]="displayPhoto"
+          [initials]="displayInitials"
+          [name]="displayName"
+        />
+        <div class="photo-actions">
+          <h3>Foto do perfil</h3>
+          <p class="muted">Aparece no portal, no chat e no app mobile.</p>
+          <div class="photo-buttons">
+            <label class="upload-btn">
+              <mat-icon>photo_library</mat-icon>
+              Escolher foto
+              <input type="file" accept="image/*" hidden (change)="onPhotoSelected($event)" />
+            </label>
+            @if (displayPhoto) {
+              <button type="button" mat-stroked-button (click)="removePhoto()">Remover</button>
+            }
+          </div>
+        </div>
+      </section>
+
+      <div class="form-grid">
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Nome completo</mat-label>
+          <input matInput formControlName="fullName" autocomplete="name" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>E-mail</mat-label>
+          <input matInput formControlName="email" readonly />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Telefone</mat-label>
+          <input matInput formControlName="phone" autocomplete="tel" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>CPF</mat-label>
+          <input matInput formControlName="cpf" inputmode="numeric" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Data de nascimento</mat-label>
+          <input matInput type="date" formControlName="birthDate" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>CNPJ (documento)</mat-label>
+          <input matInput formControlName="documentNumber" inputmode="numeric" />
+        </mat-form-field>
+      </div>
+
+      @if (status()) {
+        <p class="status-msg" [class.ok]="status()?.startsWith('Perfil')">{{ status() }}</p>
+      }
+
+      <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+        {{ saving() ? 'Salvando…' : 'Salvar perfil' }}
+      </button>
+    </form>
+  </mat-card>
+
+  <mat-card class="portal-surface security-card">
+    <h3>Segurança</h3>
+    <p class="muted">Para alterar a senha, use a opção no app ou recuperação por e-mail.</p>
+    <button mat-stroked-button color="warn" type="button" (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      Sair
+    </button>
+  </mat-card>
+</div>

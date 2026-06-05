@@ -16,8 +16,8 @@ import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ClaraService } from '../../core/api/clara.service';
 import { PropertiesService } from '../../core/api/properties.service';
-import { AccountService } from '../../core/api/account.service';
-import { AuthService } from '../../core/auth/auth.service';
+import { OwnerProfileStore } from '../../core/profile/owner-profile.store';
+import { ProfileAvatarComponent } from '../../shared/components/profile-avatar/profile-avatar.component';
 import { PropertyDto } from '../../core/models/property.models';
 import { currentCompetence } from '../../core/dates/competence';
 import { OWNER_LABELS } from '../../core/i18n/owner-labels';
@@ -32,6 +32,8 @@ interface ChatLine {
   fallbackReason?: string | null;
   actionLinks?: { label: string; path: string }[];
 }
+
+const CLARA_AVATAR = '/clara-avatar.png';
 
 const SUGGESTIONS = [
   'Como está meu lucro este mês?',
@@ -53,19 +55,26 @@ const FALLBACK_HINTS: Record<string, string> = {
 @Component({
   selector: 'app-clara-assistant',
   standalone: true,
-  imports: [RouterLink, ReactiveFormsModule, MatButtonModule, MatIconModule, MatTooltipModule],
+  imports: [
+    RouterLink,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
+    ProfileAvatarComponent,
+  ],
   templateUrl: './clara-assistant.widget.html',
   styleUrl: './clara-assistant.widget.scss',
 })
 export class ClaraAssistantWidget implements OnInit {
   private readonly clara = inject(ClaraService);
   private readonly props = inject(PropertiesService);
-  private readonly account = inject(AccountService);
-  private readonly auth = inject(AuthService);
+  readonly profileStore = inject(OwnerProfileStore);
   private readonly fb = inject(FormBuilder);
   private seq = 0;
 
   readonly labels = OWNER_LABELS;
+  readonly claraAvatar = CLARA_AVATAR;
   readonly chatLog = viewChild<ElementRef<HTMLDivElement>>('chatLog');
   readonly inputRef = viewChild<ElementRef<HTMLTextAreaElement>>('messageInput');
   readonly suggestions = SUGGESTIONS;
@@ -74,7 +83,6 @@ export class ClaraAssistantWidget implements OnInit {
   readonly lines = signal<ChatLine[]>([]);
   readonly sending = signal(false);
   readonly properties = signal<PropertyDto[]>([]);
-  readonly userName = signal('');
   readonly propertiesLoaded = signal(false);
 
   readonly scope = this.fb.nonNullable.group({
@@ -84,7 +92,9 @@ export class ClaraAssistantWidget implements OnInit {
 
   readonly draft = this.fb.nonNullable.control('');
 
-  readonly userInitials = computed(() => initialsFrom(this.userName() || this.auth.email || 'Você'));
+  readonly userInitials = computed(() => this.profileStore.initials());
+  readonly userPhoto = computed(() => this.profileStore.photoSrc());
+  readonly userName = computed(() => this.profileStore.displayName());
   readonly headerStatus = computed(() => (this.sending() ? 'Digitando…' : 'Online agora'));
 
   constructor() {
@@ -97,7 +107,7 @@ export class ClaraAssistantWidget implements OnInit {
 
   ngOnInit(): void {
     this.resetGreeting();
-    void this.loadUser();
+    void this.profileStore.ensureLoaded();
   }
 
   toggle(): void {
@@ -126,15 +136,6 @@ export class ClaraAssistantWidget implements OnInit {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       void this.send();
-    }
-  }
-
-  async loadUser(): Promise<void> {
-    try {
-      const p = await firstValueFrom(this.account.getProfile());
-      this.userName.set(p.fullName?.trim() || this.auth.email || 'Você');
-    } catch {
-      this.userName.set(this.auth.email || 'Você');
     }
   }
 
@@ -215,7 +216,7 @@ export class ClaraAssistantWidget implements OnInit {
       {
         id: this.nextId(),
         role: 'assistant',
-        text: 'Olá! Sou a Clara. Posso explicar seus números, sugerir ações e mostrar onde clicar no portal. Como posso ajudar?',
+        text: 'Sou a Clara. Pergunte sobre lucro, pendências ou onde clicar no portal.',
         at: new Date(),
       },
     ]);
@@ -230,11 +231,4 @@ export class ClaraAssistantWidget implements OnInit {
     const el = this.chatLog()?.nativeElement;
     if (el) el.scrollTop = el.scrollHeight;
   }
-}
-
-function initialsFrom(name: string): string {
-  const parts = name.replace(/@.*/, '').trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return '?';
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }

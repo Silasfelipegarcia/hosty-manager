@@ -61,6 +61,7 @@ export class PropertyCrmPage implements OnInit {
   readonly propertyFilter = signal('');
   readonly activePreset = signal<'3m' | '6m' | '12m' | 'ytd' | ''>('6m');
   readonly loading = signal(true);
+  readonly loadError = signal<string | null>(null);
   readonly properties = signal<PropertyDto[]>([]);
   readonly rows = signal<PropertyCrmRow[]>([]);
   readonly expenses = signal<PropertyExpense[]>([]);
@@ -116,9 +117,11 @@ export class PropertyCrmPage implements OnInit {
   async load(): Promise<void> {
     if (this.periodInvalid()) {
       this.loading.set(false);
+      this.loadError.set(null);
       return;
     }
     this.loading.set(true);
+    this.loadError.set(null);
     try {
       const from = this.from();
       const to = this.to();
@@ -126,7 +129,7 @@ export class PropertyCrmPage implements OnInit {
 
       const [properties, fixedCosts, expenseList, ...bundles] = await Promise.all([
         firstValueFrom(this.props.listOwner()),
-        firstValueFrom(this.finance.listFixedCosts(0, 200)),
+        firstValueFrom(this.finance.listFixedCosts(0, 100)),
         firstValueFrom(this.expensesApi.listOwner(from, to)),
         ...months.map((competence) =>
           firstValueFrom(this.finance.getDashboardBundle(competence)).then((bundle) => ({ competence, bundle })),
@@ -137,6 +140,12 @@ export class PropertyCrmPage implements OnInit {
       this.monthBundles.set(bundles);
       this.expenses.set(expenseList);
       this.rows.set(buildPropertyCrmRows(properties.content, bundles, fixedCosts.content, expenseList));
+    } catch (err) {
+      this.monthBundles.set([]);
+      this.rows.set([]);
+      this.expenses.set([]);
+      const msg = err instanceof Error ? err.message : 'Falha ao carregar performance';
+      this.loadError.set(msg);
     } finally {
       this.loading.set(false);
     }
