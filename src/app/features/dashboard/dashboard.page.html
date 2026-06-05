@@ -1,0 +1,115 @@
+<div class="page-header">
+  <div>
+    <h1>Início</h1>
+    <p>Visão geral da operação — {{ competence() | competence }}</p>
+  </div>
+  <div class="actions">
+    <button mat-stroked-button (click)="load()"><mat-icon>refresh</mat-icon> Atualizar</button>
+    <button mat-flat-button color="primary" routerLink="/reservations/new">Nova reserva</button>
+    <button mat-flat-button routerLink="/properties/new">Novo imóvel</button>
+    <button mat-stroked-button (click)="exportCsv()">Exportar CSV</button>
+  </div>
+</div>
+
+@if (loading()) {
+  <mat-spinner diameter="40" />
+} @else if (error()) {
+  <p class="error">{{ error() }}</p>
+} @else {
+  <div class="kpi-grid">
+    <mat-card>
+      <span class="kpi-label">Ações pendentes</span>
+      <strong>{{ badges.ownerActionRequired() }}</strong>
+    </mat-card>
+    <mat-card>
+      <span class="kpi-label">Pedidos de acesso</span>
+      <strong>{{ badges.pendingAccessRequests() }}</strong>
+    </mat-card>
+    <mat-card>
+      <span class="kpi-label">Kits pendentes</span>
+      <strong>{{ badges.pendingKitOrders() }}</strong>
+    </mat-card>
+    <mat-card>
+      <span class="kpi-label">Field services</span>
+      <strong>{{ badges.pendingFieldServices() }}</strong>
+    </mat-card>
+    <mat-card>
+      <span class="kpi-label">Estadias ativas</span>
+      <strong>{{ stays()?.active ?? 0 }}</strong>
+    </mat-card>
+    <mat-card>
+      <span class="kpi-label">Lucro do mês</span>
+      <strong>{{ bundle()?.dashboard?.totalProfit | currencyBrl }}</strong>
+    </mat-card>
+  </div>
+
+  <div class="grid-2">
+    <mat-card>
+      <h3>Fila de ação</h3>
+      @if (accessRequests().length === 0) {
+        <p class="muted">Nenhum pedido de acesso pendente.</p>
+      } @else {
+        <ul class="action-list">
+          @for (req of accessRequests(); track req.id) {
+            <li>
+              <strong>{{ req.tenantName || req.tenantEmail }}</strong>
+              <span>{{ req.propertyName }}</span>
+              <a routerLink="/reservations">Ver reservas</a>
+            </li>
+          }
+        </ul>
+      }
+      <div class="quick-links">
+        <a routerLink="/kits/pending">Kits pendentes</a>
+        <a routerLink="/field-services/pending">Field services</a>
+      </div>
+    </mat-card>
+
+    <mat-card>
+      <h3>Receita por plataforma</h3>
+      @if (platformChart.labels?.length) {
+        <canvas baseChart type="doughnut" [data]="platformChart" [options]="platformChartOptions"></canvas>
+      } @else {
+        <p class="muted">Sem dados no período.</p>
+      }
+    </mat-card>
+  </div>
+
+  <div class="grid-2">
+    <mat-card>
+      <h3>Performance por imóvel</h3>
+      <table>
+        <thead>
+          <tr><th>Imóvel</th><th>Bruto</th><th>Lucro</th></tr>
+        </thead>
+        <tbody>
+          @for (row of bundle()?.byProperty ?? []; track row.propertyId) {
+            <tr>
+              <td>{{ row.propertyName || row.propertyId }}</td>
+              <td>{{ row.grossAmount | currencyBrl }}</td>
+              <td>{{ row.profit | currencyBrl }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </mat-card>
+
+    <mat-card>
+      <h3>Mensagens recentes</h3>
+      @if (inboxPreview().length === 0) {
+        <p class="muted">Inbox vazio.</p>
+      } @else {
+        <ul class="action-list">
+          @for (msg of inboxPreview(); track msg.bookingId) {
+            <li>
+              <strong>{{ msg.tenantName || 'Hóspede' }}</strong>
+              <span>{{ msg.lastMessage }}</span>
+              <a [routerLink]="['/reservations', msg.bookingId]">Abrir</a>
+            </li>
+          }
+        </ul>
+      }
+      <a routerLink="/messages">Ver todas</a>
+    </mat-card>
+  </div>
+}

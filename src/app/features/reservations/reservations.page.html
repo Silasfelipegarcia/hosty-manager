@@ -1,0 +1,70 @@
+<div class="page-header">
+  <h1>Reservas</h1>
+  <button mat-flat-button color="primary" (click)="showCreate.set(true)">Nova reserva</button>
+</div>
+
+@if (showCreate()) {
+  <mat-card class="create-card">
+    <h3>Nova reserva manual</h3>
+    <form [formGroup]="createForm" (ngSubmit)="create()">
+      <mat-form-field appearance="outline">
+        <mat-label>Imóvel</mat-label>
+        <mat-select formControlName="propertyId">
+          @for (p of properties(); track p.id) {
+            <mat-option [value]="p.id">{{ p.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Check-in</mat-label><input matInput type="date" formControlName="checkinDate" /></mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Check-out</mat-label><input matInput type="date" formControlName="checkoutDate" /></mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Valor bruto</mat-label><input matInput type="number" formControlName="grossAmount" /></mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>E-mail inquilino</mat-label><input matInput formControlName="tenantIdentifier" /></mat-form-field>
+      <button mat-flat-button color="primary" type="submit">Criar</button>
+      <button mat-button type="button" (click)="showCreate.set(false)">Cancelar</button>
+    </form>
+  </mat-card>
+}
+
+<div class="master-detail">
+  <mat-card class="list-pane">
+    <mat-list>
+      @for (b of bookings(); track b.id) {
+        <a mat-list-item [routerLink]="['/reservations', b.id]" [class.active]="selected()?.id === b.id">
+          <span matListItemTitle>{{ b.tenantName || b.tenantEmail || 'Reserva' }}</span>
+          <span matListItemLine>{{ b.propertyName }} · {{ b.checkinDate }} → {{ b.checkoutDate }}</span>
+          <span matListItemMeta>{{ b.lifecycleStatus }}</span>
+        </a>
+      }
+    </mat-list>
+  </mat-card>
+
+  <mat-card class="detail-pane">
+    @if (!selected()) {
+      <p class="muted">Selecione uma reserva.</p>
+    } @else {
+      <h3>{{ selected()!.propertyName }}</h3>
+      <p>{{ selected()!.tenantName || selected()!.tenantEmail }}</p>
+      <p>{{ selected()!.checkinDate }} → {{ selected()!.checkoutDate }}</p>
+      <p>Status: <strong>{{ selected()!.lifecycleStatus }}</strong> · {{ selected()!.grossAmount | currencyBrl }}</p>
+      <div class="actions">
+        @if (selected()!.ownerActionRequired || selected()!.pendingStayRequest) {
+          <button mat-flat-button color="primary" (click)="ownerConfirm()">Aprovar estadia</button>
+        }
+        <button mat-stroked-button (click)="approveCheckout()">Aprovar check-out</button>
+      </div>
+      <h4>Chat</h4>
+      <div class="chat">
+        @for (m of messages(); track m.id ?? m.createdAt) {
+          <div class="msg"><small>{{ m.senderRole }}</small><p>{{ m.body }}</p></div>
+        }
+      </div>
+      <form class="chat-input" (ngSubmit)="sendMessage()">
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Mensagem</mat-label>
+          <input matInput [value]="newMessage()" (input)="newMessage.set($any($event.target).value)" />
+        </mat-form-field>
+        <button mat-stroked-button type="submit">Enviar</button>
+      </form>
+    }
+  </mat-card>
+</div>

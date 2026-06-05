@@ -1,0 +1,41 @@
+<mat-sidenav-container class="shell">
+  <mat-sidenav mode="side" opened class="shell-sidenav">
+    <div class="brand">
+      <mat-icon>domain</mat-icon>
+      <span>{{ appName }}</span>
+    </div>
+    <mat-nav-list>
+      @for (item of nav; track item.path) {
+        <a
+          mat-list-item
+          [routerLink]="item.path"
+          routerLinkActive="active"
+          [matBadge]="item.badge?.() || null"
+          [matBadgeHidden]="!item.badge?.()"
+          matBadgeColor="warn"
+          matBadgeSize="small"
+        >
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          <span matListItemTitle>{{ item.label }}</span>
+        </a>
+      }
+    </mat-nav-list>
+    <div class="sidenav-footer">
+      <small>{{ email }}</small>
+      <button mat-button color="warn" (click)="logout()">Sair</button>
+    </div>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <mat-toolbar class="topbar">
+      <span>Portal do proprietário</span>
+      <span class="spacer"></span>
+      @if (badges.totalBadges > 0) {
+        <span class="pending-chip">{{ badges.totalBadges }} pendência(s)</span>
+      }
+    </mat-toolbar>
+    <main class="content">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

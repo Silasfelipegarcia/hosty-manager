@@ -1,0 +1,31 @@
+<div class="page-header">
+  <h1>Imóveis</h1>
+  <button mat-flat-button color="primary" routerLink="/properties/new">Novo imóvel</button>
+</div>
+
+@if (loading()) {
+  <p>Carregando…</p>
+} @else if (items().length === 0) {
+  <mat-card class="empty">
+    <p>Nenhum imóvel cadastrado.</p>
+    <button mat-flat-button color="primary" routerLink="/properties/new">Cadastrar primeiro imóvel</button>
+  </mat-card>
+} @else {
+  <div class="grid">
+    @for (p of items(); track p.id) {
+      <mat-card class="property-card">
+        @if (p.coverPhotoUrl) {
+          <img [src]="p.coverPhotoUrl" [alt]="p.name" />
+        }
+        <div class="body">
+          <h3>{{ p.name }}</h3>
+          <p>{{ p.city }} · {{ p.operationalStatus }}</p>
+          @if (p.nightlyRate) {
+            <p class="rate">{{ p.nightlyRate | currencyBrl }}/noite</p>
+          }
+          <button mat-stroked-button [routerLink]="['/properties', p.id]">Gerenciar</button>
+        </div>
+      </mat-card>
+    }
+  </div>
+}

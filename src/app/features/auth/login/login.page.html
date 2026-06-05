@@ -1,0 +1,26 @@
+<div class="login-wrap">
+  <mat-card class="login-card">
+    <h1>{{ appName }}</h1>
+    <p class="subtitle">Portal do proprietário</p>
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>E-mail</mat-label>
+        <input matInput type="email" formControlName="email" autocomplete="username" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Senha</mat-label>
+        <input matInput type="password" formControlName="password" autocomplete="current-password" />
+      </mat-form-field>
+      <button mat-flat-button color="primary" class="full" type="submit" [disabled]="loading()">
+        {{ loading() ? 'Entrando…' : 'Entrar' }}
+      </button>
+    </form>
+
+    <a routerLink="/forgot-password" class="link">Esqueci minha senha</a>
+  </mat-card>
+</div>

@@ -1,0 +1,30 @@
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.property-card {
+  overflow: hidden;
+  padding: 0 !important;
+
+  img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+  }
+
+  .body {
+    padding: 16px;
+  }
+}
+
+.rate { color: #0f766e; font-weight: 600; }
+.empty { padding: 32px; text-align: center; }
