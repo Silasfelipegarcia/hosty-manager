@@ -121,23 +121,27 @@
         }
       </div>
 
+      <div class="list-pane-body">
       @if (activeFilter() === 'approval' && scopedAccessRequests().length > 0) {
-        <section class="approval-queue">
-          <h4>Pedidos de estadia</h4>
+        <section class="approval-section">
+          <h4 class="section-label">Pedidos de estadia</h4>
           @for (req of scopedAccessRequests(); track req.id) {
-            <article class="approval-item">
-              <div class="approval-copy">
-                <strong>{{ req.tenantFullName || req.tenantName || req.tenantEmail || 'Inquilino' }}</strong>
-                <span>{{ req.propertyName }}</span>
-                <small>{{ req.requestedCheckinDate }} → {{ req.requestedCheckoutDate }}</small>
+            <article class="approval-card">
+              <div class="approval-card-head">
+                <span class="chip tone-warning">Novo pedido</span>
               </div>
-              <button mat-flat-button color="primary" (click)="approveAccessRequest(req)">Aprovar</button>
+              <strong class="approval-guest">{{ accessRequestGuestName(req) }}</strong>
+              <span class="approval-property">{{ accessRequestPropertyName(req) }}</span>
+              <span class="approval-dates">{{ accessRequestDates(req) }}</span>
+              <p class="approval-hint">O hóspede solicitou acesso ao imóvel. Aprove para criar a reserva.</p>
+              <button mat-flat-button color="primary" type="button" (click)="approveAccessRequest(req)">
+                Aprovar pedido
+              </button>
             </article>
           }
         </section>
       }
 
-      <div class="list-pane-body">
       @if (listShowsEmpty()) {
         <div class="list-empty">
           <mat-icon>event_busy</mat-icon>
@@ -145,6 +149,9 @@
           <button mat-stroked-button (click)="setFilter('all')">Ver todas</button>
         </div>
       } @else if (filteredBookings().length > 0) {
+        @if (activeFilter() === 'approval' && scopedAccessRequests().length > 0) {
+          <h4 class="section-label bookings-label">Reservas com ação</h4>
+        }
         <ul class="booking-list">
           @for (b of paginatedBookings(); track b.id) {
             <li>
@@ -207,8 +214,8 @@
       @if (!selected()) {
         <div class="detail-empty">
           <mat-icon>touch_app</mat-icon>
-          <h3>Selecione uma reserva</h3>
-          <p>Escolha uma estadia na lista para ver detalhes e aprovar ações.</p>
+          <h3>Selecione uma estadia</h3>
+          <p>Use a lista à esquerda para ver detalhes, aprovar pedidos ou confirmar check-in e check-out.</p>
         </div>
       } @else if (selected(); as b) {
         <div class="detail-head">

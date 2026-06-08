@@ -142,10 +142,16 @@ export class ReservationsPage implements OnInit {
 
   readonly listPageLabel = computed(() => {
     const total = this.filteredBookings().length;
-    if (total === 0) return 'Nenhuma estadia';
+    const access =
+      this.activeFilter() === 'approval' ? this.scopedAccessRequests().length : 0;
+    if (total === 0 && access === 0) return 'Nenhuma estadia neste filtro';
+    if (total === 0 && access > 0) {
+      return `${access} pedido${access === 1 ? '' : 's'} de estadia aguardando`;
+    }
     const from = this.listUiPage() * LIST_UI_PAGE_SIZE + 1;
     const to = Math.min(total, (this.listUiPage() + 1) * LIST_UI_PAGE_SIZE);
-    return `${from}–${to} de ${total}`;
+    const range = `${from}–${to} de ${total}`;
+    return access > 0 ? `${range} · ${access} pedido${access === 1 ? '' : 's'}` : range;
   });
 
   readonly canGoNextListPage = computed(() => {
@@ -453,6 +459,31 @@ export class ReservationsPage implements OnInit {
   async approveAccessRequest(req: AccessRequest): Promise<void> {
     await firstValueFrom(this.props.approveAccessRequest(req.id));
     await this.refreshListQuietly();
+  }
+
+  accessRequestPropertyName(req: AccessRequest): string {
+    if (req.propertyName?.trim()) return req.propertyName.trim();
+    const prop = this.properties().find((p) => p.id === req.propertyId);
+    return prop?.name ?? 'Imóvel';
+  }
+
+  accessRequestGuestName(req: AccessRequest): string {
+    return (
+      req.tenantFullName?.trim() ||
+      req.tenantName?.trim() ||
+      req.tenantEmail?.trim() ||
+      req.tenantIdentifier?.trim() ||
+      'Inquilino'
+    );
+  }
+
+  accessRequestDates(req: AccessRequest): string {
+    const checkin = req.proposedCheckinDate ?? req.requestedCheckinDate;
+    const checkout = req.proposedCheckoutDate ?? req.requestedCheckoutDate;
+    if (checkin && checkout) {
+      return formatStayDates(checkin, checkout);
+    }
+    return 'Datas a confirmar com o hóspede';
   }
 
   financeLink(): string[] {

@@ -86,8 +86,14 @@ export interface AccessRequest {
   tenantFullName?: string;
   tenantIdentifier?: string;
   status?: string;
+  /** Nomes enviados pela API Java */
+  proposedCheckinDate?: string;
+  proposedCheckoutDate?: string;
+  /** Alias legado no front */
   requestedCheckinDate?: string;
   requestedCheckoutDate?: string;
+  estimatedGrossAtRequest?: number;
+  message?: string;
 }
 
 export interface TenantSearchResult {
