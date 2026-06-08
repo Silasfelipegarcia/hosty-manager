@@ -286,6 +286,28 @@
   min-height: 0;
 }
 
+.booking-card-row {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.booking-card-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.preview-msg {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
 .booking-card {
   display: flex;
   flex-direction: column;

@@ -94,6 +94,8 @@ export interface AccessRequest {
   requestedCheckoutDate?: string;
   estimatedGrossAtRequest?: number;
   message?: string;
+  tenantPhotoUrl?: string;
+  operationBookingId?: string;
 }
 
 export interface TenantSearchResult {

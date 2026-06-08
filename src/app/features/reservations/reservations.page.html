@@ -135,20 +135,30 @@
               <li>
                 <button
                   type="button"
-                  class="booking-card needs-action"
+                  class="booking-card booking-card-row needs-action"
                   (click)="openAccessRequest(req)"
                   [class.active]="selectedAccessRequest()?.id === req.id"
                 >
-                  <div class="booking-card-main">
-                    <span class="guest">{{ accessRequestGuestName(req) }}</span>
-                    <span class="property">{{ accessRequestPropertyName(req) }}</span>
-                    <span class="dates">{{ accessRequestDates(req) }}</span>
-                  </div>
-                  <div class="booking-card-meta">
-                    <span class="chip tone-warning">Pedido de estadia</span>
-                    @if (req.tenantEmail) {
-                      <span class="source">{{ req.tenantEmail }}</span>
-                    }
+                  <app-profile-avatar
+                    size="sm"
+                    [photoSrc]="req.tenantPhotoUrl ?? null"
+                    [initials]="accessRequestInitials(req)"
+                    [name]="accessRequestGuestName(req)"
+                  />
+                  <div class="booking-card-body">
+                    <div class="booking-card-main">
+                      <span class="guest">{{ accessRequestGuestName(req) }}</span>
+                      <span class="property">{{ accessRequestPropertyName(req) }}</span>
+                      <span class="dates">{{ accessRequestDates(req) }}</span>
+                    </div>
+                    <div class="booking-card-meta">
+                      <span class="chip tone-warning">Pedido de estadia</span>
+                      @if (req.message) {
+                        <span class="source preview-msg">{{ req.message }}</span>
+                      } @else if (req.tenantEmail) {
+                        <span class="source">{{ req.tenantEmail }}</span>
+                      }
+                    </div>
                   </div>
                 </button>
               </li>
@@ -158,24 +168,32 @@
             <li>
               <button
                 type="button"
-                class="booking-card"
+                class="booking-card booking-card-row"
                 (click)="openBooking(b)"
                 [class.active]="selected()?.id === b.id"
                 [class.needs-action]="bookingNeedsOwnerAction(b)"
               >
-                <div class="booking-card-main">
-                  <span class="guest">{{ displayGuestName(b) }}</span>
-                  <span class="property">{{ b.propertyName }}</span>
-                  <span class="dates">{{ formatStayDates(b.checkinDate, b.checkoutDate) }}</span>
-                </div>
-                <div class="booking-card-meta">
-                  <span class="chip" [class]="'tone-' + flowStageTone(flowStageKey(b))">{{ flowStageDisplayLabel(flowStageKey(b)) }}</span>
-                  <div class="booking-card-foot">
-                    <span class="source">{{ reservationSourceLabel(b) }}</span>
-                    <strong class="amount">{{ displayAmount(b) | currencyBrl }}</strong>
+                <app-profile-avatar
+                  size="sm"
+                  [photoSrc]="b.tenantPhotoUrl ?? null"
+                  [initials]="displayGuestName(b).slice(0, 2).toUpperCase()"
+                  [name]="displayGuestName(b)"
+                />
+                <div class="booking-card-body">
+                  <div class="booking-card-main">
+                    <span class="guest">{{ displayGuestName(b) }}</span>
+                    <span class="property">{{ b.propertyName }}</span>
+                    <span class="dates">{{ formatStayDates(b.checkinDate, b.checkoutDate) }}</span>
                   </div>
-                  @if (b.backfill) { <span class="badge-hist">Histórico</span> }
-                  @if (bookingNeedsOwnerAction(b)) { <span class="badge-action">Ação</span> }
+                  <div class="booking-card-meta">
+                    <span class="chip" [class]="'tone-' + flowStageTone(flowStageKey(b))">{{ flowStageDisplayLabel(flowStageKey(b)) }}</span>
+                    <div class="booking-card-foot">
+                      <span class="source">{{ reservationSourceLabel(b) }}</span>
+                      <strong class="amount">{{ displayAmount(b) | currencyBrl }}</strong>
+                    </div>
+                    @if (b.backfill) { <span class="badge-hist">Histórico</span> }
+                    @if (bookingNeedsOwnerAction(b)) { <span class="badge-action">Ação</span> }
+                  </div>
                 </div>
               </button>
             </li>
@@ -215,6 +233,12 @@
       @if (selectedAccessRequest(); as req) {
         <div class="detail-head">
           <div class="guest-block">
+            <app-profile-avatar
+              size="lg"
+              [photoSrc]="req.tenantPhotoUrl ?? null"
+              [initials]="accessRequestInitials(req)"
+              [name]="accessRequestGuestName(req)"
+            />
             <div>
               <h3>{{ accessRequestPropertyName(req) }}</h3>
               @if (accessRequestPropertyCity(req)) {
@@ -238,6 +262,9 @@
 
         <mat-divider />
 
+        <h4>Mensagem do hóspede</h4>
+        <p class="access-message">{{ req.message?.trim() || 'Nenhuma mensagem adicional no pedido.' }}</p>
+
         <h4>Resumo do pedido</h4>
         <ul class="timeline">
           <li class="pending">Hóspede solicitou acesso ao imóvel pelo app</li>
@@ -249,11 +276,6 @@
           </li>
         </ul>
 
-        @if (req.message) {
-          <h4>Mensagem do hóspede</h4>
-          <p class="access-message">{{ req.message }}</p>
-        }
-
         <div class="actions">
           <button mat-flat-button color="primary" type="button" (click)="approveAccessRequest(req)">
             Aprovar e criar reserva
@@ -262,6 +284,33 @@
             Recusar pedido
           </button>
         </div>
+
+        <mat-divider />
+
+        <section class="messages-teaser">
+          <div class="messages-teaser-copy">
+            <mat-icon>forum</mat-icon>
+            <div>
+              <h4>Mensagens com o hóspede</h4>
+              <p>
+                @if (req.operationBookingId) {
+                  Abra a conversa desta estadia em <strong>Mensagens</strong>.
+                } @else {
+                  Após aprovar, o chat fica disponível em <strong>Mensagens</strong>.
+                }
+              </p>
+            </div>
+          </div>
+          <a
+            mat-flat-button
+            color="primary"
+            [routerLink]="accessRequestMessagesLink(req)"
+            [queryParams]="accessRequestMessagesQuery(req)"
+          >
+            <mat-icon>chat</mat-icon>
+            Abrir conversa
+          </a>
+        </section>
       } @else if (!selected()) {
         <div class="detail-empty">
           <mat-icon>touch_app</mat-icon>
@@ -271,9 +320,12 @@
       } @else if (selected(); as b) {
         <div class="detail-head">
           <div class="guest-block">
-            @if (b.tenantPhotoUrl) {
-              <img class="guest-photo" [src]="b.tenantPhotoUrl" alt="" />
-            }
+            <app-profile-avatar
+              size="lg"
+              [photoSrc]="b.tenantPhotoUrl ?? null"
+              [initials]="displayGuestName(b).slice(0, 2).toUpperCase()"
+              [name]="displayGuestName(b)"
+            />
             <div>
               <h3>{{ b.propertyName }}</h3>
               <p class="guest-name">{{ displayGuestName(b) }}</p>

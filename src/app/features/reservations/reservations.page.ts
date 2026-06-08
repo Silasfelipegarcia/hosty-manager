@@ -50,6 +50,7 @@ import {
 } from '../../core/utils/reservation-calendar.util';
 import { CurrencyBrlPipe } from '../../shared/pipes/currency-brl.pipe';
 import { PortalSkeletonComponent } from '../../shared/components/portal-skeleton/portal-skeleton.component';
+import { ProfileAvatarComponent } from '../../shared/components/profile-avatar/profile-avatar.component';
 
 import {
   RESERVATION_FILTER_OPTIONS,
@@ -76,6 +77,7 @@ const LIST_UI_PAGE_SIZE = RESERVATIONS_LIST_UI_PAGE_SIZE;
     MatIconModule,
     CurrencyBrlPipe,
     PortalSkeletonComponent,
+    ProfileAvatarComponent,
     DatePipe,
   ],
   templateUrl: './reservations.page.html',
@@ -210,8 +212,8 @@ export class ReservationsPage implements OnInit {
     void this.load(true);
     this.route.queryParamMap.subscribe((params) => {
       const filter = params.get('filter');
-      if (filter === 'approval') {
-        this.activeFilter.set('approval');
+      if (filter && this.isReservationFilter(filter)) {
+        this.activeFilter.set(filter);
       }
       const accessId = params.get('accessId');
       if (accessId) {
@@ -345,6 +347,27 @@ export class ReservationsPage implements OnInit {
   setFilter(filter: ReservationFilter): void {
     this.activeFilter.set(filter);
     this.resetListUiPage();
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { filter: filter === 'all' ? null : filter },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  accessRequestInitials(req: AccessRequest): string {
+    const name = this.accessRequestGuestName(req);
+    const parts = name.split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return name.slice(0, 2).toUpperCase();
+  }
+
+  accessRequestMessagesLink(req: AccessRequest): string[] {
+    return ['/messages'];
+  }
+
+  accessRequestMessagesQuery(req: AccessRequest): { bookingId?: string } {
+    return req.operationBookingId ? { bookingId: req.operationBookingId } : {};
   }
 
   setPropertyFilter(value: string): void {
@@ -551,6 +574,10 @@ export class ReservationsPage implements OnInit {
 
   private normalizeId(id: string | undefined): string {
     return (id ?? '').replace(/-/g, '').toLowerCase();
+  }
+
+  private isReservationFilter(value: string): value is ReservationFilter {
+    return RESERVATION_FILTER_OPTIONS.some((o) => o.id === value);
   }
 
   private bookingOnDay(booking: BookingDto, isoDate: string): boolean {
