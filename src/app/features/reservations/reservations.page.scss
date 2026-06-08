@@ -258,49 +258,15 @@
   border-top: 1px solid var(--portal-border);
 }
 
-.approval-section {
-  padding: 8px 12px 4px;
-}
-
-.approval-card {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  padding: 14px 16px;
-  margin-bottom: 10px;
-  background: #fffbeb;
-  border: 1px solid #fde68a;
+.access-message {
+  margin: 0 20px 16px;
+  padding: 12px 14px;
+  background: var(--portal-bg);
+  border: 1px solid var(--portal-border);
   border-radius: var(--portal-radius-sm);
-  border-left: 4px solid #f59e0b;
-}
-
-.approval-card-head {
-  width: 100%;
-}
-
-.approval-guest {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: var(--portal-text);
-}
-
-.approval-property {
   font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--portal-text);
-}
-
-.approval-dates {
-  font-size: 0.8125rem;
+  line-height: 1.5;
   color: var(--portal-text-secondary);
-}
-
-.approval-hint {
-  margin: 4px 0 8px;
-  font-size: 0.75rem;
-  line-height: 1.45;
-  color: var(--portal-text-muted);
 }
 
 .list-pane-body {

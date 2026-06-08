@@ -92,6 +92,7 @@ export class ReservationsPage implements OnInit {
   readonly weekdayLabels = WEEKDAY_LABELS;
   readonly bookings = signal<BookingDto[]>([]);
   readonly selected = signal<BookingDto | null>(null);
+  readonly selectedAccessRequest = signal<AccessRequest | null>(null);
   readonly kitOrders = signal<KitOrder[]>([]);
   readonly properties = signal<PropertyDto[]>([]);
   readonly accessRequests = signal<AccessRequest[]>([]);
@@ -212,6 +213,15 @@ export class ReservationsPage implements OnInit {
       if (filter === 'approval') {
         this.activeFilter.set('approval');
       }
+      const accessId = params.get('accessId');
+      if (accessId) {
+        this.selected.set(null);
+        this.kitOrders.set([]);
+        const req = this.accessRequests().find((r) => r.id === accessId);
+        this.selectedAccessRequest.set(req ?? null);
+        return;
+      }
+      this.selectedAccessRequest.set(null);
       const id = params.get('id');
       if (!id || id === 'new') {
         this.selected.set(null);
@@ -286,11 +296,28 @@ export class ReservationsPage implements OnInit {
   }
 
   openBooking(booking: BookingDto): void {
-    if (this.route.snapshot.queryParamMap.get('id') === booking.id) return;
+    if (
+      this.route.snapshot.queryParamMap.get('id') === booking.id &&
+      !this.selectedAccessRequest()
+    ) {
+      return;
+    }
+    this.selectedAccessRequest.set(null);
     this.selected.set(booking);
     this.kitOrders.set([]);
     void this.router.navigate(['/reservations'], {
-      queryParams: { id: booking.id },
+      queryParams: { id: booking.id, accessId: null },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  openAccessRequest(req: AccessRequest): void {
+    if (this.selectedAccessRequest()?.id === req.id) return;
+    this.selected.set(null);
+    this.kitOrders.set([]);
+    this.selectedAccessRequest.set(req);
+    void this.router.navigate(['/reservations'], {
+      queryParams: { accessId: req.id, id: null },
       queryParamsHandling: 'merge',
     });
   }
@@ -456,15 +483,43 @@ export class ReservationsPage implements OnInit {
     if (b) await this.refreshBooking(b.id);
   }
 
-  async approveAccessRequest(req: AccessRequest): Promise<void> {
-    await firstValueFrom(this.props.approveAccessRequest(req.id));
+  async approveAccessRequest(req?: AccessRequest): Promise<void> {
+    const target = req ?? this.selectedAccessRequest();
+    if (!target) return;
+    await firstValueFrom(this.props.approveAccessRequest(target.id));
+    this.selectedAccessRequest.set(null);
     await this.refreshListQuietly();
+    void this.router.navigate(['/reservations'], {
+      queryParams: { accessId: null },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  async rejectAccessRequest(req?: AccessRequest): Promise<void> {
+    const target = req ?? this.selectedAccessRequest();
+    if (!target) return;
+    await firstValueFrom(this.props.rejectAccessRequest(target.id));
+    this.selectedAccessRequest.set(null);
+    await this.refreshListQuietly();
+    void this.router.navigate(['/reservations'], {
+      queryParams: { accessId: null },
+      queryParamsHandling: 'merge',
+    });
   }
 
   accessRequestPropertyName(req: AccessRequest): string {
     if (req.propertyName?.trim()) return req.propertyName.trim();
-    const prop = this.properties().find((p) => p.id === req.propertyId);
+    const prop = this.properties().find(
+      (p) => this.normalizeId(p.id) === this.normalizeId(req.propertyId),
+    );
     return prop?.name ?? 'Imóvel';
+  }
+
+  accessRequestPropertyCity(req: AccessRequest): string {
+    const prop = this.properties().find(
+      (p) => this.normalizeId(p.id) === this.normalizeId(req.propertyId),
+    );
+    return prop?.city ?? '';
   }
 
   accessRequestGuestName(req: AccessRequest): string {
@@ -492,6 +547,10 @@ export class ReservationsPage implements OnInit {
 
   financeQueryParams(booking: BookingDto): { competence?: string } {
     return booking.competence ? { competence: booking.competence } : {};
+  }
+
+  private normalizeId(id: string | undefined): string {
+    return (id ?? '').replace(/-/g, '').toLowerCase();
   }
 
   private bookingOnDay(booking: BookingDto, isoDate: string): boolean {

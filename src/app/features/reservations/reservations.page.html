@@ -122,37 +122,38 @@
       </div>
 
       <div class="list-pane-body">
-      @if (activeFilter() === 'approval' && scopedAccessRequests().length > 0) {
-        <section class="approval-section">
-          <h4 class="section-label">Pedidos de estadia</h4>
-          @for (req of scopedAccessRequests(); track req.id) {
-            <article class="approval-card">
-              <div class="approval-card-head">
-                <span class="chip tone-warning">Novo pedido</span>
-              </div>
-              <strong class="approval-guest">{{ accessRequestGuestName(req) }}</strong>
-              <span class="approval-property">{{ accessRequestPropertyName(req) }}</span>
-              <span class="approval-dates">{{ accessRequestDates(req) }}</span>
-              <p class="approval-hint">O hóspede solicitou acesso ao imóvel. Aprove para criar a reserva.</p>
-              <button mat-flat-button color="primary" type="button" (click)="approveAccessRequest(req)">
-                Aprovar pedido
-              </button>
-            </article>
-          }
-        </section>
-      }
-
       @if (listShowsEmpty()) {
         <div class="list-empty">
           <mat-icon>event_busy</mat-icon>
           <p>Nenhuma reserva neste filtro.</p>
           <button mat-stroked-button (click)="setFilter('all')">Ver todas</button>
         </div>
-      } @else if (filteredBookings().length > 0) {
-        @if (activeFilter() === 'approval' && scopedAccessRequests().length > 0) {
-          <h4 class="section-label bookings-label">Reservas com ação</h4>
-        }
+      } @else {
         <ul class="booking-list">
+          @if (activeFilter() === 'approval' && scopedAccessRequests().length > 0) {
+            @for (req of scopedAccessRequests(); track req.id) {
+              <li>
+                <button
+                  type="button"
+                  class="booking-card needs-action"
+                  (click)="openAccessRequest(req)"
+                  [class.active]="selectedAccessRequest()?.id === req.id"
+                >
+                  <div class="booking-card-main">
+                    <span class="guest">{{ accessRequestGuestName(req) }}</span>
+                    <span class="property">{{ accessRequestPropertyName(req) }}</span>
+                    <span class="dates">{{ accessRequestDates(req) }}</span>
+                  </div>
+                  <div class="booking-card-meta">
+                    <span class="chip tone-warning">Pedido de estadia</span>
+                    @if (req.tenantEmail) {
+                      <span class="source">{{ req.tenantEmail }}</span>
+                    }
+                  </div>
+                </button>
+              </li>
+            }
+          }
           @for (b of paginatedBookings(); track b.id) {
             <li>
               <button
@@ -211,11 +212,61 @@
     </mat-card>
 
     <mat-card class="detail-pane portal-surface" [class.is-loading]="detailLoading()">
-      @if (!selected()) {
+      @if (selectedAccessRequest(); as req) {
+        <div class="detail-head">
+          <div class="guest-block">
+            <div>
+              <h3>{{ accessRequestPropertyName(req) }}</h3>
+              @if (accessRequestPropertyCity(req)) {
+                <p class="guest-email">{{ accessRequestPropertyCity(req) }}</p>
+              }
+              <p class="guest-name">{{ accessRequestGuestName(req) }}</p>
+              @if (req.tenantEmail) {
+                <p class="guest-email">{{ req.tenantEmail }}</p>
+              }
+            </div>
+          </div>
+          <div class="detail-badges">
+            <span class="chip tone-warning">Pedido de estadia</span>
+          </div>
+        </div>
+
+        <p class="stay-dates">{{ accessRequestDates(req) }}</p>
+        @if (req.estimatedGrossAtRequest) {
+          <p class="amount-banner">{{ req.estimatedGrossAtRequest | currencyBrl }}</p>
+        }
+
+        <mat-divider />
+
+        <h4>Resumo do pedido</h4>
+        <ul class="timeline">
+          <li class="pending">Hóspede solicitou acesso ao imóvel pelo app</li>
+          <li [class.done]="!!(req.proposedCheckinDate || req.requestedCheckinDate)">
+            Check-in: {{ (req.proposedCheckinDate || req.requestedCheckinDate) | date:'dd/MM/yyyy' }}
+          </li>
+          <li [class.done]="!!(req.proposedCheckoutDate || req.requestedCheckoutDate)">
+            Check-out: {{ (req.proposedCheckoutDate || req.requestedCheckoutDate) | date:'dd/MM/yyyy' }}
+          </li>
+        </ul>
+
+        @if (req.message) {
+          <h4>Mensagem do hóspede</h4>
+          <p class="access-message">{{ req.message }}</p>
+        }
+
+        <div class="actions">
+          <button mat-flat-button color="primary" type="button" (click)="approveAccessRequest(req)">
+            Aprovar e criar reserva
+          </button>
+          <button mat-stroked-button color="warn" type="button" (click)="rejectAccessRequest(req)">
+            Recusar pedido
+          </button>
+        </div>
+      } @else if (!selected()) {
         <div class="detail-empty">
           <mat-icon>touch_app</mat-icon>
-          <h3>Selecione uma estadia</h3>
-          <p>Use a lista à esquerda para ver detalhes, aprovar pedidos ou confirmar check-in e check-out.</p>
+          <h3>Selecione um item na lista</h3>
+          <p>Clique em um pedido de estadia ou reserva à esquerda para ver todos os detalhes e tomar ação.</p>
         </div>
       } @else if (selected(); as b) {
         <div class="detail-head">
