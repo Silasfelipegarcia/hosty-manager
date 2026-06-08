@@ -1,0 +1,83 @@
+<div class="property-media-editor">
+  @if (error()) {
+    <p class="media-error">{{ error() }}</p>
+  }
+
+  <section class="media-section">
+    <h3>Foto de capa</h3>
+    <p class="muted">Principal no Explore e no app mobile.</p>
+    <div class="slot slot-cover">
+      <div class="preview">
+        @if (coverPreview()) {
+          <img [src]="coverPreview()!" alt="Capa do imóvel" />
+        } @else {
+          <span class="preview-empty"><mat-icon>image</mat-icon></span>
+        }
+      </div>
+      <div class="slot-actions">
+        <label class="upload-btn">
+          <mat-icon>photo_library</mat-icon>
+          Escolher foto
+          <input type="file" accept="image/*" hidden (change)="onCoverSelected($event)" />
+        </label>
+        @if (coverPhotoUrl()) {
+          <button type="button" mat-stroked-button (click)="removeCover()">Remover</button>
+        }
+      </div>
+      @if (showUrlFields()) {
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>URL da capa</mat-label>
+          <input
+            matInput
+            [ngModel]="coverPhotoUrl()"
+            (ngModelChange)="onCoverUrlInput($event)"
+            placeholder="https://… ou data:image/…"
+          />
+        </mat-form-field>
+      }
+    </div>
+  </section>
+
+  <section class="media-section">
+    <h3>Galeria</h3>
+    <p class="muted">Até 4 fotos extras (Foto 2–5 no app).</p>
+    <div class="gallery-grid">
+      @for (slot of gallerySlots(); track $index) {
+        <article class="slot">
+          <span class="slot-label">Foto {{ $index + 2 }}</span>
+          <div class="preview preview-sm">
+            @if (galleryPreview($index)) {
+              <img [src]="galleryPreview($index)!" [alt]="'Galeria ' + ($index + 2)" />
+            } @else {
+              <span class="preview-empty"><mat-icon>add_photo_alternate</mat-icon></span>
+            }
+          </div>
+          <div class="slot-actions">
+            <label class="upload-btn upload-btn-sm">
+              <mat-icon>photo_library</mat-icon>
+              Escolher
+              <input type="file" accept="image/*" hidden (change)="onGallerySelected($event, $index)" />
+            </label>
+            @if (gallerySlots()[$index]) {
+              <button type="button" mat-stroked-button (click)="removeGallerySlot($index)">Remover</button>
+            }
+          </div>
+          @if (showUrlFields()) {
+            <mat-form-field appearance="outline" class="full">
+              <mat-label>URL</mat-label>
+              <input
+                matInput
+                [ngModel]="gallerySlots()[$index]"
+                (ngModelChange)="onGalleryUrlInput($index, $event)"
+              />
+            </mat-form-field>
+          }
+        </article>
+      }
+    </div>
+  </section>
+
+  <button type="button" mat-button class="url-toggle" (click)="toggleUrlFields()">
+    {{ showUrlFields() ? 'Ocultar campos de URL' : 'Colar URL manualmente' }}
+  </button>
+</div>

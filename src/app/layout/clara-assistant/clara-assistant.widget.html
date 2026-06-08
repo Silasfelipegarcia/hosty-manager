@@ -14,15 +14,17 @@
           </div>
         </div>
         <div class="header-actions">
-          <button
-            type="button"
-            class="icon-btn"
-            aria-label="Filtros"
-            (click)="toggleScope()"
-            [class.active]="showScope()"
-          >
-            <mat-icon>tune</mat-icon>
-          </button>
+          @if (!simpleMode()) {
+            <button
+              type="button"
+              class="icon-btn"
+              aria-label="Filtros"
+              (click)="toggleScope()"
+              [class.active]="showScope()"
+            >
+              <mat-icon>tune</mat-icon>
+            </button>
+          }
           <button type="button" class="icon-btn" aria-label="Nova conversa" (click)="clearChat()">
             <mat-icon>refresh</mat-icon>
           </button>
@@ -118,7 +120,7 @@
 
       @if (lines().length <= 1 && !sending()) {
         <div class="quick-replies">
-          @for (s of suggestions; track s) {
+          @for (s of suggestions(); track s) {
             <button type="button" (click)="send(s)">{{ s }}</button>
           }
         </div>

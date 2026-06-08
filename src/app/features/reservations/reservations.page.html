@@ -10,7 +10,7 @@
 <div class="portal-kpi-grid reservations-kpis">
   <button type="button" class="portal-kpi-clickable" (click)="setFilter('approval')">
     <span class="portal-kpi-label">Ações pendentes</span>
-    <strong>{{ ownerActions() }}</strong>
+    <strong>{{ approvalPendingTotal() }}</strong>
   </button>
   <button type="button" class="portal-kpi-clickable" (click)="setFilter('in_progress')">
     <span class="portal-kpi-label">Em estadia</span>
@@ -22,7 +22,7 @@
   </button>
   <button type="button" class="portal-kpi-clickable" (click)="setFilter('approval')">
     <span class="portal-kpi-label">Pedidos de acesso</span>
-    <strong>{{ accessRequests().length }}</strong>
+    <strong>{{ ownerPendingAccess() }}</strong>
   </button>
 </div>
 
@@ -116,8 +116,8 @@
           <h3>Estadias</h3>
           <p class="pane-sub">{{ listPageLabel() }}</p>
         </div>
-        @if (ownerActions() > 0) {
-          <span class="pane-alert">{{ ownerActions() }} {{ ownerActions() === 1 ? 'ação' : 'ações' }}</span>
+        @if (approvalPendingTotal() > 0) {
+          <span class="pane-alert">{{ approvalPendingTotal() }} {{ approvalPendingTotal() === 1 ? 'pendência' : 'pendências' }}</span>
         }
       </div>
 

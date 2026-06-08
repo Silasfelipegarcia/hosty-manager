@@ -64,13 +64,19 @@
           <kbd>⌘K</kbd>
         </button>
       @if (badges.totalBadges > 0) {
-        <a class="pending-pill" routerLink="/reservations">
+        <a class="pending-pill" routerLink="/reservations" [queryParams]="{ filter: 'approval' }">
           <mat-icon>notifications_active</mat-icon>
           {{ badges.totalBadges }} pendência{{ badges.totalBadges > 1 ? 's' : '' }}
         </a>
       }
       </div>
     </header>
+    @if (showUpgradeBanner()) {
+      <div class="upgrade-banner">
+        <span>Plano {{ entitlements.ownerPlanName() }} — desbloqueie finanças avançadas, iCal e Clara IA.</span>
+        <a mat-stroked-button routerLink="/account">Ver planos</a>
+      </div>
+    }
     <main class="content">
       <router-outlet />
     </main>

@@ -18,15 +18,19 @@
       <app-finance-page />
     </div>
   </mat-tab>
-  <mat-tab [label]="labels.financeCash">
-    <div class="tab-body">
-      <app-financial-health-page />
-    </div>
-  </mat-tab>
-  <mat-tab [label]="labels.financePerformance">
-    <div class="tab-body">
-      <app-property-crm-page />
-    </div>
-  </mat-tab>
+  @if (showCaixa()) {
+    <mat-tab [label]="labels.financeCash">
+      <div class="tab-body">
+        <app-financial-health-page />
+      </div>
+    </mat-tab>
+  }
+  @if (showPerformance()) {
+    <mat-tab [label]="labels.financePerformance">
+      <div class="tab-body">
+        <app-property-crm-page />
+      </div>
+    </mat-tab>
+  }
 </mat-tab-group>
 </div>

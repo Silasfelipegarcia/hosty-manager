@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { PropertyMediaEditorComponent } from '../../../shared/components/property-media-editor/property-media-editor.component';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatStepperModule } from '@angular/material/stepper';
@@ -21,6 +22,7 @@ import { PropertiesService } from '../../../core/api/properties.service';
     MatButtonModule,
     MatSelectModule,
     MatCheckboxModule,
+    PropertyMediaEditorComponent,
   ],
   templateUrl: './property-create.page.html',
 })
@@ -29,6 +31,8 @@ export class PropertyCreatePage {
   private readonly api = inject(PropertiesService);
   private readonly router = inject(Router);
   readonly saving = signal(false);
+  readonly mediaCover = signal('');
+  readonly mediaGallery = signal<string[]>([]);
 
   readonly identity = this.fb.nonNullable.group({
     name: ['', Validators.required],
@@ -56,8 +60,9 @@ export class PropertyCreatePage {
   });
 
   readonly media = this.fb.nonNullable.group({
-    coverPhotoUrl: [''],
     instagramUrl: [''],
+    facebookUrl: [''],
+    whatsappUrl: [''],
     websiteUrl: [''],
   });
 
@@ -74,6 +79,10 @@ export class PropertyCreatePage {
         ...this.rules.getRawValue(),
         ...this.media.getRawValue(),
         ...this.publish.getRawValue(),
+        coverPhotoUrl: this.mediaCover().trim(),
+        galleryPhotoUrls: this.mediaGallery()
+          .map((url) => url.trim())
+          .filter(Boolean),
       };
       const created = await firstValueFrom(this.api.create(body));
       await this.router.navigate(['/properties', created.id]);

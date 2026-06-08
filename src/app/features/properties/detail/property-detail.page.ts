@@ -1,5 +1,5 @@
 import { DecimalPipe } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -21,6 +21,11 @@ import { PropertyExpense, EXPENSE_CATEGORIES } from '../../../core/models/proper
 import { buildPropertyHealth } from '../../../core/finance/financial-health';
 import { CurrencyBrlPipe } from '../../../shared/pipes/currency-brl.pipe';
 import { currentCompetence } from '../../../core/dates/competence';
+import { resolveProfilePhotoSrc } from '../../../core/profile/profile-photo.util';
+import {
+  PROPERTY_GALLERY_SLOT_COUNT,
+  PropertyMediaEditorComponent,
+} from '../../../shared/components/property-media-editor/property-media-editor.component';
 
 @Component({
   selector: 'app-property-detail-page',
@@ -38,6 +43,7 @@ import { currentCompetence } from '../../../core/dates/competence';
     MatChipsModule,
     CurrencyBrlPipe,
     DecimalPipe,
+    PropertyMediaEditorComponent,
   ],
   templateUrl: './property-detail.page.html',
   styleUrl: './property-detail.page.scss',
@@ -62,6 +68,13 @@ export class PropertyDetailPage implements OnInit {
   readonly safeToWithdraw = signal(0);
   readonly financeKpis = signal({ gross: 0, costs: 0, profit: 0, margin: 0 });
   readonly expenseCategories = EXPENSE_CATEGORIES;
+  readonly savingMedia = signal(false);
+  readonly mediaCover = signal('');
+  readonly mediaGallery = signal<string[]>([]);
+
+  readonly headerCoverSrc = computed(() =>
+    resolveProfilePhotoSrc(this.property()?.coverPhotoUrl),
+  );
 
   readonly editForm = this.fb.group({
     name: [''],
@@ -69,7 +82,13 @@ export class PropertyDetailPage implements OnInit {
     city: [''],
     nightlyRate: [0],
     operationalStatus: [''],
-    coverPhotoUrl: [''],
+  });
+
+  readonly mediaForm = this.fb.nonNullable.group({
+    instagramUrl: [''],
+    facebookUrl: [''],
+    whatsappUrl: [''],
+    websiteUrl: [''],
   });
 
   readonly newRec = this.fb.nonNullable.group({
@@ -123,6 +142,14 @@ export class PropertyDetailPage implements OnInit {
     this.property.set(p);
     if (p) {
       this.editForm.patchValue(p);
+      this.mediaCover.set(p.coverPhotoUrl ?? '');
+      this.mediaGallery.set(this.normalizeGallerySlots(p.galleryPhotoUrls));
+      this.mediaForm.patchValue({
+        instagramUrl: p.instagramUrl ?? '',
+        facebookUrl: p.facebookUrl ?? '',
+        whatsappUrl: p.whatsappUrl ?? '',
+        websiteUrl: p.websiteUrl ?? '',
+      });
     }
     const [recs, kits, owners, checklist, guide] = await Promise.all([
       firstValueFrom(this.api.listLocalRecommendations(this.propertyId)),
@@ -190,6 +217,35 @@ export class PropertyDetailPage implements OnInit {
     const body = { ...this.property(), ...this.editForm.getRawValue() };
     await firstValueFrom(this.api.update(this.propertyId, body as never));
     await this.load();
+  }
+
+  async saveMedia(): Promise<void> {
+    const base = this.property();
+    if (!base) return;
+    this.savingMedia.set(true);
+    try {
+      const social = this.mediaForm.getRawValue();
+      const body = {
+        ...base,
+        coverPhotoUrl: this.mediaCover().trim(),
+        galleryPhotoUrls: this.mediaGallery()
+          .map((url) => url.trim())
+          .filter(Boolean),
+        instagramUrl: social.instagramUrl.trim(),
+        facebookUrl: social.facebookUrl.trim(),
+        whatsappUrl: social.whatsappUrl.trim(),
+        websiteUrl: social.websiteUrl.trim(),
+      };
+      await firstValueFrom(this.api.update(this.propertyId, body as never));
+      await this.load();
+    } finally {
+      this.savingMedia.set(false);
+    }
+  }
+
+  private normalizeGallerySlots(urls?: string[]): string[] {
+    const source = urls ?? [];
+    return Array.from({ length: PROPERTY_GALLERY_SLOT_COUNT }, (_, i) => source[i] ?? '');
   }
 
   async addRecommendation(): Promise<void> {

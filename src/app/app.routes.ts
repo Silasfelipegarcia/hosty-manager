@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { RedirectFunction, Router, Routes } from '@angular/router';
 import { authGuard, guestGuard, landingGuard } from './core/auth/auth.guard';
+import { platformAdminGuard } from './core/auth/platform-admin.guard';
 import { AppShellComponent } from './layout/app-shell/app-shell.component';
 
 const reservationIdRedirect: RedirectFunction = (snapshot) => {
@@ -135,6 +136,12 @@ export const routes: Routes = [
       {
         path: 'account',
         loadComponent: () => import('./features/account/account.page').then((m) => m.AccountPage),
+      },
+      {
+        path: 'platform',
+        canActivate: [platformAdminGuard],
+        loadComponent: () =>
+          import('./features/platform/platform-admin.page').then((m) => m.PlatformAdminPage),
       },
     ],
   },

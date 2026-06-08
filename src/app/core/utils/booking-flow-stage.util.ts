@@ -91,10 +91,14 @@ export function isAwaitingOwnerCheckinAck(booking: BookingDto): boolean {
 }
 
 export function bookingNeedsOwnerAction(booking: BookingDto): boolean {
+  const status = reservationStatusKey(booking);
+  if (status === 'PENDING_OWNER_CONFIRMATION' && booking.accessRequestId) {
+    return false;
+  }
   const stage = flowStageKey(booking);
   if (stage === 'DISPUTED') return true;
   if (stage === 'WAITING_OWNER_CONFIRMATION') return true;
-  if (reservationStatusKey(booking) === 'PENDING_OWNER_CONFIRMATION') return true;
+  if (status === 'PENDING_OWNER_CONFIRMATION') return true;
   if (isWaitingCheckoutApproval(booking)) return true;
   if (isAwaitingOwnerCheckinAck(booking)) return true;
   if (reservationStatusKey(booking) === 'TENANT_CANCELLATION_PENDING') return true;

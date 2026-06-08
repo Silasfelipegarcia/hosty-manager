@@ -14,6 +14,8 @@ import { ClaraAssistantWidget } from '../clara-assistant/clara-assistant.widget'
 import { CommandPaletteComponent } from '../../shared/components/command-palette/command-palette.component';
 import { CommandPaletteService } from '../../core/command-palette/command-palette.service';
 import { OWNER_LABELS } from '../../core/i18n/owner-labels';
+import { OwnerEntitlementsStore } from '../../core/entitlements/owner-entitlements.store';
+import { OWNER_FEATURES } from '../../core/models/entitlements.models';
 
 interface NavItem {
   label: string;
@@ -65,12 +67,15 @@ export class AppShellComponent implements OnInit {
   readonly badges = inject(BadgeService);
   readonly palette = inject(CommandPaletteService);
   readonly profileStore = inject(OwnerProfileStore);
+  readonly entitlements = inject(OwnerEntitlementsStore);
 
   readonly appName = environment.appName;
   readonly labels = OWNER_LABELS;
   readonly pageTitle = signal('Início');
 
-  readonly navGroups: NavGroup[] = [
+  get navGroups(): NavGroup[] {
+    const e = this.entitlements;
+    const groups: NavGroup[] = [
     {
       title: 'Operação',
       items: [
@@ -89,18 +94,22 @@ export class AppShellComponent implements OnInit {
       title: 'Gestão',
       items: [
         { label: OWNER_LABELS.finances, path: '/finance', icon: 'insights' },
-        {
-          label: OWNER_LABELS.kitOrders,
-          path: '/kits/pending',
-          icon: 'inventory_2',
-          badge: () => this.badges.pendingKitOrders(),
-        },
-        {
-          label: OWNER_LABELS.fieldServices,
-          path: '/field-services/pending',
-          icon: 'engineering',
-          badge: () => this.badges.pendingFieldServices(),
-        },
+        ...(e.featureEnabled(OWNER_FEATURES.kits)
+          ? [{
+              label: OWNER_LABELS.kitOrders,
+              path: '/kits/pending',
+              icon: 'inventory_2',
+              badge: () => this.badges.pendingKitOrders(),
+            }]
+          : []),
+        ...(e.featureEnabled(OWNER_FEATURES.fieldServices)
+          ? [{
+              label: OWNER_LABELS.fieldServices,
+              path: '/field-services/pending',
+              icon: 'engineering',
+              badge: () => this.badges.pendingFieldServices(),
+            }]
+          : []),
         { label: OWNER_LABELS.messages, path: '/messages', icon: 'forum' },
       ],
     },
@@ -109,16 +118,25 @@ export class AppShellComponent implements OnInit {
       items: [
         { label: OWNER_LABELS.help, path: '/help', icon: 'help_outline' },
         { label: OWNER_LABELS.account, path: '/account', icon: 'manage_accounts' },
+        ...(this.auth.isPlatformAdmin()
+          ? [{ label: 'Admin Master', path: '/platform', icon: 'admin_panel_settings' }]
+          : []),
       ],
     },
-  ];
+    ];
+    return groups;
+  }
+
+  readonly showUpgradeBanner = () => this.entitlements.ownerPlan() === 'FREE';
 
   get email(): string | null {
     return this.auth.email;
   }
 
   ngOnInit(): void {
+    this.auth.startSessionWatch();
     void this.profileStore.ensureLoaded();
+    void this.entitlements.ensureLoaded();
     void this.badges.refresh();
     setInterval(() => void this.badges.refresh(), 180_000);
     this.syncTitle(this.router.url);

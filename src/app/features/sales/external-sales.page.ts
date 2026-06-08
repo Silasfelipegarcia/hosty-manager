@@ -16,6 +16,8 @@ import { PropertyDto } from '../../core/models/property.models';
 import { BookingDto } from '../../core/models/operations.models';
 import { CurrencyBrlPipe } from '../../shared/pipes/currency-brl.pipe';
 import { currentCompetence } from '../../core/dates/competence';
+import { OwnerEntitlementsStore } from '../../core/entitlements/owner-entitlements.store';
+import { OWNER_FEATURES } from '../../core/models/entitlements.models';
 
 const CHANNELS = [
   { source: 'AIRBNB', platform: 'AIRBNB', label: 'Airbnb', fee: 15 },
@@ -52,8 +54,10 @@ export class ExternalSalesPage implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly snack = inject(MatSnackBar);
+  private readonly entitlements = inject(OwnerEntitlementsStore);
 
   readonly channels = CHANNELS;
+  readonly bulkImportEnabled = () => this.entitlements.featureEnabled(OWNER_FEATURES.salesBulkImport);
   readonly properties = signal<PropertyDto[]>([]);
   readonly recentSales = signal<BookingDto[]>([]);
   readonly saving = signal(false);
@@ -72,6 +76,7 @@ export class ExternalSalesPage implements OnInit {
   });
 
   ngOnInit(): void {
+    void this.entitlements.ensureLoaded();
     void this.load();
     this.form.controls.channel.valueChanges.subscribe((ch) => this.onChannelChange(ch));
   }

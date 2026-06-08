@@ -110,6 +110,10 @@ export class ReservationsPage implements OnInit {
   readonly staysActive = signal(0);
   readonly staysUpcoming = signal(0);
   readonly ownerActions = signal(0);
+  readonly ownerPendingAccess = signal(0);
+  readonly approvalPendingTotal = computed(
+    () => this.ownerActions() + this.ownerPendingAccess(),
+  );
   readonly calendarCells = computed(() =>
     buildMonthCalendar(this.calendarMonth(), this.bookings(), this.propertyFilter() || undefined),
   );
@@ -160,8 +164,12 @@ export class ReservationsPage implements OnInit {
     const propId = this.propertyFilter();
     const scoped = propId ? all.filter((b) => b.propertyId === propId) : all;
     const pendingBookings = scoped.filter((b) => bookingNeedsOwnerAction(b)).length;
+    const accessPending = this.scopedAccessRequests().length;
+    const approvalTotal = propId
+      ? pendingBookings + accessPending
+      : this.approvalPendingTotal();
     const counts: Record<ReservationFilter, number> = {
-      approval: pendingBookings + this.scopedAccessRequests().length,
+      approval: approvalTotal,
       all: scoped.length,
       waiting: scoped.filter((b) => matchesReservationFilter(b, 'waiting')).length,
       in_progress: scoped.filter((b) => matchesReservationFilter(b, 'in_progress')).length,
@@ -194,6 +202,10 @@ export class ReservationsPage implements OnInit {
     void this.profileStore.ensureLoaded();
     void this.load(true);
     this.route.queryParamMap.subscribe((params) => {
+      const filter = params.get('filter');
+      if (filter === 'approval') {
+        this.activeFilter.set('approval');
+      }
       const id = params.get('id');
       if (!id || id === 'new') {
         this.selected.set(null);
@@ -213,25 +225,31 @@ export class ReservationsPage implements OnInit {
     }
     try {
       const page = this.bookingsPage();
-      const [bookingsRes, properties, counts, stays, access] = await Promise.all([
+      const [bookingsRes, actionQueue, properties, counts, stays, access] = await Promise.all([
         firstValueFrom(this.ops.listBookings(page, PAGE_SIZE)),
+        firstValueFrom(this.ops.listOwnerActionQueue(0, 50)),
         firstValueFrom(this.props.listOwner()),
         firstValueFrom(this.ops.getCounts()),
         firstValueFrom(this.ops.getStaysSummary()),
-        firstValueFrom(this.props.listPendingAccessRequests(0, 20)),
+        firstValueFrom(this.props.listPendingAccessRequests(0, 50)),
       ]);
 
+      const merged = this.mergeBookingsById([
+        ...(actionQueue.content ?? []),
+        ...bookingsRes.content,
+      ]);
       if (reset) {
-        this.bookings.set(this.sortBookingsActionFirst(bookingsRes.content));
+        this.bookings.set(this.sortBookingsActionFirst(merged));
       } else {
         this.bookings.update((cur) =>
-          this.sortBookingsActionFirst([...cur, ...bookingsRes.content]),
+          this.sortBookingsActionFirst(this.mergeBookingsById([...cur, ...bookingsRes.content])),
         );
       }
       this.hasMore.set(bookingsRes.hasNext);
       this.properties.set(properties.content);
       this.accessRequests.set(access.content);
       this.ownerActions.set(counts.ownerActionRequired ?? 0);
+      this.ownerPendingAccess.set(counts.ownerPendingAccessRequests ?? 0);
       this.staysActive.set(activeStaysCount(stays));
       this.staysUpcoming.set(upcomingStaysCount(stays));
 
@@ -460,17 +478,23 @@ export class ReservationsPage implements OnInit {
   /** Atualiza lista/KPIs sem skeleton nem recriar o componente. */
   private async refreshListQuietly(): Promise<void> {
     try {
-      const [bookingsRes, counts, stays, access] = await Promise.all([
+      const [bookingsRes, actionQueue, counts, stays, access] = await Promise.all([
         firstValueFrom(this.ops.listBookings(0, PAGE_SIZE)),
+        firstValueFrom(this.ops.listOwnerActionQueue(0, 50)),
         firstValueFrom(this.ops.getCounts()),
         firstValueFrom(this.ops.getStaysSummary()),
-        firstValueFrom(this.props.listPendingAccessRequests(0, 20)),
+        firstValueFrom(this.props.listPendingAccessRequests(0, 50)),
       ]);
-      this.bookings.set(this.sortBookingsActionFirst(bookingsRes.content));
+      this.bookings.set(
+        this.sortBookingsActionFirst(
+          this.mergeBookingsById([...(actionQueue.content ?? []), ...bookingsRes.content]),
+        ),
+      );
       this.bookingsPage.set(0);
       this.hasMore.set(bookingsRes.hasNext);
       this.accessRequests.set(access.content);
       this.ownerActions.set(counts.ownerActionRequired ?? 0);
+      this.ownerPendingAccess.set(counts.ownerPendingAccessRequests ?? 0);
       this.staysActive.set(activeStaysCount(stays));
       this.staysUpcoming.set(upcomingStaysCount(stays));
       this.clampListUiPage();
@@ -484,6 +508,14 @@ export class ReservationsPage implements OnInit {
     if (this.listUiPage() > max) {
       this.listUiPage.set(max);
     }
+  }
+
+  private mergeBookingsById(list: BookingDto[]): BookingDto[] {
+    const byId = new Map<string, BookingDto>();
+    for (const b of list) {
+      byId.set(b.id, b);
+    }
+    return [...byId.values()];
   }
 
   /** Pendências no topo para aparecerem na primeira página da lista. */

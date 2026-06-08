@@ -1,0 +1,113 @@
+<div class="page-header">
+  <div>
+    <h1>Admin Master</h1>
+    <p>Planos, features globais e assinaturas Hosty</p>
+  </div>
+  <button mat-stroked-button type="button" (click)="reload()">
+    <mat-icon>refresh</mat-icon> Atualizar
+  </button>
+</div>
+
+@if (loading()) {
+  <p class="muted">Carregando…</p>
+} @else {
+  <mat-tab-group>
+    <mat-tab label="Dashboard">
+      @if (dashboard(); as d) {
+        <div class="kpi-grid">
+          <mat-card><strong>MRR estimado</strong><p>{{ formatBrl(d.mrrCents) }}</p></mat-card>
+          <mat-card><strong>Owners Plus</strong><p>{{ d.ownerPlus }}</p></mat-card>
+          <mat-card><strong>Owners Plus++</strong><p>{{ d.ownerPlusPlus }}</p></mat-card>
+          <mat-card><strong>Guests Plus</strong><p>{{ d.guestPlus }}</p></mat-card>
+          <mat-card><strong>Guests Plus++</strong><p>{{ d.guestPlusPlus }}</p></mat-card>
+        </div>
+      }
+    </mat-tab>
+
+    <mat-tab label="Planos Owner">
+      <div class="plan-list">
+        @for (p of ownerPlans(); track p.id) {
+          <mat-card class="plan-card">
+            <h3>{{ p.displayName }} <small>({{ p.code }})</small></h3>
+            <p>{{ formatBrl(p.priceCents) }}/mês</p>
+            <ul>
+              @for (f of p.features; track f.featureKey) {
+                <li [class.off]="!f.enabled">
+                  {{ f.featureKey }}
+                  @if (f.limitValue != null) {
+                    <span> — limite {{ f.limitValue < 0 ? '∞' : f.limitValue }}</span>
+                  }
+                </li>
+              }
+            </ul>
+          </mat-card>
+        }
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Planos Guest">
+      <div class="plan-list">
+        @for (p of guestPlans(); track p.id) {
+          <mat-card class="plan-card">
+            <h3>{{ p.displayName }} <small>({{ p.code }})</small></h3>
+            <p>{{ formatBrl(p.priceCents) }}/mês</p>
+            <ul>
+              @for (f of p.features; track f.featureKey) {
+                <li [class.off]="!f.enabled">{{ f.featureKey }} @if (f.limitValue != null) { ({{ f.limitValue }}) }</li>
+              }
+            </ul>
+          </mat-card>
+        }
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Features globais">
+      <div class="flags-list">
+        @for (f of flags(); track f.featureKey) {
+          <mat-card class="flag-row">
+            <div>
+              <strong>{{ f.featureKey }}</strong>
+              @if (f.updatedAt) {
+                <small>Atualizado {{ f.updatedAt | date: 'short' }}</small>
+              }
+            </div>
+            <mat-slide-toggle [checked]="f.enabled" (change)="toggleFlag(f, $event.checked)" />
+          </mat-card>
+        }
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Usuários">
+      <div class="user-search">
+        <input type="search" placeholder="E-mail ou ID" [(ngModel)]="userQuery" />
+        <button mat-flat-button color="primary" type="button" (click)="searchUsers()">Buscar</button>
+      </div>
+      @for (u of users(); track u.id) {
+        <mat-card class="user-row">
+          <div>
+            <strong>{{ u.email }}</strong>
+            <small>{{ u.roles }}</small>
+          </div>
+          <select [ngModel]="selectedPlanByUser()[u.id] ?? ''" (ngModelChange)="setUserPlan(u.id, $event)">
+            <option value="">Selecione plano</option>
+            @for (p of planOptionsForUser(u); track p.id) {
+              <option [value]="p.id">{{ p.displayName }}</option>
+            }
+          </select>
+          <button mat-stroked-button type="button" (click)="assignPlan(u)">Aplicar</button>
+        </mat-card>
+      }
+    </mat-tab>
+
+    <mat-tab label="Billing">
+      @for (e of events(); track e.providerEventId) {
+        <mat-card class="event-row">
+          <strong>{{ e.provider }} · {{ e.eventType }}</strong>
+          <small>{{ e.processedAt | date: 'short' }} — {{ e.providerEventId }}</small>
+        </mat-card>
+      } @empty {
+        <p class="muted">Nenhum evento de webhook ainda.</p>
+      }
+    </mat-tab>
+  </mat-tab-group>
+}

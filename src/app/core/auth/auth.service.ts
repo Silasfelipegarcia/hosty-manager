@@ -11,7 +11,7 @@ import {
   RefreshRequest,
 } from '../models/auth.models';
 import { TokenStore } from './token.store';
-import { emailFromToken, isTokenExpired, rolesFromToken } from './jwt.utils';
+import { decodeJwtPayload, emailFromToken, isTokenExpired, rolesFromToken } from './jwt.utils';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -21,6 +21,13 @@ export class AuthService {
 
   readonly passwordMustChange = signal(false);
   private refreshInFlight: Promise<boolean> | null = null;
+  private sessionWatchId: ReturnType<typeof setInterval> | null = null;
+  private expiryTimerId: ReturnType<typeof setTimeout> | null = null;
+  private readonly onVisibilityChange = (): void => {
+    if (document.visibilityState === 'visible') {
+      void this.checkSessionOrLogout();
+    }
+  };
 
   get isLoggedIn(): boolean {
     const token = this.tokens.accessToken;
@@ -41,13 +48,53 @@ export class AuthService {
     return this.roles.includes('OWNER') || this.roles.includes('ADMIN');
   }
 
+  isPlatformAdmin(): boolean {
+    return this.roles.includes('PLATFORM_ADMIN');
+  }
+
   async login(request: LoginRequest): Promise<LoginResponse> {
     const res = await firstValueFrom(
       this.http.post<LoginResponse>(`${environment.apiBaseUrl}/api/v1/auth/login`, request),
     );
     this.tokens.save(res.accessToken, res.refreshToken, res.expiresInSeconds);
     this.passwordMustChange.set(!!res.passwordMustChange);
+    this.scheduleExpiryCheck();
     return res;
+  }
+
+  /** Renova access token se expirado; desloga e redireciona ao login se a sessão acabou. */
+  async ensureValidSession(): Promise<boolean> {
+    const token = this.tokens.accessToken;
+    if (token && !isTokenExpired(token)) {
+      this.scheduleExpiryCheck();
+      return true;
+    }
+    if (!this.tokens.refreshToken) {
+      this.logout();
+      return false;
+    }
+    const refreshed = await this.refresh();
+    if (!refreshed) {
+      return false;
+    }
+    this.scheduleExpiryCheck();
+    return true;
+  }
+
+  startSessionWatch(): void {
+    this.stopSessionWatch();
+    void this.ensureValidSession();
+    this.sessionWatchId = setInterval(() => void this.checkSessionOrLogout(), 30_000);
+    document.addEventListener('visibilitychange', this.onVisibilityChange);
+  }
+
+  stopSessionWatch(): void {
+    if (this.sessionWatchId) {
+      clearInterval(this.sessionWatchId);
+      this.sessionWatchId = null;
+    }
+    this.clearExpiryTimer();
+    document.removeEventListener('visibilitychange', this.onVisibilityChange);
   }
 
   async refresh(): Promise<boolean> {
@@ -63,6 +110,7 @@ export class AuthService {
         );
         this.tokens.save(res.accessToken, res.refreshToken, res.expiresInSeconds);
         this.passwordMustChange.set(!!res.passwordMustChange);
+        this.scheduleExpiryCheck();
         return true;
       } catch {
         this.logout();
@@ -92,8 +140,37 @@ export class AuthService {
   }
 
   logout(): void {
+    this.stopSessionWatch();
     this.tokens.clear();
     this.passwordMustChange.set(false);
     void this.router.navigate(['/login']);
+  }
+
+  private async checkSessionOrLogout(): Promise<void> {
+    const token = this.tokens.accessToken;
+    if (!token || isTokenExpired(token)) {
+      await this.ensureValidSession();
+    }
+  }
+
+  private scheduleExpiryCheck(): void {
+    this.clearExpiryTimer();
+    const token = this.tokens.accessToken;
+    if (!token) return;
+    const exp = decodeJwtPayload(token)?.exp;
+    if (!exp) return;
+    const msUntilExpiry = exp * 1000 - Date.now();
+    if (msUntilExpiry <= 0) {
+      void this.ensureValidSession();
+      return;
+    }
+    this.expiryTimerId = setTimeout(() => void this.ensureValidSession(), msUntilExpiry + 1_000);
+  }
+
+  private clearExpiryTimer(): void {
+    if (this.expiryTimerId) {
+      clearTimeout(this.expiryTimerId);
+      this.expiryTimerId = null;
+    }
   }
 }

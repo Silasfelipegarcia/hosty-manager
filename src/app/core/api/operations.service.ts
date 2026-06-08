@@ -52,6 +52,12 @@ export class OperationsService {
     return this.http.get<BookingCounts>(`${this.base}/bookings/counts`);
   }
 
+  listOwnerActionQueue(page = 0, size = 50) {
+    return this.http.get<PageResponse<BookingDto>>(
+      `${this.base}/bookings/owner-action-queue?page=${page}&size=${size}`,
+    );
+  }
+
   getStaysSummary() {
     return this.http.get<StaysSummary>(`${this.base}/bookings/stays-summary`);
   }

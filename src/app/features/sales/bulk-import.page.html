@@ -6,6 +6,13 @@
   <a mat-stroked-button routerLink="/sales">Venda unitária</a>
 </div>
 
+@if (!allowed()) {
+  <mat-card class="help-card upgrade-card">
+    <h3>Disponível no plano Plus</h3>
+    <p>Importe até 500 linhas por mês no Plus ou ilimitado no Plus++.</p>
+    <a mat-flat-button color="primary" routerLink="/account">Ver planos</a>
+  </mat-card>
+} @else {
 <mat-card class="help-card">
   <h3>Formato do CSV (separador <code>;</code>)</h3>
   <p>Colunas: <strong>imóvel</strong> (nome ou ID) · competência · check-in · check-out · valor bruto · plataforma · tipo taxa · canal · e-mail · notas</p>
@@ -39,4 +46,5 @@
       </ul>
     }
   </mat-card>
+}
 }

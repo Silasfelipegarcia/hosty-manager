@@ -68,6 +68,28 @@
     </form>
   </mat-card>
 
+  <mat-card class="portal-surface plan-card">
+    <h3>Seu plano</h3>
+    <p>
+      <strong>{{ entitlements.ownerPlanName() }}</strong>
+      @if (entitlements.ownerPlan() === 'FREE') {
+        — faça upgrade para Plus ou Plus++ e desbloqueie finanças, iCal e Clara IA.
+      }
+    </p>
+    @if (entitlements.ownerPlan() !== 'PLUS_PLUS') {
+      <div class="plan-actions">
+        @if (entitlements.ownerPlan() === 'FREE') {
+          <button mat-flat-button color="primary" type="button" [disabled]="upgrading()" (click)="upgradeTo('owner-plus')">
+            Assinar Plus
+          </button>
+        }
+        <button mat-stroked-button type="button" [disabled]="upgrading()" (click)="upgradeTo('owner-plus-plus')">
+          Assinar Plus++
+        </button>
+      </div>
+    }
+  </mat-card>
+
   <mat-card class="portal-surface security-card">
     <h3>Segurança</h3>
     <p class="muted">Para alterar a senha, use a opção no app ou recuperação por e-mail.</p>

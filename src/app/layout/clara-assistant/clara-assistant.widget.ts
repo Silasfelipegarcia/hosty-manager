@@ -22,6 +22,13 @@ import { PropertyDto } from '../../core/models/property.models';
 import { currentCompetence } from '../../core/dates/competence';
 import { OWNER_LABELS } from '../../core/i18n/owner-labels';
 import { parseClaraActionLinks } from '../../core/clara/clara-action-links';
+import {
+  CLARA_SITE_GREETING,
+  CLARA_SITE_SUGGESTIONS,
+  replyClaraSiteHelp,
+} from '../../core/clara/clara-site-help';
+import { environment } from '../../../environments/environment';
+import { OwnerEntitlementsStore } from '../../core/entitlements/owner-entitlements.store';
 
 interface ChatLine {
   id: string;
@@ -35,7 +42,7 @@ interface ChatLine {
 
 const CLARA_AVATAR = '/clara-avatar.png';
 
-const SUGGESTIONS = [
+const SUGGESTIONS_DEV = [
   'Como está meu lucro este mês?',
   'Quanto preciso faturar no Bosque de Itu?',
   'Cadastra estadia 10–15/jun no Bosque, R$ 3.200',
@@ -70,6 +77,7 @@ export class ClaraAssistantWidget implements OnInit {
   private readonly clara = inject(ClaraService);
   private readonly props = inject(PropertiesService);
   readonly profileStore = inject(OwnerProfileStore);
+  private readonly entitlements = inject(OwnerEntitlementsStore);
   private readonly fb = inject(FormBuilder);
   private seq = 0;
 
@@ -77,7 +85,10 @@ export class ClaraAssistantWidget implements OnInit {
   readonly claraAvatar = CLARA_AVATAR;
   readonly chatLog = viewChild<ElementRef<HTMLDivElement>>('chatLog');
   readonly inputRef = viewChild<ElementRef<HTMLTextAreaElement>>('messageInput');
-  readonly suggestions = SUGGESTIONS;
+  readonly simpleMode = computed(() => !this.entitlements.claraAiEnabled());
+  readonly suggestions = computed(() =>
+    this.simpleMode() ? CLARA_SITE_SUGGESTIONS : SUGGESTIONS_DEV,
+  );
   readonly open = signal(false);
   readonly showScope = signal(false);
   readonly lines = signal<ChatLine[]>([]);
@@ -95,7 +106,10 @@ export class ClaraAssistantWidget implements OnInit {
   readonly userInitials = computed(() => this.profileStore.initials());
   readonly userPhoto = computed(() => this.profileStore.photoSrc());
   readonly userName = computed(() => this.profileStore.displayName());
-  readonly headerStatus = computed(() => (this.sending() ? 'Digitando…' : 'Online agora'));
+  readonly headerStatus = computed(() => {
+    if (this.sending()) return 'Digitando…';
+    return this.simpleMode() ? 'Assistente do portal' : 'Online agora';
+  });
 
   constructor() {
     effect(() => {
@@ -106,7 +120,7 @@ export class ClaraAssistantWidget implements OnInit {
   }
 
   ngOnInit(): void {
-    this.resetGreeting();
+    void this.entitlements.ensureLoaded().then(() => this.resetGreeting());
     void this.profileStore.ensureLoaded();
   }
 
@@ -161,34 +175,52 @@ export class ClaraAssistantWidget implements OnInit {
     this.sending.set(true);
 
     try {
-      const scope = this.scope.getRawValue();
-      const res = await firstValueFrom(
-        this.clara.chat({
-          message,
-          propertyId: scope.propertyId || undefined,
-          competence: scope.competence,
-        }),
-      );
+      if (this.simpleMode()) {
+        const local = replyClaraSiteHelp(message);
+        this.lines.update((l) => [
+          ...l,
+          {
+            id: this.nextId(),
+            role: 'assistant',
+            text: local.text,
+            at: new Date(),
+            actionLinks: local.actionLinks,
+          },
+        ]);
+      } else {
+        const scope = this.scope.getRawValue();
+        const res = await firstValueFrom(
+          this.clara.chat({
+            message,
+            propertyId: scope.propertyId || undefined,
+            competence: scope.competence,
+          }),
+        );
+        this.lines.update((l) => [
+          ...l,
+          {
+            id: this.nextId(),
+            role: 'assistant',
+            text: res.reply,
+            at: new Date(),
+            fallback: res.fallback,
+            fallbackReason: res.fallbackReason,
+            actionLinks: res.fallback ? undefined : parseClaraActionLinks(res.reply),
+          },
+        ]);
+      }
+    } catch {
+      const text = this.simpleMode()
+        ? replyClaraSiteHelp(message).text
+        : 'Não foi possível falar com a Clara. Verifique se a API está no ar.';
       this.lines.update((l) => [
         ...l,
         {
           id: this.nextId(),
           role: 'assistant',
-          text: res.reply,
+          text,
           at: new Date(),
-          fallback: res.fallback,
-          fallbackReason: res.fallbackReason,
-          actionLinks: res.fallback ? undefined : parseClaraActionLinks(res.reply),
-        },
-      ]);
-    } catch {
-      this.lines.update((l) => [
-        ...l,
-        {
-          id: this.nextId(),
-          role: 'error',
-          text: 'Não foi possível falar com a Clara. Verifique se a API está no ar.',
-          at: new Date(),
+          actionLinks: this.simpleMode() ? replyClaraSiteHelp(message).actionLinks : undefined,
         },
       ]);
     } finally {
@@ -198,10 +230,12 @@ export class ClaraAssistantWidget implements OnInit {
   }
 
   async clearChat(): Promise<void> {
-    try {
-      await firstValueFrom(this.clara.clearSession());
-    } catch {
-      // noop
+    if (!this.simpleMode()) {
+      try {
+        await firstValueFrom(this.clara.clearSession());
+      } catch {
+        // noop
+      }
     }
     this.resetGreeting();
   }
@@ -216,7 +250,9 @@ export class ClaraAssistantWidget implements OnInit {
       {
         id: this.nextId(),
         role: 'assistant',
-        text: 'Sou a Clara. Pergunte sobre lucro, pendências ou onde clicar no portal.',
+        text: this.simpleMode()
+          ? CLARA_SITE_GREETING
+          : 'Sou a Clara. Pergunte sobre lucro, pendências ou onde clicar no portal.',
         at: new Date(),
       },
     ]);

@@ -3,7 +3,9 @@
     <h1>Registrar estadia</h1>
     <p>Reservas feitas fora do app — Airbnb, WhatsApp, Instagram, PIX direto ou histórico.</p>
   </div>
-  <a mat-stroked-button routerLink="/sales/import">Importar planilha</a>
+  @if (bulkImportEnabled()) {
+    <a mat-stroked-button routerLink="/sales/import">Importar planilha</a>
+  }
 </div>
 
 <div class="grid">

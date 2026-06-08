@@ -1,7 +1,35 @@
 .page-header {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
   margin-bottom: 16px;
+}
+
+.page-header-main {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.header-cover {
+  width: 120px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.media-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.social-form h3 {
+  margin: 0 0 12px;
+  font-size: 1rem;
 }
 
 .tab-body {
