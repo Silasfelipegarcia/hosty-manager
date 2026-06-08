@@ -8,6 +8,7 @@ import {
   ChatMessage,
   BackfillBookingRequest,
   CreateBookingRequest,
+  UpdateOwnerRegisteredSaleRequest,
   FieldServiceOrder,
   KitOrder,
   MessageInboxItem,
@@ -46,6 +47,10 @@ export class OperationsService {
 
   deleteBooking(id: string) {
     return this.http.delete(`${this.base}/bookings/${id}`, { responseType: 'text' });
+  }
+
+  updateOwnerRegisteredSale(id: string, body: UpdateOwnerRegisteredSaleRequest) {
+    return this.http.put<BookingDto>(`${this.base}/bookings/${id}/owner-registered-sale`, body);
   }
 
   getCounts() {

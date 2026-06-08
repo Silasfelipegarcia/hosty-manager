@@ -9,9 +9,15 @@
 </div>
 
 <div class="grid">
-  <mat-card class="form-card">
-    <h2>Nova estadia</h2>
-    <p class="hint">A reserva entra na agenda, no financeiro e nos relatórios por canal.</p>
+  <mat-card class="form-card" [class.editing]="editingSale()">
+    <h2>{{ editingSale() ? 'Editar estadia' : 'Nova estadia' }}</h2>
+    <p class="hint">
+      @if (editingSale(); as sale) {
+        Ajustando venda de {{ guestDisplayName(sale) }} — {{ formatStayDates(sale) }}.
+      } @else {
+        A reserva entra na agenda, no financeiro e nos relatórios por canal.
+      }
+    </p>
 
     <form [formGroup]="form" (ngSubmit)="submit()">
       <mat-form-field appearance="outline" class="full">
@@ -83,9 +89,14 @@
         <textarea matInput rows="2" formControlName="notes"></textarea>
       </mat-form-field>
 
-      <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
-        {{ saving() ? 'Salvando…' : 'Registrar venda' }}
-      </button>
+      <div class="form-actions">
+        <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+          {{ saving() ? 'Salvando…' : (editingSale() ? 'Salvar alterações' : 'Registrar venda') }}
+        </button>
+        @if (editingSale()) {
+          <button mat-button type="button" (click)="cancelEdit()" [disabled]="saving()">Cancelar edição</button>
+        }
+      </div>
     </form>
   </mat-card>
 
@@ -96,7 +107,7 @@
     } @else {
       <ul class="sales-list">
         @for (s of recentSales(); track s.id) {
-          <li class="sale-row">
+          <li class="sale-row" [class.selected]="editingSale()?.id === s.id">
             <div class="sale-main">
               <div class="sale-identity">
                 <span class="sale-guest">{{ guestDisplayName(s) }}</span>
@@ -112,7 +123,27 @@
             <div class="sale-aside">
               <span class="sale-dates">{{ formatStayDates(s) }}</span>
               <span class="sale-amount">{{ s.grossAmount | currencyBrl }}</span>
-              <a class="sale-link" [routerLink]="['/reservations']" [queryParams]="{ id: s.id }">Abrir</a>
+              <div class="sale-actions">
+                <a class="sale-link" [routerLink]="['/reservations']" [queryParams]="{ id: s.id }">Abrir</a>
+                @if (canManageSale(s)) {
+                  <button
+                    type="button"
+                    class="sale-action-btn"
+                    (click)="startEdit(s)"
+                    [disabled]="deletingId() === s.id"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    class="sale-action-btn danger"
+                    (click)="deleteSale(s)"
+                    [disabled]="deletingId() === s.id"
+                  >
+                    {{ deletingId() === s.id ? 'Apagando…' : 'Apagar' }}
+                  </button>
+                }
+              </div>
             </div>
           </li>
         }

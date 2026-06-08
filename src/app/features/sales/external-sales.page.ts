@@ -61,6 +61,8 @@ export class ExternalSalesPage implements OnInit {
   readonly properties = signal<PropertyDto[]>([]);
   readonly recentSales = signal<BookingDto[]>([]);
   readonly saving = signal(false);
+  readonly editingSale = signal<BookingDto | null>(null);
+  readonly deletingId = signal<string | null>(null);
 
   readonly form = this.fb.nonNullable.group({
     propertyId: ['', Validators.required],
@@ -126,6 +128,7 @@ export class ExternalSalesPage implements OnInit {
     const channel = CHANNELS.find((c) => c.source === raw.channel)!;
     const tenantIdentifier = raw.guestEmail.trim() || undefined;
     const notes = this.buildNotes(raw.guestName.trim(), raw.notes.trim());
+    const editing = this.editingSale();
 
     this.saving.set(true);
     try {
@@ -143,33 +146,124 @@ export class ExternalSalesPage implements OnInit {
         reservationSource: channel.source,
         notes: notes || undefined,
       };
-      const res = await firstValueFrom(
-        raw.historical ? this.ops.createBackfillBooking(payload) : this.ops.createBooking(payload),
-      );
-      const bookingId = res.booking?.id;
-      let message = raw.historical
-        ? 'Estadia histórica registrada no financeiro.'
-        : 'Venda registrada no financeiro e na agenda.';
-      if (res.pendingTenantInviteCreated) {
-        message += ' Convite pendente criado para o hóspede.';
-      }
-      const snackRef = this.snack.open(message, bookingId ? 'Ver reserva' : 'OK', { duration: 5000 });
-      if (bookingId) {
-        snackRef.onAction().subscribe(() =>
-          void this.router.navigate(['/reservations'], { queryParams: { id: bookingId } }),
+
+      if (editing) {
+        await firstValueFrom(
+          this.ops.updateOwnerRegisteredSale(editing.id, {
+            grossAmount: payload.grossAmount,
+            platform: payload.platform,
+            feeType: payload.feeType,
+            percentage: payload.percentage,
+            fixedAmount: payload.fixedAmount,
+            checkinDate: payload.checkinDate,
+            checkoutDate: payload.checkoutDate,
+            competence: raw.historical ? payload.competence : undefined,
+            tenantIdentifier: payload.tenantIdentifier,
+            reservationSource: payload.reservationSource,
+            notes: payload.notes,
+          }),
         );
+        this.snack.open('Venda atualizada.', 'OK', { duration: 4000 });
+        this.cancelEdit();
+      } else {
+        const res = await firstValueFrom(
+          raw.historical ? this.ops.createBackfillBooking(payload) : this.ops.createBooking(payload),
+        );
+        const bookingId = res.booking?.id;
+        let message = raw.historical
+          ? 'Estadia histórica registrada no financeiro.'
+          : 'Venda registrada no financeiro e na agenda.';
+        if (res.pendingTenantInviteCreated) {
+          message += ' Convite pendente criado para o hóspede.';
+        }
+        const snackRef = this.snack.open(message, bookingId ? 'Ver reserva' : 'OK', { duration: 5000 });
+        if (bookingId) {
+          snackRef.onAction().subscribe(() =>
+            void this.router.navigate(['/reservations'], { queryParams: { id: bookingId } }),
+          );
+        }
+        this.form.patchValue({
+          guestName: '',
+          guestEmail: '',
+          grossAmount: 0,
+          notes: '',
+        });
       }
-      this.form.patchValue({
-        guestName: '',
-        guestEmail: '',
-        grossAmount: 0,
-        notes: '',
-      });
       await this.load();
     } catch {
-      this.snack.open('Não foi possível registrar a venda. Verifique datas e valor.', 'OK', { duration: 4000 });
+      const action = editing ? 'atualizar' : 'registrar';
+      this.snack.open(`Não foi possível ${action} a venda. Verifique datas e valor.`, 'OK', { duration: 4000 });
     } finally {
       this.saving.set(false);
+    }
+  }
+
+  canManageSale(s: BookingDto): boolean {
+    if (s.backfill) return true;
+    const source = s.reservationSource?.toUpperCase();
+    if (!source || ['HOSTY', 'ICAL_IMPORT'].includes(source)) return false;
+    if (s.checkedInAt) return false;
+    const stage = s.flowStage?.toUpperCase();
+    if (stage && ['DISPUTED', 'CANCELLED', 'ABANDONED_NO_CHECKIN', 'COMPLETED'].includes(stage)) return false;
+    const ns = s.noShowPenaltyStatus?.toUpperCase();
+    if (ns === 'APPLIED' || ns === 'WAIVED') return false;
+    return true;
+  }
+
+  startEdit(s: BookingDto): void {
+    if (!this.canManageSale(s)) return;
+    const parsed = this.parseBackfillNotes(s.backfillNotes);
+    const source = s.reservationSource?.toUpperCase();
+    const channel = CHANNELS.find((c) => c.source === source)?.source ?? 'MANUAL';
+    this.editingSale.set(s);
+    this.form.patchValue({
+      propertyId: s.propertyId,
+      channel,
+      historical: !!s.backfill,
+      competence: s.competence ?? this.competenceFromCheckin(),
+      guestName: parsed.guestName,
+      guestEmail: s.tenantEmail?.trim() || s.tenantIdentifier?.trim() || '',
+      grossAmount: s.grossAmount ?? s.amountToPay ?? 0,
+      checkinDate: s.checkinDate ?? '',
+      checkoutDate: s.checkoutDate ?? '',
+      notes: parsed.notes,
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  cancelEdit(): void {
+    this.editingSale.set(null);
+    this.form.reset({
+      propertyId: this.properties()[0]?.id ?? '',
+      channel: 'WHATSAPP',
+      historical: false,
+      competence: currentCompetence(),
+      guestName: '',
+      guestEmail: '',
+      grossAmount: 0,
+      checkinDate: '',
+      checkoutDate: '',
+      notes: '',
+    });
+  }
+
+  async deleteSale(s: BookingDto): Promise<void> {
+    if (!this.canManageSale(s)) return;
+    const guest = this.guestDisplayName(s);
+    const ok = window.confirm(
+      `Apagar a venda de ${guest} (${this.formatStayDates(s)})?\n\nEssa ação remove a estadia do financeiro e da agenda.`,
+    );
+    if (!ok) return;
+    this.deletingId.set(s.id);
+    try {
+      await firstValueFrom(this.ops.deleteBooking(s.id));
+      if (this.editingSale()?.id === s.id) this.cancelEdit();
+      this.snack.open('Venda apagada.', 'OK', { duration: 4000 });
+      await this.load();
+    } catch {
+      this.snack.open('Não foi possível apagar esta venda.', 'OK', { duration: 4000 });
+    } finally {
+      this.deletingId.set(null);
     }
   }
 
@@ -202,9 +296,16 @@ export class ExternalSalesPage implements OnInit {
   }
 
   private guestNameFromNotes(notes?: string): string | null {
-    if (!notes?.trim()) return null;
+    return this.parseBackfillNotes(notes).guestName;
+  }
+
+  private parseBackfillNotes(notes?: string): { guestName: string; notes: string } {
+    if (!notes?.trim()) return { guestName: '', notes: '' };
     const match = notes.match(/Hóspede:\s*([^·\n]+)/i);
-    return match?.[1]?.trim() || null;
+    if (!match) return { guestName: '', notes: notes.trim() };
+    const guestName = match[1]?.trim() ?? '';
+    const rest = notes.replace(match[0], '').replace(/^[·\s]+/, '').trim();
+    return { guestName, notes: rest };
   }
 
   private formatShortDate(iso?: string): string {

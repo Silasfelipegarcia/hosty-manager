@@ -26,6 +26,18 @@
   }
 }
 
+.form-card.editing {
+  border: 1px solid #99f6e4;
+  box-shadow: 0 0 0 1px #ecfdf5;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
 .full { width: 100%; display: block; }
 
 .row {
@@ -64,6 +76,14 @@
   border-bottom: 1px solid #e2e8f0;
 
   &:last-child { border-bottom: none; }
+
+  &.selected {
+    background: #f0fdfa;
+    margin: 0 -8px;
+    padding-left: 8px;
+    padding-right: 8px;
+    border-radius: 8px;
+  }
 }
 
 .sale-main {
@@ -129,6 +149,15 @@
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.sale-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .sale-dates {
@@ -154,6 +183,22 @@
   white-space: nowrap;
 
   &:hover { text-decoration: underline; }
+}
+
+.sale-action-btn {
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0b5ed7;
+  cursor: pointer;
+  padding: 0;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) { text-decoration: underline; }
+  &:disabled { opacity: 0.5; cursor: default; }
+
+  &.danger { color: #dc2626; }
 }
 
 .list-card > a {

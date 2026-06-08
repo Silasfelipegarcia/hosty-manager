@@ -39,7 +39,11 @@
       <h3>Redes e site</h3>
       <mat-form-field appearance="outline" class="full"><mat-label>Instagram</mat-label><input matInput formControlName="instagramUrl" /></mat-form-field>
       <mat-form-field appearance="outline" class="full"><mat-label>Facebook</mat-label><input matInput formControlName="facebookUrl" /></mat-form-field>
-      <mat-form-field appearance="outline" class="full"><mat-label>WhatsApp</mat-label><input matInput formControlName="whatsappUrl" /></mat-form-field>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>WhatsApp</mat-label>
+        <input matInput formControlName="whatsappUrl" placeholder="11999998888" />
+        <mat-hint>Número com DDD — salvamos como link do WhatsApp</mat-hint>
+      </mat-form-field>
       <mat-form-field appearance="outline" class="full"><mat-label>Site</mat-label><input matInput formControlName="websiteUrl" /></mat-form-field>
       <button mat-button matStepperPrevious>Voltar</button>
       <button mat-button matStepperNext>Próximo</button>

@@ -122,6 +122,20 @@ export interface BackfillBookingRequest extends CreateBookingRequest {
   notes?: string;
 }
 
+export interface UpdateOwnerRegisteredSaleRequest {
+  grossAmount: number;
+  platform: string;
+  feeType: string;
+  percentage?: number;
+  fixedAmount?: number;
+  checkinDate: string;
+  checkoutDate: string;
+  competence?: string;
+  tenantIdentifier?: string;
+  reservationSource?: string;
+  notes?: string;
+}
+
 export interface KitOrderLine {
   kitId: string;
   kitName: string;

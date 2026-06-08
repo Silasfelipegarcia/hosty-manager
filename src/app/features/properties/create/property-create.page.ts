@@ -10,6 +10,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { firstValueFrom } from 'rxjs';
 import { PropertiesService } from '../../../core/api/properties.service';
+import { normalizeWhatsappForSave } from '../../../core/utils/whatsapp-url.util';
 
 @Component({
   selector: 'app-property-create-page',
@@ -73,11 +74,13 @@ export class PropertyCreatePage {
   async submit(): Promise<void> {
     this.saving.set(true);
     try {
+      const media = this.media.getRawValue();
       const body = {
         ...this.identity.getRawValue(),
         ...this.address.getRawValue(),
         ...this.rules.getRawValue(),
-        ...this.media.getRawValue(),
+        ...media,
+        whatsappUrl: normalizeWhatsappForSave(media.whatsappUrl),
         ...this.publish.getRawValue(),
         coverPhotoUrl: this.mediaCover().trim(),
         galleryPhotoUrls: this.mediaGallery()

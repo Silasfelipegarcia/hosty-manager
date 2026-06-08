@@ -22,6 +22,7 @@ import { buildPropertyHealth } from '../../../core/finance/financial-health';
 import { CurrencyBrlPipe } from '../../../shared/pipes/currency-brl.pipe';
 import { currentCompetence } from '../../../core/dates/competence';
 import { resolveProfilePhotoSrc } from '../../../core/profile/profile-photo.util';
+import { normalizeWhatsappForSave, whatsappForInput } from '../../../core/utils/whatsapp-url.util';
 import {
   PROPERTY_GALLERY_SLOT_COUNT,
   PropertyMediaEditorComponent,
@@ -147,7 +148,7 @@ export class PropertyDetailPage implements OnInit {
       this.mediaForm.patchValue({
         instagramUrl: p.instagramUrl ?? '',
         facebookUrl: p.facebookUrl ?? '',
-        whatsappUrl: p.whatsappUrl ?? '',
+        whatsappUrl: whatsappForInput(p.whatsappUrl),
         websiteUrl: p.websiteUrl ?? '',
       });
     }
@@ -233,7 +234,7 @@ export class PropertyDetailPage implements OnInit {
           .filter(Boolean),
         instagramUrl: social.instagramUrl.trim(),
         facebookUrl: social.facebookUrl.trim(),
-        whatsappUrl: social.whatsappUrl.trim(),
+        whatsappUrl: normalizeWhatsappForSave(social.whatsappUrl),
         websiteUrl: social.websiteUrl.trim(),
       };
       await firstValueFrom(this.api.update(this.propertyId, body as never));
