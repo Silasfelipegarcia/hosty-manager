@@ -79,7 +79,7 @@
         <p class="muted">Nenhuma pendência urgente. Bom trabalho!</p>
       } @else {
         <ul class="action-list priority">
-          @for (item of actionItems(); track item.label) {
+          @for (item of actionItems(); track item.trackKey) {
             <li>
               <div class="action-copy">
                 <strong>{{ item.label }}</strong>

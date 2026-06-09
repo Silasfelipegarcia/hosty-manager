@@ -17,6 +17,7 @@ import { currentCompetence } from '../../core/dates/competence';
 import { OWNER_LABELS } from '../../core/i18n/owner-labels';
 
 interface ActionItem {
+  trackKey: string;
   label: string;
   detail: string;
   path: string;
@@ -77,6 +78,7 @@ export class DashboardPage implements OnInit {
     const b = this.badges;
     if (b.ownerActionRequired() > 0) {
       items.push({
+        trackKey: 'owner-actions',
         label: 'Aprovar reservas',
         detail: `${b.ownerActionRequired()} ação(ões) na fila`,
         path: '/reservations',
@@ -86,6 +88,7 @@ export class DashboardPage implements OnInit {
     }
     if (b.pendingAccessRequests() > 0) {
       items.push({
+        trackKey: 'pending-access',
         label: 'Pedidos de estadia',
         detail: `${b.pendingAccessRequests()} aguardando você`,
         path: '/reservations',
@@ -95,6 +98,7 @@ export class DashboardPage implements OnInit {
     }
     if (b.pendingKitOrders() > 0) {
       items.push({
+        trackKey: 'pending-kits',
         label: 'Kits pendentes',
         detail: `${b.pendingKitOrders()} pedido(s)`,
         path: '/kits/pending',
@@ -104,6 +108,7 @@ export class DashboardPage implements OnInit {
     }
     if (b.pendingFieldServices() > 0) {
       items.push({
+        trackKey: 'pending-field-services',
         label: 'Serviços de campo',
         detail: `${b.pendingFieldServices()} ordem(ns)`,
         path: '/field-services/pending',
@@ -113,6 +118,7 @@ export class DashboardPage implements OnInit {
     }
     for (const req of this.accessRequests()) {
       items.push({
+        trackKey: `access-${req.id}`,
         label: req.tenantName || req.tenantEmail || 'Hóspede',
         detail: `${req.propertyName} — ${req.requestedCheckinDate}`,
         path: '/reservations',

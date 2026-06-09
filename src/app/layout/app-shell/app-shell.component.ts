@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
@@ -72,6 +72,7 @@ export class AppShellComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly breakpoint = inject(BreakpointObserver);
+  private readonly destroyRef = inject(DestroyRef);
   readonly badges = inject(BadgeService);
   readonly palette = inject(CommandPaletteService);
   readonly profileStore = inject(OwnerProfileStore);
@@ -88,7 +89,25 @@ export class AppShellComponent implements OnInit {
   readonly sidenavOpen = signal(
     typeof window !== 'undefined' && !window.matchMedia(MOBILE_QUERY).matches,
   );
-  readonly routeLoading = signal(true);
+  readonly routeLoading = signal(false);
+
+  constructor() {
+    this.breakpoint
+      .observe([MOBILE_QUERY])
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((state) => {
+        const mobile = state.matches;
+        this.isMobile.set(mobile);
+        this.sidenavOpen.set(!mobile);
+      });
+
+    this.router.events.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((e) => {
+      if (e instanceof NavigationEnd) {
+        this.syncTitle(e.urlAfterRedirects);
+        this.closeSidenavOnNav();
+      }
+    });
+  }
 
   get menuAriaLabel(): string {
     return this.sidenavOpen() ? 'Fechar menu' : 'Abrir menu';
@@ -165,37 +184,17 @@ export class AppShellComponent implements OnInit {
     this.auth.startSessionWatch();
     void this.profileStore.ensureLoaded();
     void this.entitlements.ensureLoaded();
-    void this.badges.refresh();
+    queueMicrotask(() => void this.badges.refresh());
     setInterval(() => void this.badges.refresh(), 180_000);
     this.syncTitle(this.router.url);
-
-    this.breakpoint
-      .observe([MOBILE_QUERY])
-      .pipe(takeUntilDestroyed())
-      .subscribe((state) => {
-        const mobile = state.matches;
-        this.isMobile.set(mobile);
-        if (mobile) {
-          this.sidenavOpen.set(false);
-        } else {
-          this.sidenavOpen.set(true);
-        }
-      });
-
-    this.router.events.pipe(takeUntilDestroyed()).subscribe((e) => {
-      if (e instanceof NavigationEnd) {
-        this.syncTitle(e.urlAfterRedirects);
-        this.closeSidenavOnNav();
-      }
-    });
   }
 
   onOutletDeactivate(): void {
-    this.routeLoading.set(true);
+    queueMicrotask(() => this.routeLoading.set(true));
   }
 
   onOutletActivate(): void {
-    this.routeLoading.set(false);
+    queueMicrotask(() => this.routeLoading.set(false));
   }
 
   toggleSidenav(): void {
