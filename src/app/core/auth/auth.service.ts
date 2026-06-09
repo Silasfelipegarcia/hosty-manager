@@ -9,6 +9,7 @@ import {
   LoginRequest,
   LoginResponse,
   RefreshRequest,
+  RegisterRequest,
 } from '../models/auth.models';
 import { TokenStore } from './token.store';
 import { decodeJwtPayload, emailFromToken, isTokenExpired, rolesFromToken } from './jwt.utils';
@@ -50,6 +51,18 @@ export class AuthService {
 
   isPlatformAdmin(): boolean {
     return this.roles.includes('PLATFORM_ADMIN');
+  }
+
+  async register(request: RegisterRequest): Promise<LoginResponse> {
+    const res = await firstValueFrom(
+      this.http.post<LoginResponse>(`${environment.apiBaseUrl}/api/v1/auth/register-owner`, request, {
+        headers: { 'X-Hosty-Client': 'owner-portal' },
+      }),
+    );
+    this.tokens.save(res.accessToken, res.refreshToken, res.expiresInSeconds);
+    this.passwordMustChange.set(!!res.passwordMustChange);
+    this.scheduleExpiryCheck();
+    return res;
   }
 
   async login(request: LoginRequest): Promise<LoginResponse> {

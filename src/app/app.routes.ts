@@ -49,10 +49,23 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/login/login.page').then((m) => m.LoginPage),
   },
   {
+    path: 'register',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./features/auth/register/register.page').then((m) => m.RegisterPage),
+  },
+  {
     path: 'forgot-password',
     canActivate: [guestGuard],
     loadComponent: () =>
       import('./features/auth/forgot-password/forgot-password.page').then((m) => m.ForgotPasswordPage),
+  },
+  {
+    path: 'privacidade',
+    loadComponent: () => import('./features/legal/privacy.page').then((m) => m.PrivacyPage),
+  },
+  {
+    path: 'termos',
+    loadComponent: () => import('./features/legal/terms.page').then((m) => m.TermsPage),
   },
   {
     path: 'change-password',
@@ -124,6 +137,11 @@ export const routes: Routes = [
         path: 'field-services/pending',
         loadComponent: () =>
           import('./features/field-services/field-services-pending.page').then((m) => m.FieldServicesPendingPage),
+      },
+      {
+        path: 'field-services/providers',
+        loadComponent: () =>
+          import('./features/field-services/service-providers.page').then((m) => m.ServiceProvidersPage),
       },
       {
         path: 'messages',

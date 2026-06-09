@@ -11,6 +11,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   const isAuthRoute =
     req.url.includes('/api/v1/auth/login') ||
+    req.url.includes('/api/v1/auth/register-owner') ||
     req.url.includes('/api/v1/auth/refresh') ||
     req.url.includes('/api/v1/auth/forgot-password');
 

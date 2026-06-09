@@ -13,6 +13,7 @@ import {
   KitOrder,
   MessageInboxItem,
   PortfolioAvailabilitySummary,
+  ProviderInviteResult,
   ServiceProvider,
   StaysSummary,
   TenantSearchResult,
@@ -149,15 +150,20 @@ export class OperationsService {
     return this.http.post(`${this.base}/kit-requests/${orderId}/reject`, {});
   }
 
-  listServiceProviders() {
-    return this.http.get<ServiceProvider[]>(`${this.base}/service-providers`);
+  listServiceProviders(page = 0, size = 100) {
+    return this.http.get<PageResponse<ServiceProvider>>(
+      `${this.base}/service-providers?page=${page}&size=${size}`,
+    );
   }
 
-  createServiceProvider(body: Partial<ServiceProvider>) {
+  createServiceProvider(body: { name: string; phone?: string; serviceTypes?: string[] }) {
     return this.http.post<ServiceProvider>(`${this.base}/service-providers`, body);
   }
 
-  inviteServiceProvider(id: string) {
-    return this.http.post(`${this.base}/service-providers/${id}/invite`, {}, { responseType: 'text' });
+  inviteServiceProvider(id: string, email: string) {
+    return this.http.post<ProviderInviteResult>(
+      `${this.base}/service-providers/${id}/invite`,
+      { email },
+    );
   }
 }

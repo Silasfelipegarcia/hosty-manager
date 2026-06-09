@@ -38,6 +38,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/sales': 'Registrar estadia',
   '/kits/pending': 'Pedidos de kit',
   '/field-services/pending': 'Serviços de campo',
+  '/field-services/providers': 'Prestadores',
   '/messages': 'Mensagens',
   '/help': 'Ajuda',
   '/account': 'Conta',
@@ -103,12 +104,19 @@ export class AppShellComponent implements OnInit {
             }]
           : []),
         ...(e.featureEnabled(OWNER_FEATURES.fieldServices)
-          ? [{
-              label: OWNER_LABELS.fieldServices,
-              path: '/field-services/pending',
-              icon: 'engineering',
-              badge: () => this.badges.pendingFieldServices(),
-            }]
+          ? [
+              {
+                label: OWNER_LABELS.fieldServices,
+                path: '/field-services/pending',
+                icon: 'engineering',
+                badge: () => this.badges.pendingFieldServices(),
+              },
+              {
+                label: 'Prestadores',
+                path: '/field-services/providers',
+                icon: 'groups',
+              },
+            ]
           : []),
         { label: OWNER_LABELS.messages, path: '/messages', icon: 'forum' },
       ],

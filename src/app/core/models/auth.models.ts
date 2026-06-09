@@ -23,3 +23,11 @@ export interface ChangePasswordRequest {
 export interface ForgotPasswordRequest {
   email: string;
 }
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  fullName: string;
+  cpf: string;
+  phone: string;
+}

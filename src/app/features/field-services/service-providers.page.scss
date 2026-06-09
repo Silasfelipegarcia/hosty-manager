@@ -1,0 +1,82 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+
+  h1 {
+    margin: 0 0 4px;
+  }
+
+  p {
+    margin: 0;
+    color: #64748b;
+  }
+}
+
+.create-card,
+.invite-card,
+.empty-card,
+.provider-card {
+  padding: 16px;
+}
+
+.full {
+  width: 100%;
+}
+
+.types-label {
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+
+.types-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 12px;
+  margin-bottom: 16px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.invite-url {
+  word-break: break-all;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+}
+
+.invite-meta,
+.hint,
+.muted {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.provider-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.provider-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .status {
+    font-size: 12px;
+    color: #0f766e;
+    font-weight: 600;
+  }
+}

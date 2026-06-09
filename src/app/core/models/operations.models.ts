@@ -190,6 +190,16 @@ export interface ServiceProvider {
   name: string;
   email?: string;
   phone?: string;
+  serviceTypes?: string[];
+  status?: string;
+  linkedUserId?: string;
+  createdAt?: string;
+}
+
+export interface ProviderInviteResult {
+  inviteUrl: string;
+  invitePath: string;
+  expiresAt: string;
 }
 
 /** @deprecated use PortfolioAvailabilitySummary */

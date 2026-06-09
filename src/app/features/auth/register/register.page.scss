@@ -1,0 +1,14 @@
+@import '../login/login.page.scss';
+
+.footer-link {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 14px;
+  color: #64748b;
+
+  a {
+    color: #0f766e;
+    font-weight: 600;
+    text-decoration: none;
+  }
+}

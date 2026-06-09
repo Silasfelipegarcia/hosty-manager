@@ -1,0 +1,93 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <h1>Prestadores</h1>
+      <p>Cadastre equipe de campo e compartilhe o link de convite para o app Hosty.</p>
+    </div>
+    <button mat-flat-button color="primary" (click)="showCreate.set(!showCreate())">
+      <mat-icon>person_add</mat-icon>
+      Novo prestador
+    </button>
+  </header>
+
+  @if (showCreate()) {
+    <mat-card class="create-card">
+      <h2>Novo prestador</h2>
+      <form [formGroup]="createForm" (ngSubmit)="submitCreate()">
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Nome</mat-label>
+          <input matInput formControlName="name" autocomplete="name" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Telefone / WhatsApp</mat-label>
+          <input matInput formControlName="phone" autocomplete="tel" />
+        </mat-form-field>
+        <p class="types-label">Tipos de serviço</p>
+        <div class="types-grid">
+          <mat-checkbox formControlName="cleaning">Limpeza</mat-checkbox>
+          <mat-checkbox formControlName="pool">Piscina</mat-checkbox>
+          <mat-checkbox formControlName="garden">Jardim</mat-checkbox>
+          <mat-checkbox formControlName="maintenance">Manutenção</mat-checkbox>
+        </div>
+        <div class="actions">
+          <button mat-stroked-button type="button" (click)="showCreate.set(false)">Cancelar</button>
+          <button mat-flat-button color="primary" type="submit" [disabled]="creating() || createForm.invalid">
+            Salvar
+          </button>
+        </div>
+      </form>
+    </mat-card>
+  }
+
+  @if (lastInvite(); as invite) {
+    <mat-card class="invite-card">
+      <h2>Link de convite — {{ inviteProviderName() }}</h2>
+      <p class="invite-url">{{ invite.inviteUrl }}</p>
+      <p class="invite-meta">Válido até {{ invite.expiresAt | date: 'short' }}</p>
+      <div class="actions">
+        <button mat-stroked-button type="button" (click)="copyInviteLink()">
+          <mat-icon>content_copy</mat-icon>
+          Copiar
+        </button>
+        <button mat-stroked-button type="button" (click)="shareInviteNative()">
+          <mat-icon>share</mat-icon>
+          Compartilhar
+        </button>
+        <button mat-stroked-button type="button" (click)="shareInviteWhatsApp()">
+          <mat-icon>chat</mat-icon>
+          WhatsApp
+        </button>
+      </div>
+      <p class="hint">O e-mail automático ainda não está ativo — envie o link manualmente por enquanto.</p>
+    </mat-card>
+  }
+
+  @if (loading()) {
+    <p>Carregando…</p>
+  } @else if (providers().length === 0) {
+    <mat-card class="empty-card">
+      <p>Nenhum prestador cadastrado. Crie o primeiro e envie o convite para o app.</p>
+    </mat-card>
+  } @else {
+    @for (p of providers(); track p.id) {
+      <mat-card class="provider-card">
+        <div class="provider-main">
+          <strong>{{ p.name }}</strong>
+          <span class="status">{{ statusLabel(p) }}</span>
+          <p>{{ serviceTypeLabels(p) }}</p>
+          @if (p.phone) {
+            <p class="muted">{{ p.phone }}</p>
+          }
+          @if (p.email) {
+            <p class="muted">{{ p.email }}</p>
+          }
+        </div>
+        <div class="provider-actions">
+          <button mat-flat-button color="primary" type="button" (click)="invite(p)">
+            {{ p.linkedUserId ? 'Reenviar convite' : 'Convidar' }}
+          </button>
+        </div>
+      </mat-card>
+    }
+  }
+</section>

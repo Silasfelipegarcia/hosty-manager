@@ -1,0 +1,95 @@
+<div class="legal-page">
+  <header class="legal-header">
+    <a class="brand" routerLink="/">
+      <span class="brand-mark">H</span>
+      <span>{{ brandName }}</span>
+    </a>
+  </header>
+
+  <main class="legal-main">
+    <h1>Termos de Uso</h1>
+    <p class="updated">Última atualização: {{ lastUpdated }}</p>
+
+    <p>
+      Estes termos regem o uso do aplicativo <strong>{{ brandName }}</strong> e do portal do proprietário.
+      Ao criar conta ou utilizar os serviços, você declara ter lido e aceito estas condições.
+    </p>
+
+    <h2>1. Perfis de uso</h2>
+    <ul>
+      <li><strong>Hóspede (inquilino):</strong> cadastro pelo app; explora imóveis, solicita estadias e usa benefícios de fidelidade.</li>
+      <li><strong>Proprietário:</strong> cadastro pelo portal web; gerencia imóveis, reservas, finanças e convites.</li>
+      <li><strong>Prestador:</strong> conta criada somente por convite do proprietário; executa serviços de campo pelo app.</li>
+    </ul>
+
+    <h2>2. Conta e segurança</h2>
+    <p>
+      Você é responsável por manter a confidencialidade da senha e pelas atividades na sua conta.
+      Informe-nos imediatamente em caso de uso não autorizado.
+    </p>
+
+    <h2>3. Uso aceitável</h2>
+    <p>É proibido:</p>
+    <ul>
+      <li>Usar a plataforma para fins ilegais, fraudulentos ou que violem direitos de terceiros;</li>
+      <li>Publicar conteúdo falso, ofensivo ou que infrinja propriedade intelectual;</li>
+      <li>Tentar acessar áreas ou dados de outros usuários sem autorização;</li>
+      <li>Automatizar acesso de forma abusiva ou comprometer a estabilidade do serviço.</li>
+    </ul>
+
+    <h2>4. Relação entre usuários</h2>
+    <p>
+      O Hosty facilita a conexão entre proprietários, hóspedes e prestadores. Condições comerciais da estadia,
+      cancelamentos e regras do imóvel são definidas pelo anfitrião, salvo quando a plataforma exibir regras
+      operacionais específicas. Disputas devem ser tratadas preferencialmente entre as partes; o Hosty pode
+      mediar conforme recursos disponíveis.
+    </p>
+
+    <h2>5. Pagamentos</h2>
+    <p>
+      Transações via Mercado Pago ou outros meios integrados seguem também os termos desses provedores.
+      Taxas de plataformas externas (Airbnb, Booking etc.) registradas pelo proprietário são de sua responsabilidade.
+    </p>
+
+    <h2>6. Propriedade intelectual</h2>
+    <p>
+      A marca, software e interface do Hosty são de nossa titularidade ou licenciados. Conteúdos enviados por você
+      (fotos, textos) permanecem seus, com licença necessária para operarmos o serviço.
+    </p>
+
+    <h2>7. Disponibilidade</h2>
+    <p>
+      Buscamos alta disponibilidade, mas o serviço pode ser interrompido para manutenção ou por fatores fora
+      do nosso controle. Funcionalidades podem evoluir sem aviso prévio.
+    </p>
+
+    <h2>8. Limitação de responsabilidade</h2>
+    <p>
+      Na extensão permitida pela lei, o Hosty não se responsabiliza por danos indiretos decorrentes do uso da
+      plataforma, incluindo perdas decorrentes de estadias, serviços de terceiros ou indisponibilidade temporária.
+    </p>
+
+    <h2>9. Encerramento</h2>
+    <p>
+      Você pode encerrar sua conta a qualquer momento (ver Política de Privacidade). Podemos suspender ou encerrar
+      contas que violem estes termos.
+    </p>
+
+    <h2>10. Lei aplicável</h2>
+    <p>
+      Estes termos são regidos pelas leis da República Federativa do Brasil. Foro: comarca do domicílio do
+      controlador do Hosty, salvo disposição legal em contrário.
+    </p>
+
+    <h2>11. Contato</h2>
+    <p>
+      <a [href]="'mailto:' + supportEmail">{{ supportEmail }}</a>
+    </p>
+  </main>
+
+  <footer class="legal-footer">
+    <a routerLink="/">Início</a>
+    <a routerLink="/privacidade">Política de privacidade</a>
+    <a routerLink="/login">Portal do proprietário</a>
+  </footer>
+</div>

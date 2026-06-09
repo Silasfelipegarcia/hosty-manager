@@ -1,0 +1,111 @@
+<div class="legal-page">
+  <header class="legal-header">
+    <a class="brand" routerLink="/">
+      <span class="brand-mark">H</span>
+      <span>{{ brandName }}</span>
+    </a>
+  </header>
+
+  <main class="legal-main">
+    <h1>Política de Privacidade</h1>
+    <p class="updated">Última atualização: {{ lastUpdated }}</p>
+
+    <p>
+      Esta política descreve como o <strong>{{ brandName }}</strong> (“nós”, “Hosty”) trata dados pessoais
+      no <strong>aplicativo móvel Hosty</strong> (hóspedes e prestadores de serviço) e no
+      <strong>portal do proprietário</strong> (site Manager). Ao usar nossos serviços, você concorda com
+      as práticas descritas abaixo, em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).
+    </p>
+
+    <h2>1. Quem somos</h2>
+    <p>
+      O Hosty é uma plataforma de gestão de estadias de temporada. O controlador dos dados é a pessoa jurídica
+      responsável pelo produto Hosty. Para exercer seus direitos ou dúvidas sobre privacidade, escreva para
+      <a [href]="'mailto:' + supportEmail">{{ supportEmail }}</a>.
+    </p>
+
+    <h2>2. Quais dados coletamos</h2>
+    <ul>
+      <li><strong>Cadastro e conta:</strong> nome, e-mail, senha (armazenada de forma criptografada), CPF, telefone e foto de perfil (quando informados).</li>
+      <li><strong>Estadias e operação:</strong> reservas, mensagens entre hóspede e anfitrião, termos aceitos, check-in/check-out e histórico de uso.</li>
+      <li><strong>Imóveis:</strong> endereço, fotos, descrições e regras operacionais inseridas pelo proprietário.</li>
+      <li><strong>Pagamentos:</strong> quando você conecta o Mercado Pago, tratamos identificadores e status de transações conforme a integração — não armazenamos dados completos de cartão.</li>
+      <li><strong>Prestadores de campo:</strong> localização aproximada (quando você autoriza no app), evidências fotográficas de serviços e avaliações.</li>
+      <li><strong>Uso técnico:</strong> logs de acesso, identificadores de dispositivo, endereço IP e dados de diagnóstico para segurança e melhoria do serviço.</li>
+    </ul>
+
+    <h2>3. Para que usamos os dados</h2>
+    <ul>
+      <li>Criar e autenticar sua conta (inquilino, proprietário ou prestador convidado).</li>
+      <li>Operar reservas, mensagens, fidelidade, kits, serviços de campo e finanças do anfitrião.</li>
+      <li>Exibir imóveis no mapa e sugerir serviços próximos ao prestador (com sua permissão de localização).</li>
+      <li>Enviar comunicações operacionais (confirmação de cadastro, recuperação de senha, avisos da estadia).</li>
+      <li>Cumprir obrigações legais e prevenir fraudes ou abusos.</li>
+    </ul>
+
+    <h2>4. Bases legais (LGPD)</h2>
+    <p>
+      Tratamos dados com base em execução de contrato ou procedimentos preliminares, cumprimento de obrigação legal,
+      legítimo interesse (segurança e melhoria do produto) e, quando aplicável, consentimento — por exemplo,
+      para localização no dispositivo ou marketing opcional.
+    </p>
+
+    <h2>5. Compartilhamento</h2>
+    <p>Podemos compartilhar dados apenas quando necessário:</p>
+    <ul>
+      <li>Com o anfitrião ou hóspede envolvidos na mesma reserva ou imóvel.</li>
+      <li>Com prestadores de serviço indicados pelo proprietário para executar limpeza, manutenção ou tarefas de campo.</li>
+      <li>Com provedores de infraestrutura (hospedagem, e-mail, pagamentos) sob contrato e confidencialidade.</li>
+      <li>Com autoridades, quando exigido por lei ou ordem judicial.</li>
+    </ul>
+    <p>Não vendemos seus dados pessoais.</p>
+
+    <h2>6. Retenção e exclusão</h2>
+    <p>
+      Mantemos os dados enquanto sua conta estiver ativa e pelo tempo necessário para obrigações legais,
+      disputas ou auditoria. Você pode solicitar exclusão da conta enviando e-mail para
+      <a [href]="deletionMailto">{{ supportEmail }}</a>
+      com o assunto “Exclusão de conta Hosty” e o e-mail de login. Analisaremos e responderemos em prazo razoável,
+      respeitando retenções legais mínimas.
+    </p>
+
+    <h2>7. Seus direitos</h2>
+    <p>Você pode solicitar, conforme a LGPD:</p>
+    <ul>
+      <li>Confirmação e acesso aos dados;</li>
+      <li>Correção de dados incompletos ou desatualizados;</li>
+      <li>Anonimização, bloqueio ou eliminação de dados desnecessários;</li>
+      <li>Portabilidade e informação sobre compartilhamentos;</li>
+      <li>Revogação de consentimento, quando o tratamento depender dele.</li>
+    </ul>
+
+    <h2>8. Segurança</h2>
+    <p>
+      Adotamos medidas técnicas e organizacionais como comunicação criptografada (HTTPS), controle de acesso,
+      senhas com hash e segregação de papéis (hóspede, proprietário, prestador, administrador).
+    </p>
+
+    <h2>9. Crianças</h2>
+    <p>
+      O Hosty não é destinado a menores de 18 anos. Não coletamos intencionalmente dados de crianças.
+    </p>
+
+    <h2>10. Alterações</h2>
+    <p>
+      Podemos atualizar esta política. A data no topo da página indica a versão vigente.
+      Mudanças relevantes podem ser comunicadas no app ou por e-mail.
+    </p>
+
+    <h2>11. Contato</h2>
+    <p>
+      Dúvidas sobre privacidade:
+      <a [href]="'mailto:' + supportEmail">{{ supportEmail }}</a>
+    </p>
+  </main>
+
+  <footer class="legal-footer">
+    <a routerLink="/">Início</a>
+    <a routerLink="/termos">Termos de uso</a>
+    <a routerLink="/login">Portal do proprietário</a>
+  </footer>
+</div>

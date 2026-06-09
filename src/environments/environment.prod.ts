@@ -4,5 +4,7 @@ export const environment = {
   appName: 'Hosty Manager',
   brandName: 'Hosty',
   tenantAppUrl: 'https://app.hosty.com.br',
+  /** URL pública do Manager (páginas legais /privacidade e /termos). */
+  publicSiteUrl: 'https://manager.hosty.app',
   tagline: 'O sistema operacional da sua estadia de temporada',
 };
