@@ -104,9 +104,11 @@
     <h2>8. Retenção e exclusão</h2>
     <p>
       Mantemos os dados enquanto sua conta estiver ativa e pelo tempo necessário para obrigações legais,
-      disputas ou auditoria. Você pode solicitar exclusão da conta enviando e-mail para
+      disputas ou auditoria. Você pode solicitar exclusão em
+      <a routerLink="/exclusao-conta">página de exclusão de conta</a>
+      (formulário no site), em <strong>Conta → Segurança → Excluir conta e dados</strong> no app, ou por e-mail para
       <a [href]="deletionMailto">{{ supportEmail }}</a>
-      com o assunto “Exclusão de conta Hosty” e o e-mail de login. Analisaremos e responderemos em prazo razoável,
+      com o assunto “Exclusão de conta Hosty”. Analisaremos e responderemos em prazo razoável,
       respeitando retenções legais mínimas.
     </p>
     <p>
@@ -176,6 +178,7 @@
   <footer class="legal-footer">
     <a routerLink="/">Início</a>
     <a routerLink="/termos">Termos de uso</a>
+    <a routerLink="/exclusao-conta">Exclusão de conta</a>
     <a routerLink="/login">Portal do proprietário</a>
   </footer>
 </div>

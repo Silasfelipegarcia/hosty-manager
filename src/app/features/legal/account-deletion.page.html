@@ -1,0 +1,71 @@
+<div class="legal-page">
+  <header class="legal-header">
+    <a class="brand" routerLink="/">
+      <span class="brand-mark">H</span>
+      <span>{{ brandName }}</span>
+    </a>
+  </header>
+
+  <main class="legal-main">
+    <h1>Exclusão de conta e dados</h1>
+    <p class="updated">Última atualização: {{ lastUpdated }}</p>
+
+    <p>
+      Você pode solicitar a exclusão da sua conta Hosty e dos dados pessoais vinculados a ela.
+      Esta página atende ao direito previsto na LGPD e aos requisitos das lojas de aplicativos.
+    </p>
+
+    <h2>O que acontece</h2>
+    <ul>
+      <li>Analisamos sua solicitação e confirmamos por e-mail quando necessário.</li>
+      <li>Removemos ou anonimizamos dados da conta, salvo retenções legais (fiscal, disputas, segurança).</li>
+      <li>Reservas e registros que o anfitrião deve manter por lei podem permanecer sem identificação pessoal sua.</li>
+    </ul>
+
+    <h2>Pelo aplicativo Hosty</h2>
+    <p>
+      Se você usa o app: abra <strong>Conta</strong> → role até <strong>Segurança</strong> → expanda
+      <strong>Excluir conta e dados</strong> → siga as instruções e confirme a solicitação.
+    </p>
+
+    <h2>Pelo site (formulário abaixo)</h2>
+    <p>
+      Informe o e-mail de login e envie a solicitação. Seu cliente de e-mail abrirá com a mensagem pronta
+      para <a [href]="'mailto:' + supportEmail">{{ supportEmail }}</a>.
+    </p>
+
+    @if (submitted()) {
+      <p class="notice success">
+        Se o e-mail não abriu automaticamente, envie manualmente para
+        <a [href]="'mailto:' + supportEmail">{{ supportEmail }}</a>
+        com o assunto <strong>Exclusão de conta Hosty</strong>.
+      </p>
+    }
+
+    <form class="deletion-form" [formGroup]="form" (ngSubmit)="submit()">
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>E-mail de login</mat-label>
+        <input matInput type="email" formControlName="email" autocomplete="email" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Observação (opcional)</mat-label>
+        <textarea matInput rows="3" formControlName="note"></textarea>
+      </mat-form-field>
+      <button mat-flat-button color="warn" type="submit" [disabled]="form.invalid">
+        Enviar solicitação por e-mail
+      </button>
+    </form>
+
+    <h2>Prazo</h2>
+    <p>
+      Respondemos em prazo razoável, conforme a legislação aplicável e nossa
+      <a routerLink="/privacidade">Política de Privacidade</a>.
+    </p>
+  </main>
+
+  <footer class="legal-footer">
+    <a routerLink="/">Início</a>
+    <a routerLink="/privacidade">Política de privacidade</a>
+    <a routerLink="/termos">Termos de uso</a>
+  </footer>
+</div>

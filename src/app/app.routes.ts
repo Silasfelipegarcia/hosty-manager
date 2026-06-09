@@ -68,6 +68,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/legal/terms.page').then((m) => m.TermsPage),
   },
   {
+    path: 'exclusao-conta',
+    loadComponent: () =>
+      import('./features/legal/account-deletion.page').then((m) => m.AccountDeletionPage),
+  },
+  {
     path: 'change-password',
     canActivate: [authGuard],
     loadComponent: () =>
