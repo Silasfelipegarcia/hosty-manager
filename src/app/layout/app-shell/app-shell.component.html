@@ -106,7 +106,7 @@
       @if (routeLoading()) {
         <app-portal-skeleton variant="dashboard" />
       }
-      <router-outlet />
+      <router-outlet (activate)="onOutletActivate()" (deactivate)="onOutletDeactivate()" />
     </main>
   </mat-sidenav-content>
 </mat-sidenav-container>

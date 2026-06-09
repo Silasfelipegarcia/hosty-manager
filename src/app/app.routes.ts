@@ -3,6 +3,7 @@ import { RedirectFunction, Router, Routes } from '@angular/router';
 import { authGuard, guestGuard, landingGuard } from './core/auth/auth.guard';
 import { platformAdminGuard } from './core/auth/platform-admin.guard';
 import { AppShellComponent } from './layout/app-shell/app-shell.component';
+import { DashboardPage } from './features/dashboard/dashboard.page';
 
 const reservationIdRedirect: RedirectFunction = (snapshot) => {
   const router = inject(Router);
@@ -85,7 +86,7 @@ export const routes: Routes = [
     children: [
       {
         path: 'dashboard',
-        loadComponent: () => import('./features/dashboard/dashboard.page').then((m) => m.DashboardPage),
+        component: DashboardPage,
       },
       {
         path: 'properties',

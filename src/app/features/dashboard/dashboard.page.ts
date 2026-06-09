@@ -4,7 +4,6 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { PortalKpiComponent } from '../../shared/components/portal-kpi/portal-kpi.component';
-import { PortalSkeletonComponent } from '../../shared/components/portal-skeleton/portal-skeleton.component';
 import { firstValueFrom } from 'rxjs';
 import { OperationsService } from '../../core/api/operations.service';
 import { FinanceService } from '../../core/api/finance.service';
@@ -34,7 +33,6 @@ interface ActionItem {
     MatButtonModule,
     MatIconModule,
     PortalKpiComponent,
-    PortalSkeletonComponent,
     CompetencePipe,
   ],
   templateUrl: './dashboard.page.html',
@@ -47,10 +45,9 @@ export class DashboardPage implements OnInit {
 
   readonly badges = inject(BadgeService);
   readonly labels = OWNER_LABELS;
-  readonly loading = signal(true);
   readonly loadingFinance = signal(false);
+  readonly loadingStays = signal(true);
   readonly financeError = signal<string | null>(null);
-  readonly error = signal<string | null>(null);
   readonly competence = signal(currentCompetence());
   readonly bundle = signal<FinanceDashboardBundle | null>(null);
   readonly stays = signal<StaysSummary | null>(null);
@@ -131,25 +128,40 @@ export class DashboardPage implements OnInit {
   }
 
   async load(): Promise<void> {
-    this.loading.set(true);
-    this.error.set(null);
     this.financeError.set(null);
+    void this.loadStays();
+    void this.loadAccess();
+    void this.loadInbox();
+    void this.loadFinance();
+  }
+
+  private async loadStays(): Promise<void> {
+    this.loadingStays.set(true);
     try {
-      const [stays, access, inbox] = await Promise.all([
-        firstValueFrom(this.ops.getStaysSummary()),
-        firstValueFrom(this.properties.listPendingAccessRequests(0, 5)),
-        firstValueFrom(this.ops.listMessagesInbox(0, 5)),
-      ]);
-      this.stays.set(stays);
+      this.stays.set(await firstValueFrom(this.ops.getStaysSummary()));
+    } catch {
+      // KPI de estadias fica em 0 até atualizar
+    } finally {
+      this.loadingStays.set(false);
+    }
+  }
+
+  private async loadAccess(): Promise<void> {
+    try {
+      const access = await firstValueFrom(this.properties.listPendingAccessRequests(0, 5));
       this.accessRequests.set(access.content);
+    } catch {
+      // lista de ações usa badges do shell
+    }
+  }
+
+  private async loadInbox(): Promise<void> {
+    try {
+      const inbox = await firstValueFrom(this.ops.listMessagesInbox(0, 5));
       this.inboxPreview.set(inbox.content);
     } catch {
-      this.error.set('Não foi possível carregar o painel.');
-      this.loading.set(false);
-      return;
+      // inbox vazio até atualizar
     }
-    this.loading.set(false);
-    void this.loadFinance();
   }
 
   private async loadFinance(): Promise<void> {

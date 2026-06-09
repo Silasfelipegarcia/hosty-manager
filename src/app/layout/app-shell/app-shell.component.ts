@@ -1,16 +1,7 @@
 import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import {
-  NavigationCancel,
-  NavigationEnd,
-  NavigationError,
-  NavigationStart,
-  Router,
-  RouterLink,
-  RouterLinkActive,
-  RouterOutlet,
-} from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -192,20 +183,19 @@ export class AppShellComponent implements OnInit {
       });
 
     this.router.events.pipe(takeUntilDestroyed()).subscribe((e) => {
-      if (e instanceof NavigationStart) {
-        this.routeLoading.set(true);
-      } else if (
-        e instanceof NavigationEnd ||
-        e instanceof NavigationCancel ||
-        e instanceof NavigationError
-      ) {
-        this.routeLoading.set(false);
-      }
       if (e instanceof NavigationEnd) {
         this.syncTitle(e.urlAfterRedirects);
         this.closeSidenavOnNav();
       }
     });
+  }
+
+  onOutletDeactivate(): void {
+    this.routeLoading.set(true);
+  }
+
+  onOutletActivate(): void {
+    this.routeLoading.set(false);
   }
 
   toggleSidenav(): void {
