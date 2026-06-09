@@ -48,6 +48,8 @@ export class DashboardPage implements OnInit {
   readonly badges = inject(BadgeService);
   readonly labels = OWNER_LABELS;
   readonly loading = signal(true);
+  readonly loadingFinance = signal(false);
+  readonly financeError = signal<string | null>(null);
   readonly error = signal<string | null>(null);
   readonly competence = signal(currentCompetence());
   readonly bundle = signal<FinanceDashboardBundle | null>(null);
@@ -131,23 +133,35 @@ export class DashboardPage implements OnInit {
   async load(): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
+    this.financeError.set(null);
     try {
-      const competence = this.competence();
-      const [bundle, stays, access, inbox] = await Promise.all([
-        firstValueFrom(this.finance.getDashboardBundle(competence)),
+      const [stays, access, inbox] = await Promise.all([
         firstValueFrom(this.ops.getStaysSummary()),
         firstValueFrom(this.properties.listPendingAccessRequests(0, 5)),
         firstValueFrom(this.ops.listMessagesInbox(0, 5)),
-        this.badges.refresh(),
       ]);
-      this.bundle.set(bundle);
       this.stays.set(stays);
       this.accessRequests.set(access.content);
       this.inboxPreview.set(inbox.content);
     } catch {
       this.error.set('Não foi possível carregar o painel.');
-    } finally {
       this.loading.set(false);
+      return;
+    }
+    this.loading.set(false);
+    void this.loadFinance();
+  }
+
+  private async loadFinance(): Promise<void> {
+    this.loadingFinance.set(true);
+    this.financeError.set(null);
+    try {
+      const bundle = await firstValueFrom(this.finance.getDashboardBundle(this.competence()));
+      this.bundle.set(bundle);
+    } catch {
+      this.financeError.set('Lucro indisponível no momento.');
+    } finally {
+      this.loadingFinance.set(false);
     }
   }
 }

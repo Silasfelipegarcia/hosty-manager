@@ -15,6 +15,7 @@ import {
   PlanView,
   UserSummary,
 } from '../../core/api/platform-admin.service';
+import { PortalSkeletonComponent } from '../../shared/components/portal-skeleton/portal-skeleton.component';
 
 @Component({
   selector: 'app-platform-admin',
@@ -28,6 +29,7 @@ import {
     MatIconModule,
     MatTabsModule,
     MatSlideToggleModule,
+    PortalSkeletonComponent,
   ],
   templateUrl: './platform-admin.page.html',
   styleUrl: './platform-admin.page.scss',

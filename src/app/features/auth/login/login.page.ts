@@ -51,6 +51,7 @@ export class LoginPage {
     this.error.set(null);
     try {
       await this.auth.login(this.form.getRawValue());
+      void import('../../dashboard/dashboard.page');
       if (!this.auth.isOwner()) {
         this.auth.logout();
         this.error.set('Conta sem perfil de proprietário.');

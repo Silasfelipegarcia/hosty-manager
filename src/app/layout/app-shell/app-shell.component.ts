@@ -1,8 +1,16 @@
 import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { filter } from 'rxjs/operators';
+import {
+  NavigationCancel,
+  NavigationEnd,
+  NavigationError,
+  NavigationStart,
+  Router,
+  RouterLink,
+  RouterLinkActive,
+  RouterOutlet,
+} from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -18,6 +26,9 @@ import { CommandPaletteService } from '../../core/command-palette/command-palett
 import { OWNER_LABELS } from '../../core/i18n/owner-labels';
 import { OwnerEntitlementsStore } from '../../core/entitlements/owner-entitlements.store';
 import { OWNER_FEATURES } from '../../core/models/entitlements.models';
+import { PortalSkeletonComponent } from '../../shared/components/portal-skeleton/portal-skeleton.component';
+
+const MOBILE_QUERY = '(max-width: 899px)';
 
 interface NavItem {
   label: string;
@@ -44,6 +55,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/messages': 'Mensagens',
   '/help': 'Ajuda',
   '/account': 'Conta',
+  '/platform': 'Admin Master',
 };
 
 @Component({
@@ -60,6 +72,7 @@ const PAGE_TITLES: Record<string, string> = {
     ClaraAssistantWidget,
     CommandPaletteComponent,
     ProfileAvatarComponent,
+    PortalSkeletonComponent,
   ],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss',
@@ -78,8 +91,17 @@ export class AppShellComponent implements OnInit {
   readonly appName = environment.appName;
   readonly labels = OWNER_LABELS;
   readonly pageTitle = signal('Início');
-  readonly isMobile = signal(false);
-  readonly sidenavOpen = signal(false);
+  readonly isMobile = signal(
+    typeof window !== 'undefined' && window.matchMedia(MOBILE_QUERY).matches,
+  );
+  readonly sidenavOpen = signal(
+    typeof window !== 'undefined' && !window.matchMedia(MOBILE_QUERY).matches,
+  );
+  readonly routeLoading = signal(true);
+
+  get menuAriaLabel(): string {
+    return this.sidenavOpen() ? 'Fechar menu' : 'Abrir menu';
+  }
 
   get navGroups(): NavGroup[] {
     const e = this.entitlements;
@@ -157,17 +179,32 @@ export class AppShellComponent implements OnInit {
     this.syncTitle(this.router.url);
 
     this.breakpoint
-      .observe(['(max-width: 899px)'])
+      .observe([MOBILE_QUERY])
       .pipe(takeUntilDestroyed())
       .subscribe((state) => {
         const mobile = state.matches;
         this.isMobile.set(mobile);
-        this.sidenavOpen.set(mobile ? false : true);
+        if (mobile) {
+          this.sidenavOpen.set(false);
+        } else {
+          this.sidenavOpen.set(true);
+        }
       });
 
-    this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe((e) => {
-      this.syncTitle((e as NavigationEnd).urlAfterRedirects);
-      this.closeSidenavOnNav();
+    this.router.events.pipe(takeUntilDestroyed()).subscribe((e) => {
+      if (e instanceof NavigationStart) {
+        this.routeLoading.set(true);
+      } else if (
+        e instanceof NavigationEnd ||
+        e instanceof NavigationCancel ||
+        e instanceof NavigationError
+      ) {
+        this.routeLoading.set(false);
+      }
+      if (e instanceof NavigationEnd) {
+        this.syncTitle(e.urlAfterRedirects);
+        this.closeSidenavOnNav();
+      }
     });
   }
 

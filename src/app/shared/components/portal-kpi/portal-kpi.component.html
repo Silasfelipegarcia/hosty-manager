@@ -9,6 +9,9 @@
         </span>
       }
     </div>
+    @if (hint()) {
+      <span class="portal-kpi-hint">{{ hint() }}</span>
+    }
     @if (sparkline().length > 1) {
       <svg class="portal-kpi-spark" viewBox="0 0 64 24" aria-hidden="true">
         <path [attr.d]="sparklinePath()" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />

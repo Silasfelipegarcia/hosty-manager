@@ -62,7 +62,8 @@
         <button
           type="button"
           class="menu-btn"
-          aria-label="Abrir menu"
+          [attr.aria-expanded]="sidenavOpen()"
+          [attr.aria-label]="menuAriaLabel"
           (click)="toggleSidenav()"
         >
           <mat-icon>menu</mat-icon>
@@ -102,6 +103,9 @@
       </div>
     }
     <main class="content">
+      @if (routeLoading()) {
+        <app-portal-skeleton variant="dashboard" />
+      }
       <router-outlet />
     </main>
   </mat-sidenav-content>

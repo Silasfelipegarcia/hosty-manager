@@ -50,7 +50,9 @@ Após deploy da API com migration `V71`:
 | Senha | `123456` |
 | Plano | Plus++ (seed) |
 
-Local (`profile=local`): mesma conta é criada pelo `LocalUserSeedInitializer`.
+**Dados de demo** (após deploy da API): 3 imóveis (Itu, Ubatuba, Pinheiros), reservas com valores, custos fixos, pendências na fila, mensagens e chat ativo.
+
+Local (`profile=local`): conta + massa criadas automaticamente no boot da API.
 
 ## Deploy
 

@@ -68,10 +68,11 @@
       />
       <app-portal-kpi
         label="Lucro do mês"
-        [value]="profitLabel()"
-        [delta]="profitMargin()"
+        [value]="loadingFinance() ? '…' : profitLabel()"
+        [delta]="loadingFinance() ? null : profitMargin()"
         deltaLabel="margem"
-        [sparkline]="profitSparkline()"
+        [sparkline]="loadingFinance() ? [] : profitSparkline()"
+        [hint]="financeError() ?? (loadingFinance() ? 'Carregando finanças…' : '')"
         routerLink="/finance"
       />
     </div>

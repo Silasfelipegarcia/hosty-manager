@@ -61,3 +61,33 @@
 .muted {
   color: #6b7280;
 }
+
+@media (max-width: 900px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  :host ::ng-deep .mat-mdc-tab-header {
+    overflow-x: auto;
+  }
+
+  :host ::ng-deep .mat-mdc-tab-labels {
+    flex-wrap: nowrap;
+  }
+
+  .flag-row,
+  .user-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .user-search {
+    flex-direction: column;
+  }
+
+  .user-search button {
+    width: 100%;
+  }
+}
