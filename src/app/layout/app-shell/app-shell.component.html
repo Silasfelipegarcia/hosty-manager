@@ -1,5 +1,10 @@
-<mat-sidenav-container class="shell">
-  <mat-sidenav mode="side" opened class="shell-sidenav">
+<mat-sidenav-container class="shell" [class.shell-mobile]="isMobile()">
+  <mat-sidenav
+    class="shell-sidenav"
+    [mode]="isMobile() ? 'over' : 'side'"
+    [opened]="isMobile() ? sidenavOpen() : true"
+    (closedStart)="onSidenavClosed()"
+  >
     <div class="brand">
       <div class="brand-mark">H</div>
       <div class="brand-text">
@@ -18,6 +23,7 @@
               [routerLink]="item.path"
               routerLinkActive="active"
               [routerLinkActiveOptions]="item.exact ? { exact: true } : { exact: false }"
+              (click)="closeSidenavOnNav()"
             >
               <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
               <span class="nav-item-label">{{ item.label }}</span>
@@ -31,7 +37,7 @@
     </nav>
 
     <div class="sidenav-footer">
-      <a class="user-block" routerLink="/account">
+      <a class="user-block" routerLink="/account" (click)="closeSidenavOnNav()">
         <app-profile-avatar
           size="md"
           [photoSrc]="profileStore.photoSrc()"
@@ -52,6 +58,16 @@
 
   <mat-sidenav-content class="shell-main">
     <header class="topbar">
+      @if (isMobile()) {
+        <button
+          type="button"
+          class="menu-btn"
+          aria-label="Abrir menu"
+          (click)="toggleSidenav()"
+        >
+          <mat-icon>menu</mat-icon>
+        </button>
+      }
       <div class="topbar-titles">
         <h1>{{ pageTitle() }}</h1>
         <span class="topbar-sub">Portal do proprietário</span>
@@ -64,9 +80,17 @@
           <kbd>⌘K</kbd>
         </button>
       @if (badges.totalBadges > 0) {
-        <a class="pending-pill" routerLink="/reservations" [queryParams]="{ filter: 'approval' }">
+        <a
+          class="pending-pill"
+          routerLink="/reservations"
+          [queryParams]="{ filter: 'approval' }"
+          [attr.aria-label]="badges.totalBadges + ' pendências'"
+        >
           <mat-icon>notifications_active</mat-icon>
-          {{ badges.totalBadges }} pendência{{ badges.totalBadges > 1 ? 's' : '' }}
+          <span class="pending-pill-count">{{ badges.totalBadges }}</span>
+          <span class="pending-pill-text">
+            {{ badges.totalBadges }} pendência{{ badges.totalBadges > 1 ? 's' : '' }}
+          </span>
         </a>
       }
       </div>
@@ -80,7 +104,7 @@
     <main class="content">
       <router-outlet />
     </main>
-    <app-clara-assistant />
-    <app-command-palette />
   </mat-sidenav-content>
 </mat-sidenav-container>
+<app-clara-assistant />
+<app-command-palette />

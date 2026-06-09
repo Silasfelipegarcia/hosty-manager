@@ -1,5 +1,6 @@
 <div class="clara-root" [class.open]="open()">
   @if (open()) {
+    <div class="clara-backdrop" (click)="close()" aria-hidden="true"></div>
     <section class="messenger-panel" role="dialog" aria-label="Chat com Clara">
       <!-- Header estilo Messenger -->
       <header class="messenger-header">

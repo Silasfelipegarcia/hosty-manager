@@ -1,3 +1,12 @@
+:host {
+  position: relative;
+  z-index: 1300;
+}
+
+.clara-backdrop {
+  display: none;
+}
+
 .clara-root {
   position: fixed;
   right: 20px;
@@ -437,12 +446,52 @@
   &:disabled { opacity: 0.4; cursor: default; }
 }
 
-@media (max-width: 480px) {
-  .clara-root { right: 12px; bottom: 12px; }
+@media (max-width: 899px) {
+  .clara-root {
+    right: 0;
+    bottom: 0;
+    left: 0;
+    top: 0;
+    align-items: stretch;
+    justify-content: flex-end;
+  }
 
-  .messenger-panel {
-    width: calc(100vw - 24px);
-    height: calc(100vh - 88px);
-    border-radius: 12px 12px 0 0;
+  .clara-root.open .clara-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(11, 18, 32, 0.45);
+    z-index: 0;
+    pointer-events: auto;
+  }
+
+  .clara-root.open .messenger-panel {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    z-index: 1;
+    animation: slide-up 0.22s ease-out;
+  }
+
+  .clara-root:not(.open) {
+    right: 12px;
+    bottom: 12px;
+    left: auto;
+    top: auto;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }

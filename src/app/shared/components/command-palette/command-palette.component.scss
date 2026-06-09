@@ -162,6 +162,22 @@
   color: var(--portal-text-muted);
 }
 
+:host {
+  position: relative;
+  z-index: 1300;
+}
+
+@media (max-width: 900px) {
+  .cmdk-backdrop {
+    padding: 8vh 16px 16px;
+  }
+
+  .cmdk-panel {
+    width: calc(100vw - 32px);
+    max-width: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cmdk-panel {
     animation: none;

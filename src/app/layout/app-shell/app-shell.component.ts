@@ -1,4 +1,6 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -65,14 +67,19 @@ const PAGE_TITLES: Record<string, string> = {
 export class AppShellComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly breakpoint = inject(BreakpointObserver);
   readonly badges = inject(BadgeService);
   readonly palette = inject(CommandPaletteService);
   readonly profileStore = inject(OwnerProfileStore);
   readonly entitlements = inject(OwnerEntitlementsStore);
 
+  @ViewChild(ClaraAssistantWidget) private clara?: ClaraAssistantWidget;
+
   readonly appName = environment.appName;
   readonly labels = OWNER_LABELS;
   readonly pageTitle = signal('Início');
+  readonly isMobile = signal(false);
+  readonly sidenavOpen = signal(false);
 
   get navGroups(): NavGroup[] {
     const e = this.entitlements;
@@ -148,9 +155,40 @@ export class AppShellComponent implements OnInit {
     void this.badges.refresh();
     setInterval(() => void this.badges.refresh(), 180_000);
     this.syncTitle(this.router.url);
+
+    this.breakpoint
+      .observe(['(max-width: 899px)'])
+      .pipe(takeUntilDestroyed())
+      .subscribe((state) => {
+        const mobile = state.matches;
+        this.isMobile.set(mobile);
+        this.sidenavOpen.set(mobile ? false : true);
+      });
+
     this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe((e) => {
       this.syncTitle((e as NavigationEnd).urlAfterRedirects);
+      this.closeSidenavOnNav();
     });
+  }
+
+  toggleSidenav(): void {
+    const next = !this.sidenavOpen();
+    if (next && this.isMobile()) {
+      this.clara?.close();
+    }
+    this.sidenavOpen.set(next);
+  }
+
+  onSidenavClosed(): void {
+    if (this.isMobile()) {
+      this.sidenavOpen.set(false);
+    }
+  }
+
+  closeSidenavOnNav(): void {
+    if (this.isMobile()) {
+      this.sidenavOpen.set(false);
+    }
   }
 
   logout(): void {

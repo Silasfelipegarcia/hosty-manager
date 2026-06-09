@@ -19,9 +19,17 @@
   }
 }
 
-.shell-main > * {
+.shell-main > header,
+.shell-main > main,
+.shell-main > .upgrade-banner {
   position: relative;
   z-index: 1;
+}
+
+@media (max-width: 900px) {
+  .shell-main::before {
+    inset: 0;
+  }
 }
 
 /* Dark sidebar */
