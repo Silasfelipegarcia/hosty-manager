@@ -40,6 +40,18 @@ Saída: `dist/hosty-manager/browser/`
 | `/messages` | Inbox |
 | `/account` | Perfil |
 
+## Conta de teste (proprietário)
+
+Após deploy da API com migration `V71`:
+
+| Campo | Valor |
+|-------|-------|
+| E-mail | `teste@gmail.com` |
+| Senha | `123456` |
+| Plano | Plus++ (seed) |
+
+Local (`profile=local`): mesma conta é criada pelo `LocalUserSeedInitializer`.
+
 ## Deploy
 
 ### Vercel / Railway (SPA)
