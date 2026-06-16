@@ -1,5 +1,5 @@
 export const OWNER_LABELS = {
-  brand: 'Hosty',
+  brand: 'Staya',
   property: 'Imóvel',
   guest: 'Hóspede',
   stay: 'Estadia',

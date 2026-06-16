@@ -137,7 +137,7 @@ export class ServiceProvidersPage implements OnInit {
     const link = this.lastInvite()?.inviteUrl;
     if (!link) return;
     const text = encodeURIComponent(
-      `Você foi convidado(a) para prestar serviços no Hosty. Abra o link no app para criar sua senha:\n${link}`,
+      `Você foi convidado(a) para prestar serviços no Staya. Abra o link no app para criar sua senha:\n${link}`,
     );
     window.open(`https://wa.me/?text=${text}`, '_blank', 'noopener');
   }
@@ -145,8 +145,8 @@ export class ServiceProvidersPage implements OnInit {
   async shareInviteNative(): Promise<void> {
     const link = this.lastInvite()?.inviteUrl;
     if (!link) return;
-    const title = `Convite Hosty — ${this.inviteProviderName()}`;
-    const text = `Abra no app Hosty para aceitar o convite:\n${link}`;
+    const title = `Convite Staya — ${this.inviteProviderName()}`;
+    const text = `Abra no app Staya para aceitar o convite:\n${link}`;
     if (navigator.share) {
       try {
         await navigator.share({ title, text, url: link });

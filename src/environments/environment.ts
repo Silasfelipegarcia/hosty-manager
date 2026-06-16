@@ -1,8 +1,9 @@
 export const environment = {
   production: false,
   apiBaseUrl: 'http://localhost:8080',
-  appName: 'Hosty Manager',
-  brandName: 'Hosty',
+  appName: 'Staya Manager',
+  brandName: 'Staya',
+  supportEmail: 'contato@staya.com.br',
   tenantAppUrl: '#inquilinos',
   tagline: 'O sistema operacional da sua estadia de temporada',
 };

@@ -9,7 +9,7 @@ export function downloadFinanceCsv(bundle: FinanceDashboardBundle, competence: s
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `hosty-finance-${competence}.csv`;
+  a.download = `staya-finance-${competence}.csv`;
   a.click();
   URL.revokeObjectURL(a.href);
 }

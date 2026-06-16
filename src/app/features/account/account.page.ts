@@ -5,6 +5,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { DatePipe } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { AccountService } from '../../core/api/account.service';
 import { AuthService } from '../../core/auth/auth.service';
@@ -12,7 +14,7 @@ import { OwnerProfileStore } from '../../core/profile/owner-profile.store';
 import { imageFileToDataUrl } from '../../core/profile/profile-photo.util';
 import { ProfileAvatarComponent } from '../../shared/components/profile-avatar/profile-avatar.component';
 import { OwnerEntitlementsStore } from '../../core/entitlements/owner-entitlements.store';
-import { BillingService } from '../../core/api/billing.service';
+import { BillingService, OwnerBillingStatus } from '../../core/api/billing.service';
 
 @Component({
   selector: 'app-account-page',
@@ -25,6 +27,7 @@ import { BillingService } from '../../core/api/billing.service';
     MatButtonModule,
     MatIconModule,
     ProfileAvatarComponent,
+    DatePipe,
   ],
   templateUrl: './account.page.html',
   styleUrl: './account.page.scss',
@@ -39,8 +42,11 @@ export class AccountPage implements OnInit {
 
   readonly saving = signal(false);
   readonly upgrading = signal(false);
+  readonly startingTrial = signal(false);
   readonly photoDraft = signal<string | null>(null);
-  readonly status = signal<string | null>(null);
+  readonly profileStatus = signal<string | null>(null);
+  readonly planStatus = signal<string | null>(null);
+  readonly billingStatus = signal<OwnerBillingStatus | null>(null);
 
   readonly form = this.fb.nonNullable.group({
     fullName: [''],
@@ -65,18 +71,51 @@ export class AccountPage implements OnInit {
 
   ngOnInit(): void {
     void this.entitlements.ensureLoaded();
+    void this.loadBillingStatus();
     void this.load();
+  }
+
+  async loadBillingStatus(): Promise<void> {
+    try {
+      const status = await firstValueFrom(this.billing.getOwnerStatus());
+      this.billingStatus.set(status);
+    } catch {
+      this.billingStatus.set(null);
+    }
+  }
+
+  async startTrial(): Promise<void> {
+    this.startingTrial.set(true);
+    this.planStatus.set(null);
+    try {
+      const status = await firstValueFrom(this.billing.startOwnerTrial());
+      this.billingStatus.set(status);
+      await this.entitlements.refresh();
+      this.planStatus.set('Trial ativado — Clara IA e Plus++ liberados por 14 dias.');
+    } catch (err) {
+      const msg = err instanceof HttpErrorResponse ? err.error?.message ?? err.message : null;
+      this.planStatus.set(msg ?? 'Não foi possível iniciar o trial. Tente novamente.');
+    } finally {
+      this.startingTrial.set(false);
+    }
   }
 
   async upgradeTo(planId: string): Promise<void> {
     this.upgrading.set(true);
+    this.planStatus.set(null);
     try {
       const session = await firstValueFrom(this.billing.ownerCheckout(planId));
       if (session.checkoutUrl) {
         window.location.href = session.checkoutUrl;
+      } else {
+        this.planStatus.set('Checkout sem URL de redirecionamento.');
       }
-    } catch {
-      this.status.set('Checkout indisponível — configure Stripe na API ou peça upgrade manual ao admin.');
+    } catch (err) {
+      if (err instanceof HttpErrorResponse && err.status === 503) {
+        this.planStatus.set('Pagamento online em configuração. Use o trial gratuito abaixo.');
+      } else {
+        this.planStatus.set('Não foi possível abrir o checkout. Tente o trial gratuito.');
+      }
     } finally {
       this.upgrading.set(false);
     }
@@ -105,20 +144,20 @@ export class AccountPage implements OnInit {
     try {
       const dataUrl = await imageFileToDataUrl(file);
       this.photoDraft.set(dataUrl);
-      this.status.set(null);
+      this.profileStatus.set(null);
     } catch {
-      this.status.set('Não foi possível processar a imagem.');
+      this.profileStatus.set('Não foi possível processar a imagem.');
     }
   }
 
   removePhoto(): void {
     this.photoDraft.set('');
-    this.status.set(null);
+    this.profileStatus.set(null);
   }
 
   async save(): Promise<void> {
     this.saving.set(true);
-    this.status.set(null);
+    this.profileStatus.set(null);
     try {
       const raw = this.form.getRawValue();
       const photoUrl = this.photoDraft();
@@ -133,9 +172,9 @@ export class AccountPage implements OnInit {
       const saved = await firstValueFrom(this.account.updateProfile(body));
       this.profileStore.applyLocal(saved);
       this.photoDraft.set(null);
-      this.status.set('Perfil salvo — mesmos dados do app mobile.');
+      this.profileStatus.set('Perfil salvo — mesmos dados do app mobile.');
     } catch {
-      this.status.set('Erro ao salvar. Tente novamente.');
+      this.profileStatus.set('Erro ao salvar. Tente novamente.');
     } finally {
       this.saving.set(false);
     }

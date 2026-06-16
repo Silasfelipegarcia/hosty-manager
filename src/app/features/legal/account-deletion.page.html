@@ -1,7 +1,7 @@
 <div class="legal-page">
   <header class="legal-header">
     <a class="brand" routerLink="/">
-      <span class="brand-mark">H</span>
+      <span class="brand-mark">S</span>
       <span>{{ brandName }}</span>
     </a>
   </header>
@@ -11,7 +11,7 @@
     <p class="updated">Última atualização: {{ lastUpdated }}</p>
 
     <p>
-      Você pode solicitar a exclusão da sua conta Hosty e dos dados pessoais vinculados a ela.
+      Você pode solicitar a exclusão da sua conta {{ brandName }} e dos dados pessoais vinculados a ela.
       Esta página atende ao direito previsto na LGPD e aos requisitos das lojas de aplicativos.
     </p>
 
@@ -22,7 +22,7 @@
       <li>Reservas e registros que o anfitrião deve manter por lei podem permanecer sem identificação pessoal sua.</li>
     </ul>
 
-    <h2>Pelo aplicativo Hosty</h2>
+    <h2>Pelo aplicativo {{ brandName }}</h2>
     <p>
       Se você usa o app: abra <strong>Conta</strong> → role até <strong>Segurança</strong> → expanda
       <strong>Excluir conta e dados</strong> → siga as instruções e confirme a solicitação.
@@ -38,7 +38,7 @@
       <p class="notice success">
         Se o e-mail não abriu automaticamente, envie manualmente para
         <a [href]="'mailto:' + supportEmail">{{ supportEmail }}</a>
-        com o assunto <strong>Exclusão de conta Hosty</strong>.
+        com o assunto <strong>Exclusão de conta {{ brandName }}</strong>.
       </p>
     }
 

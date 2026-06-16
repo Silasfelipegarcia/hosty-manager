@@ -41,7 +41,7 @@ export class LoginPage {
   constructor() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('error') === 'owner_only') {
-      this.error.set('Esta área é exclusiva para proprietários. Use o app Hosty como hóspede.');
+      this.error.set('Esta área é exclusiva para proprietários. Use o app Staya como hóspede.');
     }
   }
 

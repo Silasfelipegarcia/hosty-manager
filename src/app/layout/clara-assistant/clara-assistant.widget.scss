@@ -7,6 +7,29 @@
   display: none;
 }
 
+.trial-hint-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 14px;
+  background: #ecfdf5;
+  border-bottom: 1px solid #a7f3d0;
+  font-size: 0.75rem;
+  color: #065f46;
+
+  a {
+    color: #0d9488;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
 .clara-root {
   position: fixed;
   right: 20px;

@@ -3,9 +3,78 @@
 }
 
 .profile-card,
+.plan-card,
 .security-card {
   padding: 20px;
   margin-bottom: 16px;
+}
+
+.plan-card {
+  h3 {
+    margin: 0 0 8px;
+    font-size: 0.9375rem;
+  }
+
+  p {
+    margin: 0 0 12px;
+    font-size: 0.875rem;
+  }
+}
+
+.trial-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  margin-bottom: 10px !important;
+  border-radius: 999px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #047857;
+  font-size: 0.8125rem !important;
+  font-weight: 600;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.trial-cta {
+  margin: 12px 0 16px;
+  padding: 14px;
+  border-radius: var(--portal-radius-sm);
+  background: linear-gradient(135deg, #f0fdfa 0%, #ecfdf5 100%);
+  border: 1px solid #99f6e4;
+
+  p {
+    margin: 0 0 10px;
+  }
+}
+
+.trial-btn {
+  width: 100%;
+}
+
+.plan-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.plan-note {
+  margin: 0 !important;
+}
+
+.plan-status-msg {
+  font-size: 0.8125rem;
+  color: var(--portal-danger);
+  margin: 0 0 12px !important;
+
+  &.ok {
+    color: var(--portal-brand);
+  }
 }
 
 .photo-section {

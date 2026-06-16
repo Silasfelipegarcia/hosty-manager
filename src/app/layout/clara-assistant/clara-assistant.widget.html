@@ -35,6 +35,13 @@
         </div>
       </header>
 
+      @if (simpleMode()) {
+        <div class="trial-hint-bar">
+          <span>Clara IA completa no trial gratuito.</span>
+          <a routerLink="/account" (click)="close()">Ativar trial grátis</a>
+        </div>
+      }
+
       @if (showScope()) {
         <div class="scope-bar" [formGroup]="scope">
           <label class="scope-field">

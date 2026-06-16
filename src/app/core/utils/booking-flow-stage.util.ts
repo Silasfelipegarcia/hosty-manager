@@ -1,7 +1,7 @@
 import { BookingDto } from '../models/operations.models';
 
 const SOURCE_LABELS: Record<string, string> = {
-  HOSTY: 'Hosty',
+  HOSTY: 'Staya',
   AIRBNB: 'Airbnb',
   BOOKING: 'Booking',
   DIRECT: 'Direto',
@@ -144,7 +144,7 @@ export function tenantCancellationPending(booking: BookingDto): boolean {
 
 export function reservationSourceLabel(booking: BookingDto): string {
   const raw = (booking.reservationSource ?? booking.platform ?? '').trim().toUpperCase();
-  if (!raw) return 'Hosty';
+  if (!raw) return 'Staya';
   return SOURCE_LABELS[raw] ?? raw;
 }
 

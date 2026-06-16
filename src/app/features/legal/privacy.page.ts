@@ -11,7 +11,7 @@ import { environment } from '../../../environments/environment';
 })
 export class PrivacyPage {
   readonly brandName = environment.brandName;
-  readonly supportEmail = 'contato@hosty.com.br';
+  readonly supportEmail = environment.supportEmail;
   readonly lastUpdated = '9 de junho de 2026';
-  readonly deletionMailto = `mailto:contato@hosty.com.br?subject=${encodeURIComponent('Exclusão de conta Hosty')}`;
+  readonly deletionMailto = `mailto:${environment.supportEmail}?subject=${encodeURIComponent(`Exclusão de conta ${environment.brandName}`)}`;
 }

@@ -11,6 +11,6 @@ import { environment } from '../../../environments/environment';
 })
 export class TermsPage {
   readonly brandName = environment.brandName;
-  readonly supportEmail = 'contato@hosty.com.br';
+  readonly supportEmail = environment.supportEmail;
   readonly lastUpdated = '9 de junho de 2026';
 }

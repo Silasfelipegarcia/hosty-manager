@@ -336,7 +336,7 @@ export class FinancePage implements OnInit {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `hosty-finance-${from}.csv`;
+    a.download = `staya-finance-${from}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }

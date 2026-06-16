@@ -24,7 +24,7 @@ export class AccountDeletionPage implements OnInit {
   private readonly fb = inject(FormBuilder);
 
   readonly brandName = environment.brandName;
-  readonly supportEmail = 'contato@hosty.com.br';
+  readonly supportEmail = environment.supportEmail;
   readonly lastUpdated = '9 de junho de 2026';
   readonly submitted = signal(false);
 
@@ -47,7 +47,7 @@ export class AccountDeletionPage implements OnInit {
     const body = [
       'Olá,',
       '',
-      'Solicito a exclusão da minha conta Hosty e dos dados pessoais associados.',
+      `Solicito a exclusão da minha conta ${this.brandName} e dos dados pessoais associados.`,
       `E-mail de login: ${email}`,
       '',
       note ? `Observação: ${note}` : '',
@@ -59,7 +59,7 @@ export class AccountDeletionPage implements OnInit {
       .filter(Boolean)
       .join('\n');
 
-    const mailto = `mailto:${this.supportEmail}?subject=${encodeURIComponent('Exclusão de conta Hosty')}&body=${encodeURIComponent(body)}`;
+    const mailto = `mailto:${this.supportEmail}?subject=${encodeURIComponent(`Exclusão de conta ${this.brandName}`)}&body=${encodeURIComponent(body)}`;
     window.location.href = mailto;
     this.submitted.set(true);
   }

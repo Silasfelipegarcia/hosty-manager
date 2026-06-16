@@ -150,12 +150,12 @@ export class LandingPage {
 
   readonly faqs: FaqItem[] = [
     {
-      q: 'O Hosty substitui Airbnb ou Booking?',
+      q: `O ${environment.brandName} substitui Airbnb ou Booking?`,
       a: 'Não. Ele centraliza a operação depois da reserva — e também registra vendas diretas e histórico em massa.',
     },
     {
       q: 'Preciso usar os dois apps?',
-      a: 'Proprietários usam o portal web (Manager). Hóspedes usam o app Hosty. Tudo na mesma base de dados.',
+      a: `Proprietários usam o portal web (Manager). Hóspedes usam o app ${environment.brandName}. Tudo na mesma base de dados.`,
     },
     {
       q: 'O que a Clara consegue fazer?',

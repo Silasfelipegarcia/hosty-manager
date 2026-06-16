@@ -1,7 +1,7 @@
 <div class="legal-page">
   <header class="legal-header">
     <a class="brand" routerLink="/">
-      <span class="brand-mark">H</span>
+      <span class="brand-mark">S</span>
       <span>{{ brandName }}</span>
     </a>
   </header>
@@ -11,16 +11,16 @@
     <p class="updated">Última atualização: {{ lastUpdated }}</p>
 
     <p>
-      Esta política descreve como o <strong>{{ brandName }}</strong> (“nós”, “Hosty”) trata dados pessoais
-      no <strong>aplicativo móvel Hosty</strong> (hóspedes e prestadores de serviço) e no
+      Esta política descreve como o <strong>{{ brandName }}</strong> (“nós”, “{{ brandName }}”) trata dados pessoais
+      no <strong>aplicativo móvel {{ brandName }}</strong> (hóspedes e prestadores de serviço) e no
       <strong>portal do proprietário</strong> (site Manager). Ao usar nossos serviços, você concorda com
       as práticas descritas abaixo, em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).
     </p>
 
     <h2>1. Quem somos</h2>
     <p>
-      O Hosty é uma plataforma de gestão de estadias de temporada. O controlador dos dados é o responsável legal
-      pelo produto Hosty. Caso exista pessoa jurídica constituída, os dados cadastrais da empresa, incluindo
+      O {{ brandName }} é uma plataforma de gestão de estadias de temporada. O controlador dos dados é o responsável legal
+      pelo produto {{ brandName }}. Caso exista pessoa jurídica constituída, os dados cadastrais da empresa, incluindo
       razão social e CNPJ, poderão ser informados nesta seção. Para exercer seus direitos ou dúvidas sobre privacidade,
       escreva para <a [href]="'mailto:' + supportEmail">{{ supportEmail }}</a>.
     </p>
@@ -93,7 +93,7 @@
 
     <h2>7. Transferência internacional de dados</h2>
     <p>
-      Alguns fornecedores utilizados pelo Hosty podem processar ou armazenar dados fora do Brasil, como provedores de
+      Alguns fornecedores utilizados pelo {{ brandName }} podem processar ou armazenar dados fora do Brasil, como provedores de
       infraestrutura, hospedagem, banco de dados, autenticação, análise, mapas, pagamentos ou inteligência artificial.
     </p>
     <p>
@@ -108,7 +108,7 @@
       <a routerLink="/exclusao-conta">página de exclusão de conta</a>
       (formulário no site), em <strong>Conta → Segurança → Excluir conta e dados</strong> no app, ou por e-mail para
       <a [href]="deletionMailto">{{ supportEmail }}</a>
-      com o assunto “Exclusão de conta Hosty”. Analisaremos e responderemos em prazo razoável,
+      com o assunto “Exclusão de conta {{ brandName }}”. Analisaremos e responderemos em prazo razoável,
       respeitando retenções legais mínimas.
     </p>
     <p>
@@ -142,7 +142,7 @@
 
     <h2>11. Crianças</h2>
     <p>
-      O Hosty não é destinado a menores de 18 anos. Não coletamos intencionalmente dados de crianças.
+      O {{ brandName }} não é destinado a menores de 18 anos. Não coletamos intencionalmente dados de crianças.
     </p>
 
     <h2>12. Cookies e tecnologias semelhantes</h2>
@@ -153,7 +153,7 @@
 
     <h2>13. Serviços de terceiros</h2>
     <p>
-      O Hosty pode utilizar serviços de terceiros para viabilizar funcionalidades da plataforma, incluindo hospedagem,
+      O {{ brandName }} pode utilizar serviços de terceiros para viabilizar funcionalidades da plataforma, incluindo hospedagem,
       banco de dados, autenticação, envio de e-mails, armazenamento de imagens, mapas, pagamentos, monitoramento,
       análise de uso e suporte.
     </p>

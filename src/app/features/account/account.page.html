@@ -58,8 +58,8 @@
         </mat-form-field>
       </div>
 
-      @if (status()) {
-        <p class="status-msg" [class.ok]="status()?.startsWith('Perfil')">{{ status() }}</p>
+      @if (profileStatus()) {
+        <p class="status-msg" [class.ok]="profileStatus()?.startsWith('Perfil')">{{ profileStatus() }}</p>
       }
 
       <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
@@ -70,22 +70,58 @@
 
   <mat-card class="portal-surface plan-card">
     <h3>Seu plano</h3>
+    @if (billingStatus()?.trialActive) {
+      <p class="trial-badge">
+        <mat-icon>verified</mat-icon>
+        Trial Plus++ ativo
+        @if (billingStatus()?.trialEndsAt; as endsAt) {
+          — até {{ endsAt | date: 'dd/MM/yyyy' }}
+        }
+      </p>
+    }
     <p>
       <strong>{{ entitlements.ownerPlanName() }}</strong>
-      @if (entitlements.ownerPlan() === 'FREE') {
+      @if (entitlements.ownerPlan() === 'FREE' && !billingStatus()?.trialActive) {
         — faça upgrade para Plus ou Plus++ e desbloqueie finanças, iCal e Clara IA.
+      } @else if (billingStatus()?.trialActive) {
+        — você está testando finanças avançadas, iCal e Clara IA.
       }
     </p>
-    @if (entitlements.ownerPlan() !== 'PLUS_PLUS') {
+
+    @if (planStatus()) {
+      <p class="plan-status-msg" [class.ok]="planStatus()?.startsWith('Trial ativado')">{{ planStatus() }}</p>
+    }
+
+    @if (billingStatus()?.trialEligible) {
+      <div class="trial-cta">
+        <p class="muted">Teste a Clara IA completa e todos os recursos Plus++ sem cartão.</p>
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          class="trial-btn"
+          [disabled]="startingTrial()"
+          (click)="startTrial()"
+        >
+          {{ startingTrial() ? 'Ativando…' : 'Testar grátis — 14 dias com Clara IA' }}
+        </button>
+      </div>
+    }
+
+    @if (entitlements.ownerPlan() !== 'PLUS_PLUS' || billingStatus()?.trialActive) {
       <div class="plan-actions">
-        @if (entitlements.ownerPlan() === 'FREE') {
-          <button mat-flat-button color="primary" type="button" [disabled]="upgrading()" (click)="upgradeTo('owner-plus')">
+        @if (entitlements.ownerPlan() === 'FREE' && billingStatus()?.stripeConfigured) {
+          <button mat-stroked-button type="button" [disabled]="upgrading()" (click)="upgradeTo('owner-plus')">
             Assinar Plus
           </button>
         }
-        <button mat-stroked-button type="button" [disabled]="upgrading()" (click)="upgradeTo('owner-plus-plus')">
-          Assinar Plus++
-        </button>
+        @if (billingStatus()?.stripeConfigured) {
+          <button mat-stroked-button type="button" [disabled]="upgrading()" (click)="upgradeTo('owner-plus-plus')">
+            Assinar Plus++
+          </button>
+        } @else if (!billingStatus()?.trialEligible && entitlements.ownerPlan() !== 'PLUS_PLUS') {
+          <p class="muted plan-note">Assinatura online em breve. Entre em contato com o suporte para upgrade manual.</p>
+        }
       </div>
     }
   </mat-card>
